@@ -2,99 +2,139 @@
 
 # Fuck Competitors
 
-**Watch your competitors' websites and journal every change.**
+**盯紧竞争对手的网站，把每一次变化都记成日志。**
 
-A self-hosted, open-source competitor-monitoring app. Point it at a competitor's
-`sitemap.xml` and it periodically checks for **added / removed / modified** pages, then
-records each change like a diary entry. Warm "手账" (journal) UI, pixel mascot included.
+一个自托管、开源的竞品监控应用。填入竞品的 `sitemap.xml`，它会定期巡检页面的
+**新增 / 删减 / 修改**，像写观察日记一样记录下来。温暖的手账风界面，自带像素眼睛吉祥物。
 
 </div>
 
-## Quick start
+---
+
+## 功能特性
+
+- 📒 **变更日志** —— 竞品页面的新增、删减、内容修改，按日期分组、时间倒序，可按竞品和变更类型筛选
+- 🔍 **两层监控** —— 轻量的 sitemap 增删监控（全站）+ 可选的正文逐行 diff（按竞品开启）
+- 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会用初始清单刷屏日志
+- ⚙️ **竞品设置** —— 随时改名称 / sitemap 地址 / 巡检频率、立即巡检、删除竞品
+- 🐳 **一条命令部署** —— 单容器 + 单个 SQLite 文件，无需任何外部服务
+- 🪶 **无前端构建** —— 服务端渲染 + 原生 JS，克隆即跑
+
+## 快速开始
 
 ```bash
 docker compose up
-# open http://localhost:8000
+# 打开 http://localhost:8000
 ```
 
-That's it — one container, one SQLite file (persisted in the `fc-data` volume), no external services.
+就这样 —— 一个容器、一个 SQLite 文件（持久化在 `fc-data` 数据卷里），不依赖任何外部服务。
 
-## Getting started
+## 安装方式
 
-1. **Add a competitor** — click **＋ 添加竞品**, paste its `sitemap.xml`, pick a check interval.
-   The first crawl is a **silent baseline**: it records every current page but does *not* flood
-   the journal with one "added" entry per page — there's no change signal in the initial inventory.
-2. **Let it run** — each competitor is re-crawled on its interval (or hit **↻ 立即巡检** on its card
-   to check now). From the second crawl on, only real **新增 / 删减 / 疑似修改** show up in 变更日志.
-3. **Watch the pages that matter** — to get line-by-line **content** diffs (pricing, positioning,
-   customer logos), open the competitor's card → **「从 N 页中钉选要详细监控的页」**, search by path,
-   and pin the key pages. Pinning auto-enables 详细监控 for that competitor; the next detailed crawl
-   fetches those pages and records exactly what changed.
+### 方式一：Docker（推荐）
 
-## How monitoring works (two tiers)
+```bash
+git clone https://github.com/tod-zhang/fuck-competitors.git
+cd fuck-competitors
+docker compose up -d          # 后台运行
+# 打开 http://localhost:8000
+```
 
-| Tier | What it does | Cost | Coverage |
+数据持久化在 `fc-data` 卷中。需要重置为空白：`docker compose down -v` 后再 `up`。
+
+### 方式二：源码本地运行
+
+```bash
+git clone https://github.com/tod-zhang/fuck-competitors.git
+cd fuck-competitors
+
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+
+uvicorn app.main:app          # 打开 http://localhost:8000
+```
+
+> ⚠️ 调度器跑在进程内，请用**单个 worker**（默认即是）。多 worker 会重复触发巡检。
+
+## 使用流程
+
+1. **添加竞品** —— 点「＋ 添加竞品」，填竞品的 `sitemap.xml`，选巡检频率。
+   首次巡检是**静默建基线**：只记录当前全部页面，**不会**给每个页面灌一条"新增"
+   —— 初始清单里没有"变化"这个信号。
+2. **让它跑** —— 每个竞品按各自频率自动重抓（或在卡片设置里点「立即巡检」马上查一次）。
+   从第二次巡检起，只有真正的 **新增 / 删减 / 疑似修改** 才会进变更日志。
+3. **盯关键内容** —— 想看定价、文案、客户案例的**逐行内容 diff**，在「竞品列表」里
+   对该竞品打开**详细监控**开关。开启后，每次详细巡检会抓取它**全部页面**的正文做对比，
+   记录到底改了什么。
+
+## 监控原理（两层）
+
+| 层级 | 做什么 | 成本 | 覆盖 |
 | --- | --- | --- | --- |
-| **Basic** (always on) | Diffs the sitemap each cycle → page **added / removed**; if a page carries `<lastmod>`, a changed `lastmod` raises a **"suspected modification"** flag. | low | every page |
-| **Detailed** (opt-in per competitor) | Fetches the **pinned** pages, extracts main text, and produces a line-by-line **content diff** — catches pricing/positioning/copy changes. | medium | pinned pages |
+| **基础**（始终开启） | 每次巡检 diff sitemap → 页面**新增 / 删减**；若页面带 `<lastmod>`，时间戳变化会标记一条**「疑似修改」** | 低 | 全部页面 |
+| **详细**（每个竞品可选） | 抓取该竞品**全部页面**的正文，逐行 **内容 diff** —— 抓到定价 / 定位 / 文案的具体改动 | 中 | 全部页面（受上限约束） |
 
-> Honesty note: basic monitoring can only *suspect* a modification (and only when the site
-> provides a truthful `<lastmod>`); it never sees *what* changed. Seeing the actual diff
-> requires detailed monitoring. The UI keeps these distinct on purpose.
+> **诚实说明**：基础监控只能"**疑似**"判断修改（且仅当站点诚实填写了 `<lastmod>`），
+> 它永远看不到*改了什么*。要看到真正的逐行 diff，必须开启详细监控。界面上这两者刻意区分清楚。
 
-Pin the high-value pages (pricing, homepage, customers) from the competitor card's page browser —
-those are the B2B signals worth a line-by-line diff, and pinning turns on **详细监控** automatically.
+详细监控对全站正文做对比，比只盯几页更吃资源、噪音也更大 —— 所以它**默认关闭、按竞品单独开**，
+并用 `FC_DETAILED_MAX_PAGES`（默认 500）兜底，避免超大站把自己拖垮。
 
-## Configuration
+## 配置
 
-All settings are env vars prefixed `FC_` (see `.env.example`):
+所有配置都是 `FC_` 前缀的环境变量（见 `.env.example`）：
 
-| Var | Default | Meaning |
+| 变量 | 默认值 | 含义 |
 | --- | --- | --- |
-| `FC_DB_URL` | `sqlite:///./data/app.db` | database location |
-| `FC_DEFAULT_INTERVAL_HOURS` | `12` | default crawl interval |
-| `FC_REQUEST_TIMEOUT` | `20` | per-request timeout (s) |
-| `FC_MAX_SITEMAP_URLS` | `50000` | cap per sitemap |
-| `FC_SNAPSHOT_RETENTION` | `10` | content snapshots kept per pinned page |
+| `FC_DB_URL` | `sqlite:///./data/app.db` | 数据库位置 |
+| `FC_DEFAULT_INTERVAL_HOURS` | `12` | 默认巡检间隔 |
+| `FC_REQUEST_TIMEOUT` | `20` | 单次请求超时（秒） |
+| `FC_MAX_SITEMAP_URLS` | `50000` | 单个 sitemap 的抓取上限 |
+| `FC_DETAILED_MAX_PAGES` | `500` | 每次详细巡检内容对比的页面上限 |
+| `FC_SNAPSHOT_RETENTION` | `10` | 每个页面保留的内容快照数 |
+| `FC_USER_AGENT` | `FuckCompetitors/0.1 …` | 抓取时使用的 User-Agent |
 
-## Development
+## 开发
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload        # http://localhost:8000
+uvicorn app.main:app --reload          # http://localhost:8000
 
-python tests/test_basic.py           # sitemap-parse + diff (stdlib only)
-python tests/e2e_local.py            # full fetch→diff→persist over a local server
-python tests/seed_demo.py            # load demo data to explore the UI
+python tests/test_basic.py             # sitemap 解析 + 增删改 diff（纯标准库）
+python tests/test_security.py          # 拒绝 XXE / 实体炸弹的 sitemap
+python tests/e2e_local.py              # 全链路：抓取 → diff → 落库（本地 HTTP 服务）
+python tests/seed_demo.py              # 灌入演示数据，方便逛界面
 ```
 
-## Architecture
+## 架构
 
-- **FastAPI** app, server-rendered **Jinja2** templates (no build step), vanilla JS for the change-detail drawer.
-- **APScheduler** runs one in-process interval job per competitor → **run a single worker**.
-- **SQLite** via SQLModel: `competitors / pages / changes / snapshots`.
-- `app/monitor/` holds the dependency-free core: `sitemap.py` (fetch + parse), `basic.py` (add/remove/suspected diff), `detailed.py` (content fetch + extract), `diff.py` (line diff).
+- **FastAPI** 应用，服务端渲染 **Jinja2** 模板（无构建步骤），抽屉 / 设置 / 筛选用原生 `fetch` + 少量 JS。
+- **APScheduler** 每个竞品一个进程内定时任务 → **请用单 worker 运行**。
+- **SQLite**（经 SQLModel）：`competitors / pages / changes / snapshots` 四张表。
+- `app/monitor/` 是零依赖的核心：`sitemap.py`（抓取 + 解析）、`basic.py`（增删改 diff）、
+  `detailed.py`（正文抓取 + 提取）、`diff.py`（逐行 diff）、`favicon.py`（站点图标解析）。
 
 ```
 app/
-├── main.py          # FastAPI app + lifespan (starts scheduler)
-├── web.py           # web routes + form endpoints
-├── service.py       # check orchestration (basic + detailed)
-├── scheduler.py     # APScheduler jobs
-├── models.py        # SQLModel tables
-├── viewmodels.py    # DB rows → template structures
-├── monitor/         # sitemap.py · basic.py · detailed.py · diff.py
-├── templates/       # index.html + partials/drawer.html
-└── static/          # app.css · app.js
+├── main.py          # FastAPI 入口 + lifespan（启动调度器）
+├── web.py           # 页面路由 + 表单/接口端点
+├── service.py       # 巡检编排（基础 + 详细）
+├── scheduler.py     # APScheduler 定时任务
+├── models.py        # SQLModel 表
+├── viewmodels.py    # DB 行 → 模板数据
+├── config.py · db.py · timeutil.py
+├── monitor/         # sitemap.py · basic.py · detailed.py · diff.py · favicon.py
+├── templates/       # index.html + partials/(drawer.html · settings.html)
+└── static/          # app.css · app.js · favicon.svg
 ```
 
-## Security notes
+## 安全说明
 
-- Sitemaps are untrusted input. Parsing currently uses stdlib `ElementTree`; before exposing
-  publicly, switch to `defusedxml` (already in `requirements.txt`) to guard against XXE.
-- The crawler sets a `User-Agent` and timeouts; be a good citizen and use sane intervals.
+- Sitemap 是不可信输入，XML 用 **defusedxml** 解析（防 XXE / 实体展开攻击），并有回归测试覆盖。
+- 抓取时设置了自定义 `User-Agent` 和超时；请做个好公民，用合理的巡检间隔。
+- 站点图标（favicon）由用户浏览器直接向竞品站点请求，并带 `no-referrer`，不经任何第三方。
 
-## License
+## 许可证
 
 MIT
