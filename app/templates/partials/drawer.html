@@ -1,0 +1,42 @@
+<div class="drawer-head">
+  <div class="crumb"><span>{{ site }}</span> · <span class="path">{{ path }}</span></div>
+  <h3><span class="gly {{ gtype }}" style="display:inline-grid">{{ glyph }}</span>{{ title }}</h3>
+</div>
+<div class="drawer-body">
+  <div class="metagrid">
+    {% for k, v in meta %}<div class="mi"><div class="k">{{ k }}</div><div class="v">{{ v }}</div></div>{% endfor %}
+  </div>
+
+  {% if mode == 'suspected' %}
+  <div class="dh">为什么看不到具体改动？ <span class="line"></span><span class="tag susp">基础监控</span></div>
+  <div class="upsell">
+    <div class="pd">基础监控只读取 sitemap，检测到该页 <b>lastmod {{ lastmod }}</b>，说明页面<b>可能有改动</b>，但未抓取正文，<b>无法显示改了什么</b>。</div>
+    <div class="why"><svg class="wic" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="2"/><rect x="0" y="6" width="8" height="1"/></svg>该提示依赖站点诚实填写 lastmod；未提供 lastmod 的站点连「疑似修改」也无法判断。</div>
+    <form method="post" action="/competitors/{{ competitor_id }}/detailed">
+      <input type="hidden" name="on" value="1">
+      <button class="btn btn-primary" type="submit" style="margin-top:13px"><svg class="xic" viewBox="0 0 8 8"><rect x="4" y="0" width="2" height="3"/><rect x="1" y="3" width="5" height="1"/><rect x="2" y="4" width="2" height="3"/></svg> 为该竞品开启详细监控</button>
+    </form>
+  </div>
+
+  {% elif mode == 'diff' %}
+  <div class="dh">逐行对比 <span class="line"></span><span class="tag mod">内容修改</span></div>
+  {% if hunks %}
+  <div class="difffull">
+    {% for r in hunks %}<div class="row {{ r.t }}"><span class="mk">{% if r.t == 'add' %}+{% elif r.t == 'del' %}−{% elif r.t == 'hunk' %}{% else %} {% endif %}</span><span>{{ r.x }}</span></div>{% endfor %}
+  </div>
+  {% else %}<p class="empty-soft">内容已变化，但未生成可读 diff。</p>{% endif %}
+
+  {% elif mode == 'newpage' %}
+  <div class="dh">页面快照 <span class="line"></span><span class="tag add">新增页面</span></div>
+  <div class="newpage"><div class="pt">{{ snapshot.title }}</div><div class="url2">{{ snapshot.url }}</div></div>
+
+  {% elif mode == 'gone' %}
+  <div class="dh">最后已知 <span class="line"></span><span class="tag del">删减页面</span></div>
+  <div class="newpage"><div class="pt">{{ snapshot.title }}</div><div class="url2">{{ snapshot.url }}</div></div>
+  {% endif %}
+
+  <div class="drawer-actions">
+    <a class="btn {{ 'btn-soft' if suspected else 'btn-primary' }}" href="{{ full_url }}" target="_blank" rel="noopener"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="0" width="4" height="1"/><rect x="6" y="0" width="1" height="4"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/></svg> 在浏览器打开</a>
+    <form method="post" action="/changes/{{ change_id }}/read"><button class="btn btn-soft" type="submit"><svg class="xic" viewBox="0 0 8 8"><rect x="1" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/></svg> 标记已读</button></form>
+  </div>
+</div>

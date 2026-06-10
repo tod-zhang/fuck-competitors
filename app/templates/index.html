@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuck Competitors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Caveat:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+
+{% macro eyes() %}
+<svg viewBox="0 0 11 4" aria-label="盯梢的像素眼睛">
+  <g class="eyes">
+    <rect x="1" y="0" width="2" height="1" fill="#F6E9C8"/><rect x="0" y="1" width="4" height="2" fill="#F6E9C8"/><rect x="1" y="3" width="2" height="1" fill="#F6E9C8"/>
+    <rect x="8" y="0" width="2" height="1" fill="#F6E9C8"/><rect x="7" y="1" width="4" height="2" fill="#F6E9C8"/><rect x="8" y="3" width="2" height="1" fill="#F6E9C8"/>
+    <g class="pupils"><rect x="1" y="1" width="2" height="2" fill="#39332B"/><rect x="8" y="1" width="2" height="2" fill="#39332B"/></g>
+  </g>
+</svg>
+{% endmacro %}
+
+{% macro avatar(letter, color, favicon, extra='') %}<span class="monogram no-fav" style="background:{{ color }};{{ extra }}">{% if favicon %}<img class="favicon" src="{{ favicon }}" alt="" referrerpolicy="no-referrer" onload="this.closest('.monogram').classList.remove('no-fav')" onerror="this.remove()">{% endif %}<span class="letter">{{ letter }}</span></span>{% endmacro %}
+
+{% macro render_entry(entry) %}
+<div class="entry has-{{ entry.dominant }}" data-comp="{{ entry.name }}">
+  <div class="entry-head">
+    {{ avatar(entry.monogram, entry.color, entry.favicon, 'width:26px;height:26px;border-radius:8px') }}
+    <span class="name">{{ entry.name }}</span><span class="url">/sitemap.xml</span>
+    <span class="summary-tags">
+      {% if entry.summary.added %}<span class="tag add" data-cat="add">＋{{ entry.summary.added }}</span>{% endif %}
+      {% if entry.summary.removed %}<span class="tag del" data-cat="del">－{{ entry.summary.removed }}</span>{% endif %}
+      {% if entry.summary.modified %}<span class="tag mod" data-cat="mod">±{{ entry.summary.modified }}</span>{% endif %}
+      {% if entry.summary.suspected %}<span class="tag susp" data-cat="mod">± 疑似 {{ entry.summary.suspected }}</span>{% endif %}
+    </span>
+    <span class="time">{{ entry.time }}</span>
+  </div>
+  <div class="changes">
+    {% for r in entry.rows %}
+    {% set cat = 'mod' if r.gtype in ['mod', 'susp'] else r.gtype %}
+    <div class="change clickable{% if r.type == 'removed' %} del{% endif %}" data-cat="{{ cat }}" onclick="openDetail({{ r.id }})">
+      <span class="gly {{ r.gtype }}">{{ r.glyph }}</span>
+      <div><span class="path">{{ r.path }}</span>{% if r.note %} <span class="note">{{ r.note }}</span>{% endif %}</div>
+      <span class="chev">›</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+<body{% if not has_data %} class="first-run"{% endif %}>
+<div class="app">
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark pixel-eyes" title="we're watching">{{ eyes() }}</div>
+      <div><h1>Fuck<br>Competitors</h1></div>
+    </div>
+
+    <nav class="nav">
+      <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="3" height="3"/><rect x="5" y="0" width="3" height="3"/><rect x="0" y="5" width="3" height="3"/><rect x="5" y="5" width="3" height="3"/></svg></span>最近动态</a>
+      <a data-view="timeline"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="1"/><rect x="0" y="3" width="6" height="1"/><rect x="0" y="6" width="7" height="1"/></svg></span>变更日志{% if nav_changes %}<span class="badge hide-empty">{{ nav_changes }}</span>{% endif %}</a>
+      <a data-view="sites"><span class="ic"><svg viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="3" y="6" width="2" height="2"/><rect x="0" y="3" width="2" height="2"/><rect x="6" y="3" width="2" height="2"/><rect x="3" y="3" width="2" height="2"/></svg></span>竞品列表</a>
+    </nav>
+
+    <div class="hide-empty">
+      <div class="nav-label">监控中 · {{ competitors|length }}</div>
+      <div class="sites-list">
+        {% for c in competitors %}
+        <div class="site-row" data-comp="{{ c.name }}" onclick="filterCompetitor(this.dataset.comp)">{{ avatar((c.name[:1] or '?')|upper, c.color, favicons[c.id]) }}{{ c.name }}<span class="dot-status" title="{% if c.status == 'error' %}上次巡检出错{% elif c.last_checked_at %}巡检正常{% else %}等待首次巡检{% endif %}" style="background:{% if c.status == 'error' %}var(--del){% elif c.last_checked_at %}var(--add){% else %}var(--ink-faint){% endif %}"></span></div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="only-empty">
+      <div class="nav-label">监控中 · 0</div>
+      <div class="empty-side">还空空如也～<br>添加第一个竞品<br>开启你的手账 ✦</div>
+    </div>
+
+    <div class="side-foot">
+      <span class="pill hide-empty">● 巡检运行中</span>
+    </div>
+  </aside>
+
+  <!-- ================= Main ================= -->
+  <main class="main">
+
+    <!-- ===== First-run empty state ===== -->
+    <section class="onboarding only-empty">
+      <div class="ob-card">
+        <div class="ob-tape"></div>
+        <div class="ob-eyes pixel-eyes">{{ eyes() }}</div>
+        <h2>开始 <span class="hl">盯死</span> 你的对手</h2>
+        <p class="lead">填入竞品的 sitemap 地址，<b>Fuck Competitors</b> 会定期巡检，把它网站上每一次页面的<b>新增</b>、<b>删减</b>、<b>修改</b>都记成一篇日志——像写观察日记一样，看懂对手的每一步动作。</p>
+        <div class="ob-quick">
+          <input placeholder="https://competitor.com/sitemap.xml" readonly onclick="document.body.classList.remove('first-run');openModal()">
+          <button class="btn btn-primary" onclick="document.body.classList.remove('first-run');openModal()">开始监控 →</button>
+        </div>
+      </div>
+      <div class="ob-features">
+        <div class="ob-feat"><div class="fi" style="background:var(--add-bg);color:var(--add)">＋</div><h4>捕捉新增</h4><p>竞品上线新页面（新品、新案例、新博客）第一时间记录。</p></div>
+        <div class="ob-feat"><div class="fi" style="background:var(--del-bg);color:var(--del)">－</div><h4>追踪删减</h4><p>页面悄悄下线，往往是产品线调整或策略转向的信号。</p></div>
+        <div class="ob-feat"><div class="fi" style="background:var(--mod-bg);color:var(--mod)">±</div><h4>内容变化</h4><p>基础监控提示「疑似修改」；开启详细监控看定价、文案的逐行 diff。</p></div>
+      </div>
+    </section>
+
+    <div class="topbar">
+      <div class="greet">
+        <div class="date">{{ greet_date }}</div>
+        <h2>{% if recent_count %}最近竞品有 <span class="hl">{{ recent_count }} 处</span> 新动静。{% else %}最近暂无新动静，<span class="hl">一切平静</span>。{% endif %}</h2>
+      </div>
+      <div class="top-actions">
+        <div class="search"><svg viewBox="0 0 8 8"><rect x="1" y="0" width="4" height="1"/><rect x="1" y="4" width="4" height="1"/><rect x="0" y="1" width="1" height="3"/><rect x="5" y="1" width="1" height="3"/><rect x="5" y="5" width="2" height="2"/></svg><input placeholder="搜索页面 / 关键词"></div>
+        <button class="btn btn-primary" onclick="openModal()">＋ 添加竞品</button>
+      </div>
+    </div>
+
+    <!-- ===== Overview ===== -->
+    <section class="view show" id="view-overview">
+      <div class="stats">
+        <div class="stat c-add"><div class="tape" style="background:repeating-linear-gradient(45deg,#B7D9B4 0 6px,#D6ECD3 6px 12px)"></div><div class="num">{{ stats.added }}</div><div class="lab">新增页面 <span class="trend" style="background:var(--add-bg);color:var(--add)">近 7 天</span></div></div>
+        <div class="stat c-del"><div class="tape" style="background:repeating-linear-gradient(45deg,#E8BCAE 0 6px,#F3D9CF 6px 12px)"></div><div class="num">{{ stats.removed }}</div><div class="lab">删减页面 <span class="trend" style="background:var(--del-bg);color:var(--del)">近 7 天</span></div></div>
+        <div class="stat c-mod"><div class="tape" style="background:repeating-linear-gradient(45deg,#EBD49E 0 6px,#F4E6C2 6px 12px)"></div><div class="num">{{ stats.modified }}</div><div class="lab">内容修改 <span class="trend" style="background:var(--mod-bg);color:var(--mod)">含疑似</span></div></div>
+        <div class="stat c-site"><div class="tape" style="background:repeating-linear-gradient(45deg,#B9C2DA 0 6px,#D9DEEC 6px 12px)"></div><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend" style="background:var(--accent-bg);color:var(--accent)">{{ stats.pages }} 页</span></div></div>
+      </div>
+
+      <div class="sec-head"><h3>变更日志</h3><span class="ribbon">~ 最近动态 ~</span><span class="line"></span></div>
+      {% for g in overview_groups %}
+      <div class="day-group">
+        <div class="day-tag"><span class="d">{{ g.label }}</span><span class="w">{{ g.weekday }}</span><span class="cnt">{{ g.count }} 处变更</span></div>
+        {% for entry in g.entries %}{{ render_entry(entry) }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-soft" style="padding:18px 0">巡检还没有发现变更——竞品很安静，或者刚添加还在等第一次巡检。</p>
+      {% endfor %}
+    </section>
+
+    <!-- ===== Timeline ===== -->
+    <section class="view" id="view-timeline">
+      <div class="sec-head"><h3>变更日志 · <span id="tlScope">全部</span></h3><span class="ribbon">~ 按时间倒序 ~</span><span class="line"></span></div>
+      <div class="filterbar">
+        <span class="fchip on" data-type="add">＋ 新增</span>
+        <span class="fchip on" data-type="del">－ 删减</span>
+        <span class="fchip on" data-type="mod">± 修改</span>
+      </div>
+      {% for g in timeline_groups %}
+      <div class="day-group">
+        <div class="day-tag"><span class="d">{{ g.label }}</span><span class="w">{{ g.weekday }}</span><span class="cnt">{{ g.count }} 处变更</span></div>
+        {% for entry in g.entries %}{{ render_entry(entry) }}{% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-soft" style="padding:18px 0">还没有任何变更记录。</p>
+      {% endfor %}
+    </section>
+
+    <!-- ===== Sites ===== -->
+    <section class="view" id="view-sites">
+      <div class="sec-head"><h3>竞品列表</h3><span class="ribbon">~ {{ competitors|length }} 本观察册 ~</span><span class="line"></span></div>
+      <div class="grid">
+        {% for s in sites %}
+        <div class="site-card">
+          <div class="top">
+            {{ avatar(s.monogram, s.color, s.favicon) }}
+            <div><div class="nm">{{ s.name }}</div><div class="lk">{{ s.host }}</div></div>
+            <div class="top-right">
+              <span class="freq">{{ s.freq }}</span>
+              <button type="button" class="card-settings" title="设置" onclick="openSettings({{ s.id }})"><svg class="gear" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="1"/><rect x="3" y="7" width="2" height="1"/><rect x="0" y="3" width="1" height="2"/><rect x="7" y="3" width="1" height="2"/><rect x="1" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="2" y="2" width="4" height="4"/><rect x="3" y="3" width="2" height="2" fill="var(--card)"/></svg></button>
+            </div>
+          </div>
+          <div class="meta">
+            <div><div class="k">追踪页面</div><div class="v">{{ s.tracked }}</div></div>
+            <div><div class="k">近 7 天变更</div><div class="v" style="color:var(--accent)">{{ s.week_changes }}</div></div>
+          </div>
+          <form method="post" action="/competitors/{{ s.id }}/detailed" class="card-foot">
+            <span class="lvl {{ 'deep' if s.detailed else 'basic' }}">{{ '详细监控' if s.detailed else '基础监控' }}</span>
+            <span>{{ '抓取全部页面正文、逐行对比' if s.detailed else '仅 sitemap 增删' }}</span>
+            <label class="switch"><input type="checkbox" name="on" {% if s.detailed %}checked{% endif %} onchange="this.form.submit()"><span class="track"></span></label>
+          </form>
+        </div>
+        {% else %}
+        <p class="empty-soft">还没有竞品，点右上角「＋ 添加竞品」。</p>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= Change-detail drawer ================= -->
+<div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div id="drawerContent"></div>
+</aside>
+
+<!-- ================= Add modal ================= -->
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="washi-top"></div>
+    <h3>盯上一个新对手</h3>
+    <p class="sub">填入站点地图地址，我们会定期巡检并记录每一次增删改。</p>
+    <form method="post" action="/competitors">
+      <div class="field"><label>竞品名称</label><input name="name" required placeholder="例如：Linear"></div>
+      <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" required placeholder="https://example.com/sitemap.xml"></div>
+      <div class="field"><label>巡检频率</label>
+        <select name="interval_hours">
+          <option value="6">每 6 小时</option>
+          <option value="12" selected>每 12 小时</option>
+          <option value="24">每天</option>
+          <option value="168">每周</option>
+        </select>
+      </div>
+      <div class="field"><label>监控深度</label>
+        <div class="toggle-card">
+          <div style="flex:1">
+            <div class="t">详细内容监控 <span class="lvl deep" style="margin-left:4px">可选</span></div>
+            <div class="d">基础监控（默认）：检测页面新增 / 删减，并在 sitemap 带 <code style="background:#F3EEE2;padding:0 4px;border-radius:4px">lastmod</code> 时提示「疑似修改」。开启后抓取正文，逐行对比定价、文案等<b>具体</b>改动。可稍后对单个竞品开启。</div>
+          </div>
+          <label class="switch"><input type="checkbox" name="detailed"><span class="track"></span></label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" type="button" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" type="submit">开始监控</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= Settings modal (per competitor, loaded on demand) ================= -->
+<div class="scrim" id="settingsScrim" onclick="if(event.target===this)closeSettings()">
+  <div id="settingsContent"></div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

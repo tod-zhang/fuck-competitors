@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+httpx
+jinja2
+python-multipart
+apscheduler
+pydantic-settings
+defusedxml
+selectolax

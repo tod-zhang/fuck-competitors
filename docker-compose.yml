@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    container_name: fuck-competitors
+    ports:
+      - "8000:8000"
+    volumes:
+      - fc-data:/data
+    environment:
+      - FC_DB_URL=sqlite:////data/app.db
+      # - FC_DEFAULT_INTERVAL_HOURS=12
+      # - FC_REQUEST_TIMEOUT=20
+      # - FC_SNAPSHOT_RETENTION=10
+    restart: unless-stopped
+
+volumes:
+  fc-data:

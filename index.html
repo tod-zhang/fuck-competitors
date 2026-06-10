@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuck Competitors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Caveat:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --dot:#E7DFCE;
+    --card:#FFFDF8;
+    --line:#ECE4D4;
+    --ink:#39332B;
+    --ink-soft:#7C7263;
+    --ink-faint:#A89E8D;
+    --add:#3F7A4F;      --add-bg:#E5F0E5;  --add-tape:#BcdCb8;
+    --del:#B2553F;      --del-bg:#F7E2DB;  --del-tape:#E8C2B5;
+    --mod:#A9772A;      --mod-bg:#F6EBD0;  --mod-tape:#ECD7A6;
+    --accent:#5B6B8C;   --accent-bg:#E6EAF2;
+    --shadow:0 1px 2px rgba(57,51,43,.04), 0 10px 30px -16px rgba(57,51,43,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Noto Sans SC",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:radial-gradient(var(--dot) 1.1px, transparent 1.1px);
+    background-size:26px 26px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    border-right:1px solid var(--line);
+    background:linear-gradient(180deg,#FBF8F1, #F6F1E6);
+    padding:22px 16px;display:flex;flex-direction:column;gap:22px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:2px 6px}
+  .brand .mark{
+    width:42px;height:42px;border-radius:5px;display:grid;place-items:center;overflow:hidden;
+    background:#39332B;
+    box-shadow:3px 3px 0 #C9A24E, 0 0 0 2px #2B2622 inset;
+  }
+  .brand .mark svg{width:27px;height:auto;display:block;shape-rendering:crispEdges}
+  .ob-eyes{width:66px;height:66px;border-radius:10px;display:grid;place-items:center;margin:0 auto 18px;background:#39332B;box-shadow:5px 5px 0 #C9A24E,0 0 0 3px #2B2622 inset;transform:rotate(-3deg)}
+  .ob-eyes svg{width:44px;height:auto;display:block;shape-rendering:crispEdges}
+  @keyframes fc-blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
+  @keyframes fc-scan{0%,100%{transform:translateX(-0.7px)}50%{transform:translateX(0.7px)}}
+  .pixel-eyes .eyes{transform-box:fill-box;transform-origin:center;animation:fc-blink 4.5s infinite}
+  .pixel-eyes .pupils{animation:fc-scan 3.2s ease-in-out infinite}
+  @media (prefers-reduced-motion:reduce){.pixel-eyes .eyes,.pixel-eyes .pupils{animation:none}}
+  .brand h1{font-family:"Press Start 2P",monospace;font-weight:400;font-size:10px;line-height:1.55;color:var(--ink)}
+
+  .nav{display:flex;flex-direction:column;gap:2px}
+  .nav-label{font-size:11px;letter-spacing:1.5px;color:var(--ink-faint);padding:6px 10px;text-transform:uppercase;font-weight:500}
+  .nav a{
+    display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;
+    color:var(--ink-soft);text-decoration:none;font-size:14.5px;font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .nav a .ic{width:18px;display:inline-flex;align-items:center;justify-content:center;opacity:.85}
+  .nav a .ic svg{width:15px;height:15px;fill:currentColor;shape-rendering:crispEdges}
+  .nav a:hover{background:#F0E9DA;color:var(--ink)}
+  .nav a.active{background:#39332B;color:#FBF5E6}
+  .nav a.active .ic{opacity:1}
+  .nav a .badge{margin-left:auto;background:var(--del-bg);color:var(--del);font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px}
+  .nav a.active .badge{background:rgba(255,255,255,.16);color:#FBF5E6}
+
+  .sites-list{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+  .site-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:13.5px;color:var(--ink-soft);transition:background .15s}
+  .site-row:hover{background:#F0E9DA}
+  .dot-status{width:7px;height:7px;border-radius:50%;margin-left:auto}
+  .monogram{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+
+  .side-foot{margin-top:auto;font-size:12px;color:var(--ink-faint);padding:0 8px}
+  .side-foot .pill{display:inline-flex;align-items:center;gap:6px;background:var(--add-bg);color:var(--add);padding:3px 9px;border-radius:20px;font-weight:600;font-size:11.5px}
+
+  /* ---------- Main ---------- */
+  .main{padding:30px 40px 60px;max-width:1040px}
+  .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:26px}
+  .greet .date{font-family:"Caveat",cursive;font-size:17px;color:var(--ink-faint);letter-spacing:.5px}
+  .greet h2{font-family:"Noto Serif SC",serif;font-weight:600;font-size:27px;margin-top:2px}
+  .greet h2 .hl{background:linear-gradient(180deg,transparent 62%, #F6E1A8 62%);padding:0 3px}
+  .top-actions{display:flex;gap:10px;align-items:center}
+  .search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:8px 13px;color:var(--ink-faint);font-size:13.5px;min-width:200px}
+  .search input{border:0;background:transparent;outline:none;font-family:inherit;font-size:13.5px;color:var(--ink);width:100%}
+  .search svg{width:13px;height:13px;fill:var(--ink-faint);shape-rendering:crispEdges;flex-shrink:0}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;padding:9px 16px;border-radius:11px;transition:transform .12s, box-shadow .15s}
+  .btn-primary{background:#39332B;color:#FBF5E6;box-shadow:0 8px 18px -8px rgba(57,51,43,.7)}
+  .btn-primary:hover{transform:translateY(-1px)}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px}
+  .stat{position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px 18px 16px;box-shadow:var(--shadow)}
+  .stat .tape{position:absolute;top:-9px;left:20px;width:64px;height:20px;opacity:.85;transform:rotate(-3deg);border-radius:2px;mix-blend-mode:multiply}
+  .stat .num{font-family:"Noto Serif SC",serif;font-size:34px;font-weight:700;line-height:1}
+  .stat .lab{font-size:13px;color:var(--ink-soft);margin-top:7px;display:flex;align-items:center;gap:6px}
+  .stat .trend{font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:20px}
+  .c-add .num{color:var(--add)} .c-del .num{color:var(--del)} .c-mod .num{color:var(--mod)} .c-site .num{color:var(--accent)}
+
+  /* section heading */
+  .sec-head{display:flex;align-items:center;gap:11px;margin:8px 0 16px}
+  .sec-head h3{font-family:"Noto Serif SC",serif;font-size:18px;font-weight:600}
+  .sec-head .ribbon{font-family:"Caveat",cursive;font-size:15px;color:var(--ink-faint)}
+  .sec-head .line{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 6px, transparent 6px 12px)}
+
+  /* timeline / journal */
+  .day-group{margin-bottom:26px}
+  .day-tag{display:inline-flex;align-items:baseline;gap:9px;margin-bottom:12px}
+  .day-tag .d{font-family:"Noto Serif SC",serif;font-size:15px;font-weight:700}
+  .day-tag .w{font-size:12px;color:var(--ink-faint)}
+  .day-tag .cnt{font-size:11.5px;color:var(--ink-faint);background:#F0E9DA;padding:1px 9px;border-radius:20px}
+
+  .entry{position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px 19px 15px;box-shadow:var(--shadow);margin-bottom:13px}
+  .entry::before{content:"";position:absolute;left:-1px;top:18px;bottom:18px;width:3px;border-radius:3px;background:var(--line)}
+  .entry.has-add::before{background:var(--add)} .entry.has-del::before{background:var(--del)} .entry.has-mod::before{background:var(--mod)}
+  .entry-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+  .entry-head .name{font-weight:700;font-size:15px}
+  .entry-head .url{font-size:12px;color:var(--ink-faint);font-family:"Caveat",cursive;font-size:14px}
+  .entry-head .time{margin-left:auto;font-size:12px;color:var(--ink-faint)}
+  .summary-tags{display:flex;gap:6px}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:7px}
+  .tag.add{background:var(--add-bg);color:var(--add)} .tag.del{background:var(--del-bg);color:var(--del)} .tag.mod{background:var(--mod-bg);color:var(--mod)}
+  .tag.susp{background:transparent;color:var(--mod);border:1px dashed var(--mod);font-weight:600}
+  .gly.susp{background:transparent;color:var(--mod);border:1px dashed var(--mod)}
+
+  .changes{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
+  .change{display:flex;align-items:flex-start;gap:11px;font-size:13.5px}
+  .change .gly{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:13px;font-weight:800;flex-shrink:0;margin-top:1px}
+  .gly.add{background:var(--add-bg);color:var(--add)} .gly.del{background:var(--del-bg);color:var(--del)} .gly.mod{background:var(--mod-bg);color:var(--mod)}
+  .change .path{font-family:"Noto Sans SC",monospace;color:var(--ink);background:#F3EEE2;padding:1px 7px;border-radius:6px;font-size:12.5px}
+  .change .note{color:var(--ink-soft);font-size:12.5px}
+  .change.del .path{text-decoration:line-through;color:var(--ink-faint)}
+
+  /* content diff block */
+  .diff{margin:6px 0 2px 31px;border:1px dashed var(--mod);background:#FCF7EA;border-radius:10px;padding:9px 12px;font-size:12.5px}
+  .diff .dl{display:flex;gap:8px;align-items:baseline;padding:1px 0}
+  .diff .dl .mk{font-weight:800;width:14px;flex-shrink:0}
+  .diff .dl.minus{color:var(--del)} .diff .dl.minus .mk{color:var(--del)}
+  .diff .dl.plus{color:var(--add)} .diff .dl.plus .mk{color:var(--add)}
+  .diff .dl s{opacity:.7}
+  .diff .src{font-size:11px;color:var(--ink-faint);margin-top:5px;font-family:"Caveat",cursive;font-size:13px}
+  .pin{font-size:11px;color:var(--mod);background:var(--mod-bg);padding:1px 8px;border-radius:20px;font-weight:700;display:inline-flex;gap:4px;align-items:center}
+  .xic{width:10px;height:10px;fill:currentColor;shape-rendering:crispEdges;flex-shrink:0}
+  .wic{width:11px;height:11px;fill:var(--mod);shape-rendering:crispEdges;vertical-align:-2px;margin-right:3px}
+
+  /* toggle switch */
+  .switch{position:relative;display:inline-block;width:40px;height:23px;flex-shrink:0}
+  .switch input{display:none}
+  .switch .track{position:absolute;inset:0;background:#E0D8C8;border-radius:20px;transition:.2s;cursor:pointer}
+  .switch .track::before{content:"";position:absolute;width:17px;height:17px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(57,51,43,.3)}
+  .switch input:checked + .track{background:var(--add)}
+  .switch input:checked + .track::before{transform:translateX(17px)}
+  .toggle-card{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:#FBF8F1;border-radius:11px;padding:12px 14px}
+  .toggle-card .t{font-weight:600;font-size:13.5px}
+  .toggle-card .d{font-size:11.5px;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+  .lvl{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px}
+  .lvl.basic{background:#EEE7D7;color:var(--ink-soft)}
+  .lvl.deep{background:var(--add-bg);color:var(--add)}
+
+  /* competitors grid */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .site-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow)}
+  .site-card .top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .site-card .monogram{width:40px;height:40px;border-radius:11px;font-size:18px}
+  .site-card .nm{font-weight:700;font-size:16px}
+  .site-card .lk{font-size:12px;color:var(--ink-faint);font-family:"Caveat",cursive;font-size:14px}
+  .site-card .meta{display:flex;gap:18px;border-top:1px dashed var(--line);padding-top:13px;margin-top:4px}
+  .site-card .meta .k{font-size:11px;color:var(--ink-faint)}
+  .site-card .meta .v{font-size:16px;font-weight:700;font-family:"Noto Serif SC",serif}
+  .spark{display:flex;align-items:flex-end;gap:3px;height:30px;margin-left:auto}
+  .spark span{width:5px;border-radius:2px;background:var(--accent-bg)}
+  .freq{margin-left:auto;font-size:11.5px;color:var(--add);background:var(--add-bg);padding:2px 9px;border-radius:20px;font-weight:600}
+  .card-foot{display:flex;align-items:center;gap:8px;border-top:1px dashed var(--line);margin-top:13px;padding-top:11px;font-size:12.5px;color:var(--ink-soft)}
+  .card-foot .switch{margin-left:auto}
+
+  .empty-soft{color:var(--ink-faint);font-size:13.5px;font-family:"Caveat",cursive;font-size:15px}
+
+  /* modal */
+  .scrim{position:fixed;inset:0;background:rgba(57,51,43,.34);backdrop-filter:blur(2px);display:none;place-items:center;z-index:50}
+  .scrim.open{display:grid}
+  .modal{width:460px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 30px 70px -20px rgba(57,51,43,.5);position:relative}
+  .modal .washi-top{position:absolute;top:-12px;left:50%;transform:translateX(-50%) rotate(-2deg);width:120px;height:26px;background:repeating-linear-gradient(45deg,#EAD7A6 0 7px,#F2E6C6 7px 14px);opacity:.9;border-radius:3px}
+  .modal h3{font-family:"Noto Serif SC",serif;font-size:20px;margin-bottom:4px}
+  .modal p.sub{color:var(--ink-soft);font-size:13px;margin-bottom:18px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  .field input,.field select{width:100%;border:1px solid var(--line);background:#FBF8F1;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);outline:none}
+  .field input:focus{border-color:var(--accent)}
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:12.5px;border:1px solid var(--line);border-radius:20px;padding:5px 13px;cursor:pointer;color:var(--ink-soft);background:#FBF8F1}
+  .chip.on{background:#39332B;color:#FBF5E6;border-color:#39332B}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+  .btn-ghost{background:transparent;color:var(--ink-soft)}
+  .view{display:none}.view.show{display:block}
+
+  /* clickable affordance on change rows / entries */
+  .change.clickable{cursor:pointer;border-radius:8px;margin:-2px -6px;padding:2px 6px;transition:background .14s}
+  .change.clickable:hover{background:#F6F1E4}
+  .change .chev{margin-left:auto;color:var(--ink-faint);opacity:0;transition:opacity .14s;align-self:center}
+  .change.clickable:hover .chev{opacity:1}
+
+  /* timeline filter bar */
+  .filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 18px}
+  .filterbar .fchip{font-size:12.5px;border:1px solid var(--line);border-radius:20px;padding:4px 12px;cursor:pointer;color:var(--ink-soft);background:var(--card);display:inline-flex;align-items:center;gap:6px;transition:.14s}
+  .filterbar .fchip:hover{border-color:var(--ink-faint)}
+  .filterbar .fchip.on{background:#39332B;color:#FBF5E6;border-color:#39332B}
+  .filterbar .sep{width:1px;height:18px;background:var(--line);margin:0 2px}
+  .filterbar .mono-sm{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff}
+
+  /* change-detail drawer */
+  .drawer-scrim{position:fixed;inset:0;background:rgba(57,51,43,.30);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
+  .drawer-scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:452px;max-width:92vw;background:var(--card);border-left:1px solid var(--line);box-shadow:-30px 0 70px -30px rgba(57,51,43,.45);transform:translateX(102%);transition:transform .32s cubic-bezier(.4,0,.2,1);z-index:61;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer-head{padding:20px 24px 16px;border-bottom:1px solid var(--line);position:relative}
+  .drawer-head .crumb{font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin-bottom:11px}
+  .drawer-head .crumb .path{font-family:monospace;background:#F3EEE2;padding:1px 7px;border-radius:6px;font-size:12px;color:var(--ink)}
+  .drawer-head h3{font-family:"Noto Serif SC",serif;font-size:19px;font-weight:600;display:flex;align-items:center;gap:9px}
+  .drawer-close{position:absolute;top:18px;right:18px;width:30px;height:30px;border:1px solid var(--line);background:var(--card);border-radius:9px;cursor:pointer;color:var(--ink-soft);font-size:15px;display:grid;place-items:center}
+  .drawer-close:hover{background:#F0E9DA}
+  .drawer-body{padding:18px 24px 24px;overflow-y:auto;flex:1}
+  .metagrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:20px}
+  .metagrid .mi{border:1px solid var(--line);background:#FBF8F1;border-radius:10px;padding:9px 12px}
+  .metagrid .mi .k{font-size:11px;color:var(--ink-faint);margin-bottom:3px}
+  .metagrid .mi .v{font-size:13px;font-weight:600}
+  .drawer-body .dh{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.5px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .drawer-body .dh .line{flex:1;height:1px;background:var(--line)}
+  .difffull{border:1px solid var(--line);border-radius:11px;overflow:hidden;font-family:monospace;font-size:12.5px}
+  .difffull .row{display:flex;gap:9px;padding:4px 12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .difffull .row .mk{width:12px;flex-shrink:0;font-weight:800;text-align:center}
+  .difffull .row.ctx{color:var(--ink-soft);background:var(--card)}
+  .difffull .row.del{color:var(--del);background:var(--del-bg)} .difffull .row.del .mk{color:var(--del)}
+  .difffull .row.add{color:var(--add);background:var(--add-bg)} .difffull .row.add .mk{color:var(--add)}
+  .difffull .row.hunk{color:var(--ink-faint);background:#F3EEE2;font-size:11px}
+  .drawer-actions{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+  .drawer-actions .btn{font-size:13px;padding:8px 13px}
+  .drawer-actions .btn-soft{background:#F3EEE2;color:var(--ink)}
+  .newpage{border:1px solid var(--line);border-radius:11px;padding:14px;background:#FBF8F1}
+  .newpage .pt{font-weight:700;font-size:14px;margin-bottom:5px}
+  .newpage .pd{font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+  .newpage .url2{font-size:11.5px;color:var(--accent);margin-top:9px;font-family:monospace}
+  .upsell{border:1px dashed var(--mod);background:#FCF7EA;border-radius:11px;padding:15px}
+  .upsell .pd{font-size:13px;color:var(--ink);line-height:1.65}
+  .upsell .why{font-size:12px;color:var(--ink-soft);margin-top:8px;line-height:1.6}
+
+  /* first-run empty state */
+  .only-empty{display:none}
+  body.first-run .only-empty{display:block}
+  body.first-run .hide-empty{display:none!important}
+  body.first-run .topbar{display:none}
+  body.first-run .view{display:none!important}
+  .onboarding{max-width:680px;margin:0 auto;padding-top:30px}
+  .ob-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:42px 44px 34px;box-shadow:var(--shadow);text-align:center}
+  .ob-card .ob-tape{position:absolute;top:-13px;left:50%;transform:translateX(-50%) rotate(-2deg);width:132px;height:28px;background:repeating-linear-gradient(45deg,#EAD7A6 0 7px,#F2E6C6 7px 14px);opacity:.9;border-radius:3px}
+  .ob-card h2{font-family:"Noto Serif SC",serif;font-size:26px;margin-bottom:11px}
+  .ob-card h2 .hl{background:linear-gradient(180deg,transparent 60%, #F6E1A8 60%);padding:0 5px}
+  .ob-card .lead{color:var(--ink-soft);font-size:14px;line-height:1.75;max-width:490px;margin:0 auto 24px}
+  .ob-quick{display:flex;gap:10px;max-width:470px;margin:0 auto}
+  .ob-quick input{flex:1;border:1px solid var(--line);background:#FBF8F1;border-radius:11px;padding:11px 14px;font-family:inherit;font-size:14px;color:var(--ink);outline:none}
+  .ob-quick input:focus{border-color:var(--accent)}
+  .ob-quick .btn{white-space:nowrap}
+  .ob-features{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:16px}
+  .ob-feat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 15px;text-align:left;box-shadow:var(--shadow)}
+  .ob-feat .fi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:10px}
+  .ob-feat h4{font-size:13.5px;margin-bottom:5px}
+  .ob-feat p{font-size:12px;color:var(--ink-soft);line-height:1.6}
+  .empty-side{font-family:"Caveat",cursive;font-size:14px;color:var(--ink-faint);border:1px dashed var(--line);border-radius:10px;padding:16px 12px;text-align:center;line-height:1.7}
+  .demo-toggle{margin-top:12px;font-size:11px;color:var(--ink-faint);cursor:pointer;border:1px dashed var(--line);border-radius:8px;padding:6px 8px;text-align:center;transition:background .14s}
+  .demo-toggle:hover{background:#F0E9DA;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark pixel-eyes" title="we're watching">
+        <svg viewBox="0 0 11 4" aria-label="两只盯梢的像素眼睛">
+          <g class="eyes">
+            <!-- left eye sclera (rounded pixel) -->
+            <rect x="1" y="0" width="2" height="1" fill="#F6E9C8"/>
+            <rect x="0" y="1" width="4" height="2" fill="#F6E9C8"/>
+            <rect x="1" y="3" width="2" height="1" fill="#F6E9C8"/>
+            <!-- right eye sclera -->
+            <rect x="8" y="0" width="2" height="1" fill="#F6E9C8"/>
+            <rect x="7" y="1" width="4" height="2" fill="#F6E9C8"/>
+            <rect x="8" y="3" width="2" height="1" fill="#F6E9C8"/>
+            <!-- pupils (scan) -->
+            <g class="pupils">
+              <rect x="1" y="1" width="2" height="2" fill="#39332B"/>
+              <rect x="8" y="1" width="2" height="2" fill="#39332B"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <h1>Fuck<br>Competitors</h1>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="3" height="3"/><rect x="5" y="0" width="3" height="3"/><rect x="0" y="5" width="3" height="3"/><rect x="5" y="5" width="3" height="3"/></svg></span>今日概览</a>
+      <a data-view="timeline"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="1"/><rect x="0" y="3" width="6" height="1"/><rect x="0" y="6" width="7" height="1"/></svg></span>变更日志<span class="badge hide-empty">9</span></a>
+      <a data-view="sites"><span class="ic"><svg viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="3" y="6" width="2" height="2"/><rect x="0" y="3" width="2" height="2"/><rect x="6" y="3" width="2" height="2"/><rect x="3" y="3" width="2" height="2"/></svg></span>竞品列表</a>
+      <a data-view="watch"><span class="ic"><svg viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="8"/><rect x="0" y="3" width="8" height="2"/><rect x="2" y="2" width="4" height="4"/></svg></span>重点监控页<span class="badge hide-empty" style="background:var(--mod-bg);color:var(--mod)">3</span></a>
+    </nav>
+
+    <div class="hide-empty">
+      <div class="nav-label">监控中 · 5</div>
+      <div class="sites-list">
+        <div class="site-row"><span class="monogram" style="background:#111">▲</span>Vercel<span class="dot-status" style="background:var(--add)"></span></div>
+        <div class="site-row"><span class="monogram" style="background:#5E6AD2">L</span>Linear<span class="dot-status" style="background:var(--add)"></span></div>
+        <div class="site-row"><span class="monogram" style="background:#635BFF">S</span>Stripe<span class="dot-status" style="background:var(--del)"></span></div>
+        <div class="site-row"><span class="monogram" style="background:#0A0A0A">N</span>Notion<span class="dot-status" style="background:var(--ink-faint)"></span></div>
+        <div class="site-row"><span class="monogram" style="background:#F24E1E">F</span>Figma<span class="dot-status" style="background:var(--mod)"></span></div>
+      </div>
+    </div>
+    <div class="only-empty">
+      <div class="nav-label">监控中 · 0</div>
+      <div class="empty-side">还空空如也～<br>添加第一个竞品<br>开启你的手账 ✦</div>
+    </div>
+
+    <div class="side-foot">
+      <span class="pill hide-empty">● 巡检正常</span>
+      <div class="hide-empty" style="margin-top:8px">下次巡检 · 14:00</div>
+      <div class="demo-toggle" onclick="document.body.classList.toggle('first-run')">预览：空状态 / 示例数据</div>
+    </div>
+  </aside>
+
+  <!-- ================= Main ================= -->
+  <main class="main">
+
+    <!-- ===== First-run empty state ===== -->
+    <section class="onboarding only-empty">
+      <div class="ob-card">
+        <div class="ob-tape"></div>
+        <div class="ob-eyes pixel-eyes">
+          <svg viewBox="0 0 11 4" aria-label="盯梢的像素眼睛">
+            <g class="eyes">
+              <rect x="1" y="0" width="2" height="1" fill="#F6E9C8"/>
+              <rect x="0" y="1" width="4" height="2" fill="#F6E9C8"/>
+              <rect x="1" y="3" width="2" height="1" fill="#F6E9C8"/>
+              <rect x="8" y="0" width="2" height="1" fill="#F6E9C8"/>
+              <rect x="7" y="1" width="4" height="2" fill="#F6E9C8"/>
+              <rect x="8" y="3" width="2" height="1" fill="#F6E9C8"/>
+              <g class="pupils">
+                <rect x="1" y="1" width="2" height="2" fill="#39332B"/>
+                <rect x="8" y="1" width="2" height="2" fill="#39332B"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <h2>开始 <span class="hl">盯死</span> 你的对手</h2>
+        <p class="lead">填入竞品的 sitemap 地址，<b>Fuck Competitors</b> 会定期巡检，把它网站上每一次页面的<b>新增</b>、<b>删减</b>、<b>修改</b>都记成一篇日志——像写观察日记一样，看懂对手的每一步动作。</p>
+        <div class="ob-quick">
+          <input placeholder="https://competitor.com/sitemap.xml">
+          <button class="btn btn-primary" onclick="document.body.classList.remove('first-run');openModal()">开始监控 →</button>
+        </div>
+      </div>
+      <div class="ob-features">
+        <div class="ob-feat">
+          <div class="fi" style="background:var(--add-bg);color:var(--add)">＋</div>
+          <h4>捕捉新增</h4>
+          <p>竞品上线新页面（新品、新案例、新博客）第一时间记录。</p>
+        </div>
+        <div class="ob-feat">
+          <div class="fi" style="background:var(--del-bg);color:var(--del)">－</div>
+          <h4>追踪删减</h4>
+          <p>页面悄悄下线，往往是产品线调整或策略转向的信号。</p>
+        </div>
+        <div class="ob-feat">
+          <div class="fi" style="background:var(--mod-bg);color:var(--mod)">±</div>
+          <h4>内容变化</h4>
+          <p>基础监控提示「疑似修改」；开启详细监控看定价、文案的逐行 diff。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="topbar">
+      <div class="greet">
+        <div class="date">2026 年 6 月 9 日 · 星期一</div>
+        <h2>早上好，Todd。昨夜竞品有 <span class="hl">9 处</span> 新动静。</h2>
+      </div>
+      <div class="top-actions">
+        <div class="search"><svg viewBox="0 0 8 8"><rect x="1" y="0" width="4" height="1"/><rect x="1" y="4" width="4" height="1"/><rect x="0" y="1" width="1" height="3"/><rect x="5" y="1" width="1" height="3"/><rect x="5" y="5" width="2" height="2"/></svg><input placeholder="搜索页面 / 关键词"></div>
+        <button class="btn btn-primary" onclick="openModal()">＋ 添加竞品</button>
+      </div>
+    </div>
+
+    <!-- ===== Overview view ===== -->
+    <section class="view show" id="view-overview">
+      <div class="stats">
+        <div class="stat c-add">
+          <div class="tape" style="background:repeating-linear-gradient(45deg,#B7D9B4 0 6px,#D6ECD3 6px 12px)"></div>
+          <div class="num">18</div>
+          <div class="lab">新增页面 <span class="trend" style="background:var(--add-bg);color:var(--add)">↑ 本周</span></div>
+        </div>
+        <div class="stat c-del">
+          <div class="tape" style="background:repeating-linear-gradient(45deg,#E8BCAE 0 6px,#F3D9CF 6px 12px)"></div>
+          <div class="num">6</div>
+          <div class="lab">删减页面 <span class="trend" style="background:var(--del-bg);color:var(--del)">↓ 本周</span></div>
+        </div>
+        <div class="stat c-mod">
+          <div class="tape" style="background:repeating-linear-gradient(45deg,#EBD49E 0 6px,#F4E6C2 6px 12px)"></div>
+          <div class="num">18</div>
+          <div class="lab">内容修改 <span class="trend" style="background:var(--mod-bg);color:var(--mod)">● 含定价</span></div>
+        </div>
+        <div class="stat c-site">
+          <div class="tape" style="background:repeating-linear-gradient(45deg,#B9C2DA 0 6px,#D9DEEC 6px 12px)"></div>
+          <div class="num">5</div>
+          <div class="lab">监控站点 <span class="trend" style="background:var(--accent-bg);color:var(--accent)">2,140 页</span></div>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <h3>变更日志</h3><span class="ribbon">~ 最近动态 ~</span><span class="line"></span>
+      </div>
+
+      <!-- Today -->
+      <div class="day-group">
+        <div class="day-tag"><span class="d">今天</span><span class="w">6 月 9 日 星期一</span><span class="cnt">4 处变更</span></div>
+
+        <div class="entry has-add">
+          <div class="entry-head">
+            <span class="monogram" style="background:#111;width:26px;height:26px;border-radius:8px">▲</span>
+            <span class="name">Vercel</span><span class="url">/sitemap.xml</span>
+            <span class="summary-tags"><span class="tag add">＋3</span><span class="tag mod">±1</span></span>
+            <span class="time">02:14</span>
+          </div>
+          <div class="changes">
+            <div class="change clickable" onclick="openDetail('vercel-add')"><span class="gly add">＋</span><div><span class="path">/blog/ship-ai-agents-faster</span> <span class="note">新博客 · AI Agents</span></div><span class="chev">›</span></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/customers/openai</span> <span class="note">新客户案例</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/templates/ai-chatbot</span></div></div>
+            <div class="change mod clickable" onclick="openDetail('vercel-pricing')"><span class="gly mod">±</span><div><span class="path">/pricing</span> <span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 重点监控页</span> <span class="note">正文内容变化</span>
+              <div class="diff">
+                <div class="dl minus"><span class="mk">−</span><span>Pro 套餐 <s>$20 / 每位成员 / 月</s></span></div>
+                <div class="dl plus"><span class="mk">+</span><span>Pro 套餐 <b>$25 / 每位成员 / 月</b></span></div>
+                <div class="dl plus"><span class="mk">+</span><span>新增 CTA 按钮「联系销售 · 企业版」</span></div>
+                <div class="src">对比自 6/8 02:00 抓取的快照 · 命中关键词「价格」</div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+
+        <div class="entry has-del">
+          <div class="entry-head">
+            <span class="monogram" style="background:#635BFF;width:26px;height:26px;border-radius:8px">S</span>
+            <span class="name">Stripe</span><span class="url">/sitemap.xml</span>
+            <span class="summary-tags"><span class="tag del">－1</span></span>
+            <span class="time">01:40</span>
+          </div>
+          <div class="changes">
+            <div class="change del clickable" onclick="openDetail('stripe-del')"><span class="gly del">－</span><div><span class="path">/radar/legacy-rules</span> <span class="note">页面下线，疑似产品停更</span></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yesterday -->
+      <div class="day-group">
+        <div class="day-tag"><span class="d">昨天</span><span class="w">6 月 8 日 星期日</span><span class="cnt">5 处变更</span></div>
+
+        <div class="entry has-add">
+          <div class="entry-head">
+            <span class="monogram" style="background:#5E6AD2;width:26px;height:26px;border-radius:8px">L</span>
+            <span class="name">Linear</span><span class="url">/sitemap.xml</span>
+            <span class="summary-tags"><span class="tag add">＋2</span></span>
+            <span class="time">22:03</span>
+          </div>
+          <div class="changes">
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/changelog/2026-cycles</span> <span class="note">发布周期更新</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/integrations/slack-v2</span></div></div>
+          </div>
+        </div>
+
+        <div class="entry has-mod">
+          <div class="entry-head">
+            <span class="monogram" style="background:#F24E1E;width:26px;height:26px;border-radius:8px">F</span>
+            <span class="name">Figma</span><span class="url">/sitemap.xml</span>
+            <span class="summary-tags"><span class="tag mod">±2</span><span class="tag add">＋1</span></span>
+            <span class="time">19:27</span>
+          </div>
+          <div class="changes">
+            <div class="change mod"><span class="gly mod">±</span><div><span class="path">/ai</span> <span class="note">首屏文案改版，强调「Figma Make」</span></div></div>
+            <div class="change mod"><span class="gly mod">±</span><div><span class="path">/pricing</span> <span class="note">新增席位说明</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/blog/config-2026-recap</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Timeline view ===== -->
+    <section class="view" id="view-timeline">
+      <div class="sec-head"><h3>变更日志 · 全部</h3><span class="ribbon">~ 按时间倒序 ~</span><span class="line"></span></div>
+      <div class="filterbar">
+        <span class="fchip on" data-solo>全部竞品</span>
+        <span class="fchip" data-solo><span class="mono-sm" style="background:#111">▲</span>Vercel</span>
+        <span class="fchip" data-solo><span class="mono-sm" style="background:#5E6AD2">L</span>Linear</span>
+        <span class="fchip" data-solo><span class="mono-sm" style="background:#635BFF">S</span>Stripe</span>
+        <span class="fchip" data-solo><span class="mono-sm" style="background:#0A0A0A">N</span>Notion</span>
+        <span class="fchip" data-solo><span class="mono-sm" style="background:#F24E1E">F</span>Figma</span>
+        <span class="sep"></span>
+        <span class="fchip on" style="color:var(--add)">＋ 新增</span>
+        <span class="fchip on" style="color:var(--del)">－ 删减</span>
+        <span class="fchip on" style="color:var(--mod)">± 修改</span>
+      </div>
+
+      <div class="day-group">
+        <div class="day-tag"><span class="d">今天</span><span class="w">6 月 9 日 星期一</span><span class="cnt">4 处变更</span></div>
+        <div class="entry has-mod">
+          <div class="entry-head"><span class="monogram" style="background:#111;width:26px;height:26px;border-radius:8px">▲</span><span class="name">Vercel</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="tag add">＋3</span><span class="tag mod">±1</span></span><span class="time">02:14</span></div>
+          <div class="changes">
+            <div class="change clickable" onclick="openDetail('vercel-add')"><span class="gly add">＋</span><div><span class="path">/blog/ship-ai-agents-faster</span> <span class="note">新博客 · AI Agents</span></div><span class="chev">›</span></div>
+            <div class="change mod clickable" onclick="openDetail('vercel-pricing')"><span class="gly mod">±</span><div><span class="path">/pricing</span> <span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg></span> <span class="note">Pro $20→$25</span></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div class="entry has-del">
+          <div class="entry-head"><span class="monogram" style="background:#635BFF;width:26px;height:26px;border-radius:8px">S</span><span class="name">Stripe</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="tag del">－1</span></span><span class="time">01:40</span></div>
+          <div class="changes">
+            <div class="change del clickable" onclick="openDetail('stripe-del')"><span class="gly del">－</span><div><span class="path">/radar/legacy-rules</span> <span class="note">页面下线</span></div><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div class="entry has-mod">
+          <div class="entry-head"><span class="monogram" style="background:#0A0A0A;width:26px;height:26px;border-radius:8px">N</span><span class="name">Notion</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="lvl basic">基础监控</span><span class="tag susp">± 疑似 1</span></span><span class="time">11:20</span></div>
+          <div class="changes">
+            <div class="change clickable" onclick="openDetail('notion-lastmod')"><span class="gly susp">±</span><div><span class="path">/pricing</span> <span class="note">lastmod 06-05 → 06-09，可能已修改（未抓正文）</span></div><span class="chev">›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-tag"><span class="d">昨天</span><span class="w">6 月 8 日 星期日</span><span class="cnt">5 处变更</span></div>
+        <div class="entry has-mod">
+          <div class="entry-head"><span class="monogram" style="background:#F24E1E;width:26px;height:26px;border-radius:8px">F</span><span class="name">Figma</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="tag mod">±2</span><span class="tag add">＋1</span></span><span class="time">19:27</span></div>
+          <div class="changes">
+            <div class="change mod clickable" onclick="openDetail('figma-hero')"><span class="gly mod">±</span><div><span class="path">/</span> <span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg></span> <span class="note">首屏定位转向 AI</span></div><span class="chev">›</span></div>
+            <div class="change mod"><span class="gly mod">±</span><div><span class="path">/pricing</span> <span class="note">新增席位说明</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/blog/config-2026-recap</span></div></div>
+          </div>
+        </div>
+        <div class="entry has-add">
+          <div class="entry-head"><span class="monogram" style="background:#5E6AD2;width:26px;height:26px;border-radius:8px">L</span><span class="name">Linear</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="tag add">＋2</span></span><span class="time">22:03</span></div>
+          <div class="changes">
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/changelog/2026-cycles</span> <span class="note">发布周期更新</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/integrations/slack-v2</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-group">
+        <div class="day-tag"><span class="d">6 月 7 日</span><span class="w">星期六</span><span class="cnt">4 处变更</span></div>
+        <div class="entry has-add">
+          <div class="entry-head"><span class="monogram" style="background:#0A0A0A;width:26px;height:26px;border-radius:8px">N</span><span class="name">Notion</span><span class="url">/sitemap.xml</span><span class="summary-tags"><span class="tag add">＋4</span></span><span class="time">11:20</span></div>
+          <div class="changes">
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/product/notion-mail</span> <span class="note">新产品线上线</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/help/notion-mail-guide</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/templates/email-workflows</span></div></div>
+            <div class="change"><span class="gly add">＋</span><div><span class="path">/blog/introducing-notion-mail</span></div></div>
+          </div>
+        </div>
+        <p class="empty-soft" style="text-align:center;padding:18px">— 加载更早的手账页 —</p>
+      </div>
+    </section>
+
+    <!-- ===== Sites view ===== -->
+    <section class="view" id="view-sites">
+      <div class="sec-head"><h3>竞品列表</h3><span class="ribbon">~ 5 本观察册 ~</span><span class="line"></span></div>
+      <div class="grid">
+        <div class="site-card">
+          <div class="top"><span class="monogram" style="background:#111">▲</span><div><div class="nm">Vercel</div><div class="lk">vercel.com/sitemap.xml</div></div><span class="freq">每 6 小时</span></div>
+          <div class="meta"><div><div class="k">追踪页面</div><div class="v">412</div></div><div><div class="k">本周变更</div><div class="v" style="color:var(--add)">+12</div></div><div class="spark"><span style="height:40%"></span><span style="height:60%"></span><span style="height:30%"></span><span style="height:90%;background:var(--accent)"></span><span style="height:55%"></span><span style="height:70%"></span></div></div>
+          <div class="card-foot"><span class="lvl deep">详细监控</span><span>钉选 2 页逐字对比</span><label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+        </div>
+        <div class="site-card">
+          <div class="top"><span class="monogram" style="background:#5E6AD2">L</span><div><div class="nm">Linear</div><div class="lk">linear.app/sitemap.xml</div></div><span class="freq">每 12 小时</span></div>
+          <div class="meta"><div><div class="k">追踪页面</div><div class="v">188</div></div><div><div class="k">本周变更</div><div class="v" style="color:var(--add)">+5</div></div><div class="spark"><span style="height:30%"></span><span style="height:30%"></span><span style="height:50%"></span><span style="height:40%"></span><span style="height:80%;background:var(--accent)"></span><span style="height:35%"></span></div></div>
+          <div class="card-foot"><span class="lvl basic">基础监控</span><span>仅 sitemap 增删</span><label class="switch"><input type="checkbox"><span class="track"></span></label></div>
+        </div>
+        <div class="site-card">
+          <div class="top"><span class="monogram" style="background:#635BFF">S</span><div><div class="nm">Stripe</div><div class="lk">stripe.com/sitemap.xml</div></div><span class="freq">每 6 小时</span></div>
+          <div class="meta"><div><div class="k">追踪页面</div><div class="v">934</div></div><div><div class="k">本周变更</div><div class="v" style="color:var(--del)">−3</div></div><div class="spark"><span style="height:60%"></span><span style="height:45%"></span><span style="height:70%"></span><span style="height:30%"></span><span style="height:20%;background:var(--del)"></span><span style="height:40%"></span></div></div>
+          <div class="card-foot"><span class="lvl deep">详细监控</span><span>钉选 1 页逐字对比</span><label class="switch"><input type="checkbox" checked><span class="track"></span></label></div>
+        </div>
+        <div class="site-card">
+          <div class="top"><span class="monogram" style="background:#0A0A0A">N</span><div><div class="nm">Notion</div><div class="lk">notion.so/sitemap.xml</div></div><span class="freq">每天</span></div>
+          <div class="meta"><div><div class="k">追踪页面</div><div class="v">606</div></div><div><div class="k">本周变更</div><div class="v" style="color:var(--add)">+8</div></div><div class="spark"><span style="height:40%"></span><span style="height:50%"></span><span style="height:55%"></span><span style="height:60%"></span><span style="height:75%;background:var(--accent)"></span><span style="height:50%"></span></div></div>
+          <div class="card-foot"><span class="lvl basic">基础监控</span><span>仅 sitemap 增删</span><label class="switch"><input type="checkbox"><span class="track"></span></label></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Watch pages view ===== -->
+    <section class="view" id="view-watch">
+      <div class="sec-head"><h3>重点监控页</h3><span class="ribbon">~ 钉选的高价值页面，逐字对比 ~</span><span class="line"></span></div>
+      <p class="empty-soft" style="margin:-6px 0 16px">Sitemap 只能看出页面增删；钉选的页面会抓取正文做内容 diff —— 定价、定位、客户案例的每一次改动都不放过。</p>
+
+      <div class="entry has-mod">
+        <div class="entry-head">
+          <span class="monogram" style="background:#111;width:26px;height:26px;border-radius:8px">▲</span>
+          <span class="name">Vercel · 定价页</span><span class="url">/pricing</span>
+          <span class="summary-tags"><span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 已钉选</span><span class="tag mod">本周 2 改</span></span>
+          <span class="time">6/9 02:14</span>
+        </div>
+        <div class="changes">
+          <div class="change mod clickable" onclick="openDetail('vercel-pricing')"><span class="gly mod">±</span><div><span class="note">Pro 套餐价格上调</span>
+            <div class="diff">
+              <div class="dl minus"><span class="mk">−</span><span>Pro 套餐 <s>$20 / 每位成员 / 月</s></span></div>
+              <div class="dl plus"><span class="mk">+</span><span>Pro 套餐 <b>$25 / 每位成员 / 月</b></span></div>
+              <div class="dl plus"><span class="mk">+</span><span>新增 CTA「联系销售 · 企业版」</span></div>
+            </div></div></div>
+        </div>
+      </div>
+
+      <div class="entry has-mod">
+        <div class="entry-head">
+          <span class="monogram" style="background:#F24E1E;width:26px;height:26px;border-radius:8px">F</span>
+          <span class="name">Figma · 首页定位</span><span class="url">/</span>
+          <span class="summary-tags"><span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 已钉选</span><span class="tag mod">本周 1 改</span></span>
+          <span class="time">6/8 19:27</span>
+        </div>
+        <div class="changes">
+          <div class="change mod clickable" onclick="openDetail('figma-hero')"><span class="gly mod">±</span><div><span class="note">首屏主标语改版</span>
+            <div class="diff">
+              <div class="dl minus"><span class="mk">−</span><span><s>Nothing great is made alone</s></span></div>
+              <div class="dl plus"><span class="mk">+</span><span><b>Design and build, powered by AI</b></span></div>
+              <div class="src">定位明显转向 AI —— 值得跟进</div>
+            </div></div></div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="entry-head">
+          <span class="monogram" style="background:#635BFF;width:26px;height:26px;border-radius:8px">S</span>
+          <span class="name">Stripe · 客户案例</span><span class="url">/customers</span>
+          <span class="summary-tags"><span class="pin"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 已钉选</span><span class="tag" style="background:#F0E9DA;color:var(--ink-soft)">本周无变化</span></span>
+          <span class="time">6/9 01:40</span>
+        </div>
+      </div>
+
+      <button class="btn" style="background:#F3EEE2;color:var(--ink-soft);margin-top:6px">＋ 钉选新的页面到重点监控</button>
+    </section>
+  </main>
+</div>
+
+<!-- ================= Change-detail drawer ================= -->
+<div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    <div class="crumb"><span id="dCrumbSite"></span> · <span class="path" id="dCrumbPath"></span></div>
+    <h3><span id="dTypeGly"></span><span id="dTitle"></span></h3>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<!-- ================= Add modal ================= -->
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="washi-top"></div>
+    <h3>盯上一个新对手</h3>
+    <p class="sub">填入站点地图地址，我们会定期巡检并记录每一次增删改。</p>
+    <div class="field"><label>竞品名称</label><input placeholder="例如：Linear"></div>
+    <div class="field"><label>Sitemap 地址</label><input placeholder="https://example.com/sitemap.xml"></div>
+    <div class="field"><label>巡检频率</label>
+      <div class="chip-row"><span class="chip">每 6 小时</span><span class="chip on">每 12 小时</span><span class="chip">每天</span><span class="chip">每周</span></div>
+    </div>
+    <div class="field"><label>关注变更类型</label>
+      <div class="chip-row"><span class="chip on">＋ 新增</span><span class="chip on">－ 删减</span><span class="chip on">± 修改</span></div>
+    </div>
+    <div class="field"><label>监控深度</label>
+      <div class="toggle-card">
+        <div style="flex:1">
+          <div class="t">详细内容监控 <span class="lvl deep" style="margin-left:4px">可选</span></div>
+          <div class="d">基础监控（默认）：检测页面新增 / 删减，并在 sitemap 带 <code style="background:#F3EEE2;padding:0 4px;border-radius:4px">lastmod</code> 时提示「疑似修改」——但看不到改了什么。开启后抓取正文，逐行对比定价、文案等<b>具体</b>改动，更耗资源，建议只对重点页开启。</div>
+        </div>
+        <label class="switch"><input type="checkbox"><span class="track"></span></label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="closeModal()">开始监控</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.nav a[data-view]').forEach(a=>{
+    a.addEventListener('click',()=>{
+      document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
+      a.classList.add('active');
+      const v=a.dataset.view;
+      document.querySelectorAll('.view').forEach(s=>s.classList.toggle('show',s.id==='view-'+v));
+    });
+  });
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+  document.querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',()=>{
+    if(c.dataset.solo!==undefined){c.parentElement.querySelectorAll('.fchip[data-solo]').forEach(x=>x.classList.remove('on'));c.classList.add('on');}
+    else c.classList.toggle('on');
+  }));
+  function openModal(){document.getElementById('scrim').classList.add('open')}
+  function closeModal(){document.getElementById('scrim').classList.remove('open')}
+
+  /* ---- change-detail drawer ---- */
+  const TYPE={add:{g:'＋',c:'add',label:'新增页面'},del:{g:'－',c:'del',label:'删减页面'},mod:{g:'±',c:'mod',label:'内容修改'}};
+  const DETAILS={
+    'vercel-pricing':{site:'Vercel',path:'/pricing',type:'mod',title:'Pro 套餐价格上调',pinned:true,
+      meta:[['检测时间','2026/6/9 02:14'],['HTTP 状态','200 OK'],['lastmod','06-08 → 06-09'],['正文字数','1,240 → 1,268']],
+      diff:[{t:'hunk',x:'@@ 定价表 · Pro 档 @@'},
+            {t:'ctx',x:'  适合成长中的团队'},
+            {t:'del',x:'Pro 套餐 · $20 / 每位成员 / 月'},
+            {t:'add',x:'Pro 套餐 · $25 / 每位成员 / 月'},
+            {t:'ctx',x:'  无限项目 · 高级分析'},
+            {t:'hunk',x:'@@ 页面底部 CTA @@'},
+            {t:'add',x:'＜按钮＞联系销售 · 企业版＜/按钮＞'}]},
+    'stripe-del':{site:'Stripe',path:'/radar/legacy-rules',type:'del',title:'页面已下线',pinned:false,
+      meta:[['检测时间','2026/6/9 01:40'],['HTTP 状态','301 → /radar'],['从 sitemap 移除','是'],['最后可见','2026-06-07']],
+      gone:{title:'Radar Legacy Rules（已下线）',desc:'该页介绍旧版规则引擎，现 301 跳转至 /radar 主页。结合近期改版，疑似旧产品线停止维护——值得关注其 Radar 产品策略调整。',url:'stripe.com/radar/legacy-rules'}},
+    'vercel-add':{site:'Vercel',path:'/blog/ship-ai-agents-faster',type:'add',title:'新增页面 · 博客',pinned:false,
+      meta:[['检测时间','2026/6/9 02:14'],['HTTP 状态','200 OK'],['加入 sitemap','06-09'],['页面类型','博客文章']],
+      newpage:{title:'Ship AI agents faster with Vercel',desc:'介绍如何用 Vercel 部署 AI Agent 工作流，主推新的 Agent 模板与边缘运行时。竞品正加码 AI Agent 方向。',url:'vercel.com/blog/ship-ai-agents-faster'}},
+    'figma-hero':{site:'Figma',path:'/',type:'mod',title:'首屏主标语改版',pinned:true,
+      meta:[['检测时间','2026/6/8 19:27'],['HTTP 状态','200 OK'],['lastmod','06-05 → 06-08'],['正文字数','略有变化']],
+      diff:[{t:'hunk',x:'@@ 首屏 Hero @@'},
+            {t:'del',x:'Nothing great is made alone'},
+            {t:'add',x:'Design and build, powered by AI'},
+            {t:'ctx',x:'  Figma 让团队从想法到上线'}]},
+    'notion-lastmod':{site:'Notion',path:'/pricing',type:'mod',suspected:true,title:'页面可能已修改',pinned:false,lm:'06-05 → 06-09',
+      meta:[['检测时间','2026/6/9 11:20'],['HTTP 状态','200 OK'],['lastmod','06-05 → 06-09'],['监控深度','基础']]}
+  };
+  function openDetail(key){
+    const d=DETAILS[key]; if(!d) return;
+    const t=TYPE[d.type];
+    document.getElementById('dCrumbSite').textContent=d.site;
+    document.getElementById('dCrumbPath').textContent=d.path;
+    document.getElementById('dTitle').textContent=d.title;
+    document.getElementById('dTypeGly').innerHTML='<span class="gly '+(d.suspected?'susp':t.c)+'" style="display:inline-grid">'+t.g+'</span>';
+    let body='<div class="metagrid">'+d.meta.map(m=>'<div class="mi"><div class="k">'+m[0]+'</div><div class="v">'+m[1]+'</div></div>').join('')+'</div>';
+    if(d.suspected){
+      body+='<div class="dh">为什么看不到具体改动？ <span class="line"></span><span class="tag susp">基础监控</span></div>';
+      body+='<div class="upsell"><div class="pd">基础监控只读取 sitemap，检测到该页 <b>lastmod 从 '+d.lm+'</b>，说明页面<b>可能有改动</b>，但未抓取正文，<b>无法显示改了什么</b>。</div>'
+          +'<div class="why"><svg class="wic" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="2"/><rect x="0" y="6" width="8" height="1"/></svg>该提示依赖站点诚实填写 lastmod；未提供 lastmod 的站点连「疑似修改」也无法判断。</div>'
+          +'<button class="btn btn-primary" style="margin-top:13px"><svg class="xic" viewBox="0 0 8 8"><rect x="4" y="0" width="2" height="3"/><rect x="1" y="3" width="5" height="1"/><rect x="2" y="4" width="2" height="3"/></svg> 对此页开启详细监控</button></div>';
+    }
+    if(d.diff){
+      body+='<div class="dh">逐行对比 <span class="line"></span><span class="tag '+t.c+'">'+t.label+'</span></div>';
+      body+='<div class="difffull">'+d.diff.map(r=>{const mk=r.t==='add'?'+':r.t==='del'?'−':r.t==='hunk'?'':' ';return '<div class="row '+r.t+'"><span class="mk">'+mk+'</span><span>'+r.x+'</span></div>';}).join('')+'</div>';
+    }
+    if(d.newpage){
+      body+='<div class="dh">页面快照 <span class="line"></span><span class="tag add">新增页面</span></div>';
+      body+='<div class="newpage"><div class="pt">'+d.newpage.title+'</div><div class="pd">'+d.newpage.desc+'</div><div class="url2">'+d.newpage.url+'</div></div>';
+    }
+    if(d.gone){
+      body+='<div class="dh">最后已知快照 <span class="line"></span><span class="tag del">删减页面</span></div>';
+      body+='<div class="newpage"><div class="pt">'+d.gone.title+'</div><div class="pd">'+d.gone.desc+'</div><div class="url2">'+d.gone.url+'</div></div>';
+    }
+    let acts='<button class="btn '+(d.suspected?'btn-soft':'btn-primary')+'"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="0" width="4" height="1"/><rect x="6" y="0" width="1" height="4"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/></svg> 在浏览器打开</button>';
+    if(!d.suspected) acts+='<button class="btn btn-soft">'+(d.pinned?'<svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 已钉选':'<svg class="xic" viewBox="0 0 8 8"><rect x="3" y="1" width="2" height="1"/><rect x="2" y="2" width="4" height="2"/><rect x="3" y="4" width="2" height="3"/></svg> 钉选此页')+'</button>';
+    acts+='<button class="btn btn-soft"><svg class="xic" viewBox="0 0 8 8"><rect x="1" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/></svg> 标记已读</button>';
+    body+='<div class="drawer-actions">'+acts+'</div>';
+    document.getElementById('drawerBody').innerHTML=body;
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerScrim').classList.add('open');
+  }
+  function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawerScrim').classList.remove('open');}
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeModal();}});
+</script>
+</body>
+</html>

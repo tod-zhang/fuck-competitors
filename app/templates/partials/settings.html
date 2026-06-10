@@ -1,0 +1,30 @@
+<div class="modal">
+  <div class="washi-top"></div>
+  <h3>竞品设置 · {{ name }}</h3>
+  <p class="sub">修改监控配置，或停止监控这个竞品。</p>
+  <form method="post" action="/competitors/{{ id }}/update">
+    <div class="field"><label>竞品名称</label><input name="name" value="{{ name }}" required></div>
+    <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" value="{{ sitemap_url }}" required></div>
+    <div class="field"><label>巡检频率</label>
+      <select name="interval_hours">
+        <option value="6"{% if interval == 6 %} selected{% endif %}>每 6 小时</option>
+        <option value="12"{% if interval == 12 %} selected{% endif %}>每 12 小时</option>
+        <option value="24"{% if interval == 24 %} selected{% endif %}>每天</option>
+        <option value="168"{% if interval == 168 %} selected{% endif %}>每周</option>
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" onclick="closeSettings()">取消</button>
+      <button type="submit" class="btn btn-primary">保存</button>
+    </div>
+  </form>
+  <form method="post" action="/competitors/{{ id }}/check">
+    <button type="submit" class="btn btn-soft" style="width:100%;justify-content:center;margin-top:4px">↻ 立即巡检一次</button>
+  </form>
+  <div class="danger-zone">
+    <div class="dz-label">危险操作</div>
+    <form method="post" action="/competitors/{{ id }}/delete" onsubmit="return confirm('确定删除「{{ name }}」？\n它的全部追踪页面、变更记录与快照都会一并删除，不可恢复。')">
+      <button type="submit" class="btn-danger">删除这个竞品</button>
+    </form>
+  </div>
+</div>
