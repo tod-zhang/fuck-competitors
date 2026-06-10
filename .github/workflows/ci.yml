@@ -19,5 +19,7 @@ jobs:
         run: python tests/test_basic.py
       - name: XXE / entity-bomb rejection
         run: python tests/test_security.py
+      - name: SQLite concurrency (WAL + busy_timeout)
+        run: python tests/test_concurrency.py
       - name: end-to-end (fetch → diff → SQLite, local server)
         run: python tests/e2e_local.py
