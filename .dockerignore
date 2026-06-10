@@ -1,0 +1,15 @@
+.venv/
+venv/
+data/
+.git/
+.github/
+docs/
+tests/
+__pycache__/
+*.pyc
+*.db
+.env
+.claude/
+.DS_Store
+index.html
+README.md
