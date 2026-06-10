@@ -4,10 +4,21 @@
 
 **盯紧竞争对手的网站，把每一次变化都记成日志。**
 
+[![CI](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml/badge.svg)](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 一个自托管、开源的竞品监控应用。填入竞品的 `sitemap.xml`，它会定期巡检页面的
 **新增 / 删减 / 修改**，像写观察日记一样记录下来。温暖的手账风界面，自带像素眼睛吉祥物。
 
 </div>
+
+## 界面截图
+
+| 最近动态 | 变更日志 |
+| --- | --- |
+| ![最近动态](docs/screenshots/overview.png) | ![变更日志](docs/screenshots/changelog.png) |
+| **内容 diff** | **竞品列表** |
+| ![内容 diff](docs/screenshots/diff-drawer.png) | ![竞品列表](docs/screenshots/sites.png) |
 
 ---
 
@@ -24,7 +35,7 @@
 
 ```bash
 docker compose up
-# 打开 http://localhost:8000
+# 打开 http://localhost:9527
 ```
 
 就这样 —— 一个容器、一个 SQLite 文件（持久化在 `fc-data` 数据卷里），不依赖任何外部服务。
@@ -37,7 +48,7 @@ docker compose up
 git clone https://github.com/tod-zhang/fuck-competitors.git
 cd fuck-competitors
 docker compose up -d          # 后台运行
-# 打开 http://localhost:8000
+# 打开 http://localhost:9527
 ```
 
 数据持久化在 `fc-data` 卷中。需要重置为空白：`docker compose down -v` 后再 `up`。
@@ -51,7 +62,7 @@ cd fuck-competitors
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 
-uvicorn app.main:app          # 打开 http://localhost:8000
+uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
 ```
 
 > ⚠️ 调度器跑在进程内，请用**单个 worker**（默认即是）。多 worker 会重复触发巡检。
@@ -99,7 +110,7 @@ uvicorn app.main:app          # 打开 http://localhost:8000
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload          # http://localhost:8000
+uvicorn app.main:app --reload --port 9527   # http://localhost:9527
 
 python tests/test_basic.py             # sitemap 解析 + 增删改 diff（纯标准库）
 python tests/test_security.py          # 拒绝 XXE / 实体炸弹的 sitemap

@@ -3,7 +3,7 @@ services:
     build: .
     container_name: fuck-competitors
     ports:
-      - "8000:8000"
+      - "9527:9527"
     volumes:
       - fc-data:/data
     environment:

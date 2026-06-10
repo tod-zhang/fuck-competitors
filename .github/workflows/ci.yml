@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: sitemap parse + diff (stdlib)
+        run: python tests/test_basic.py
+      - name: XXE / entity-bomb rejection
+        run: python tests/test_security.py
+      - name: end-to-end (fetch → diff → SQLite, local server)
+        run: python tests/e2e_local.py
