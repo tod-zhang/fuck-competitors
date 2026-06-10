@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     max_sitemap_urls: int = 50_000
     snapshot_retention: int = 10  # detailed-monitoring snapshots kept per page
     detailed_max_pages: int = 500  # cap pages content-diffed per detailed crawl (safety for huge sites)
+    write_batch: int = 200  # commit crawl writes every N rows so the write lock is released often
 
     model_config = SettingsConfigDict(env_prefix="FC_", env_file=".env", extra="ignore")
 

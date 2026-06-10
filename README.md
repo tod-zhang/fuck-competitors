@@ -104,6 +104,7 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
 | `FC_REQUEST_TIMEOUT` | `20` | 单次请求超时（秒） |
 | `FC_MAX_SITEMAP_URLS` | `50000` | 单个 sitemap 的抓取上限 |
 | `FC_DETAILED_MAX_PAGES` | `500` | 每次详细巡检内容对比的页面上限 |
+| `FC_WRITE_BATCH` | `200` | 巡检写库每 N 行提交一次（频繁释放写锁，避免阻塞并发添加） |
 | `FC_SNAPSHOT_RETENTION` | `10` | 每个页面保留的内容快照数 |
 | `FC_USER_AGENT` | `FuckCompetitors/0.1 …` | 抓取时使用的 User-Agent |
 

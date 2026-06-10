@@ -31,6 +31,7 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
     except Exception as exc:  # noqa: BLE001
         competitor.status = "error"
         session.add(competitor)
+        session.commit()
         return {"error": str(exc), "added": 0, "removed": 0, "suspected": 0}
 
     new_lastmod = {e.loc: e.lastmod for e in entries}
@@ -42,6 +43,18 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
     # inventory. Real adds/removes/edits get logged from the second crawl onward.
     is_baseline = competitor.last_checked_at is None
     logged = {"added": 0, "removed": 0, "suspected": 0}
+
+    # Commit in batches so a big baseline (tens of thousands of pages) never holds the write
+    # lock for the whole bulk insert — otherwise a concurrent "add competitor" gets stuck and
+    # eventually fails with "database is locked".
+    batch = max(1, settings.write_batch)
+    pending = 0
+
+    def commit_if_full():
+        nonlocal pending
+        if pending >= batch:
+            session.commit()
+            pending = 0
 
     for change in changes:
         if change.type == "added":
@@ -70,17 +83,22 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
                 )
             )
             logged["suspected"] += 1
+        pending += 1
+        commit_if_full()
 
     for url, page in page_by_url.items():
         if url in new_lastmod:
             page.last_seen_at = now
             session.add(page)
+            pending += 1
+            commit_if_full()
 
     competitor.status = "ok"
     competitor.last_checked_at = now
     if not competitor.favicon_url:  # resolve the site's declared favicon once
         competitor.favicon_url = resolve_favicon(competitor.sitemap_url)
     session.add(competitor)
+    session.commit()
 
     return {"baseline": is_baseline, "tracked": len(entries), **logged}
 
@@ -96,11 +114,16 @@ def run_detailed_check(session: Session, competitor: Competitor) -> int:
     for page in pages:
         if check_page_content(session, page) is not None:
             modified += 1
+        session.commit()  # release the write lock between (network-bound) page checks
     return modified
 
 
 def run_check(competitor_id: int) -> dict:
-    """Full check for one competitor: basic always, detailed if opted in. Commits once."""
+    """Full check for one competitor: basic always, detailed if opted in.
+
+    run_basic_check / run_detailed_check commit their own work in batches (so the write lock
+    is released frequently); the final commit here just flushes any straggler.
+    """
     with Session(engine) as session:
         competitor = session.get(Competitor, competitor_id)
         if competitor is None:
