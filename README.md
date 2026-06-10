@@ -6,6 +6,8 @@
 
 [![CI](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml/badge.svg)](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 
 一个自托管、开源的竞品监控应用。填入竞品的 `sitemap.xml`，它会定期巡检页面的
 **新增 / 删减 / 修改**，像写观察日记一样记录下来。温暖的手账风界面，自带像素眼睛吉祥物。
