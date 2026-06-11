@@ -189,8 +189,22 @@ body{
 .modal p.sub{color:var(--ink-soft);font-size:13px;margin-bottom:18px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
-.field input,.field select{width:100%;border:1px solid var(--line);background:#FBF8F1;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);outline:none}
+.field input{width:100%;border:1px solid var(--line);background:#FBF8F1;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);outline:none}
 .field input:focus{border-color:var(--accent)}
+/* custom dropdown — native <select> popups can't be themed, so we roll our own to match the journal look */
+.xselect{position:relative}
+.xselect-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);background:#FBF8F1;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}
+.xselect-trigger:hover{border-color:#DDD3BF}
+.xselect.open .xselect-trigger{border-color:var(--accent)}
+.xselect-caret{font-size:10px;color:var(--ink-faint);transition:transform .18s}
+.xselect.open .xselect-caret{transform:rotate(180deg)}
+.xselect-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:10;list-style:none;margin:0;padding:5px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:none}
+.xselect.open .xselect-menu{display:block}
+.xselect-menu li{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;font-size:14px;color:var(--ink);cursor:pointer;transition:background .12s}
+.xselect-menu li::before{content:"";width:13px;flex-shrink:0;color:var(--accent);font-weight:700}
+.xselect-menu li.sel::before{content:"✓"}
+.xselect-menu li.sel{color:var(--accent);font-weight:600}
+.xselect-menu li:hover{background:#F0E9DA}
 .chip-row{display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:12.5px;border:1px solid var(--line);border-radius:20px;padding:5px 13px;cursor:pointer;color:var(--ink-soft);background:#FBF8F1}
 .chip.on{background:#39332B;color:#FBF5E6;border-color:#39332B}

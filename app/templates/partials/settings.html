@@ -6,12 +6,16 @@
     <div class="field"><label>竞品名称</label><input name="name" value="{{ name }}" required></div>
     <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" value="{{ sitemap_url }}" required></div>
     <div class="field"><label>巡检频率</label>
-      <select name="interval_hours">
-        <option value="6"{% if interval == 6 %} selected{% endif %}>每 6 小时</option>
-        <option value="12"{% if interval == 12 %} selected{% endif %}>每 12 小时</option>
-        <option value="24"{% if interval == 24 %} selected{% endif %}>每天</option>
-        <option value="168"{% if interval == 168 %} selected{% endif %}>每周</option>
-      </select>
+      <div class="xselect">
+        <button type="button" class="xselect-trigger">
+          <span class="xselect-label">{{ '每周' if interval == 168 else '每天' }}</span><span class="xselect-caret">▾</span>
+        </button>
+        <input type="hidden" name="interval_hours" value="{{ 168 if interval == 168 else 24 }}">
+        <ul class="xselect-menu" role="listbox">
+          <li data-value="24"{% if interval != 168 %} class="sel"{% endif %}>每天</li>
+          <li data-value="168"{% if interval == 168 %} class="sel"{% endif %}>每周</li>
+        </ul>
+      </div>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn btn-ghost" onclick="closeSettings()">取消</button>

@@ -67,6 +67,22 @@ document.querySelectorAll('.fchip[data-type]').forEach(c => c.addEventListener('
   applyTimelineFilter();
 }));
 
+// custom dropdown (.xselect) — delegated so it also works in the on-demand settings modal
+document.addEventListener('click', e => {
+  const trigger = e.target.closest('.xselect-trigger');
+  const item = e.target.closest('.xselect-menu li');
+  // close any open dropdown the click landed outside of
+  document.querySelectorAll('.xselect.open').forEach(x => { if (!x.contains(e.target)) x.classList.remove('open'); });
+  if (trigger) { trigger.closest('.xselect').classList.toggle('open'); return; }
+  if (item) {
+    const xs = item.closest('.xselect');
+    xs.querySelector('input[type=hidden]').value = item.dataset.value;
+    xs.querySelector('.xselect-label').textContent = item.textContent;
+    xs.querySelectorAll('.xselect-menu li').forEach(li => li.classList.toggle('sel', li === item));
+    xs.classList.remove('open');
+  }
+});
+
 function openModal() { document.getElementById('scrim').classList.add('open'); }
 function closeModal() { document.getElementById('scrim').classList.remove('open'); }
 
@@ -93,5 +109,8 @@ function closeDrawer() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeDrawer(); closeModal(); closeSettings(); }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.xselect.open').forEach(x => x.classList.remove('open'));
+    closeDrawer(); closeModal(); closeSettings();
+  }
 });

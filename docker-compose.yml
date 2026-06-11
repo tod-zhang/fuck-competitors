@@ -6,6 +6,7 @@ services:
       - "9527:9527"
     volumes:
       - fc-data:/data
+      - ./app:/srv/app          # live-mount source: edit templates/CSS/JS then just refresh (no rebuild)
     environment:
       - FC_DB_URL=sqlite:////data/app.db
       # - FC_DEFAULT_INTERVAL_HOURS=12

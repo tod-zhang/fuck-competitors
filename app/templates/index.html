@@ -202,12 +202,16 @@
       <div class="field"><label>竞品名称</label><input name="name" required placeholder="例如：Linear"></div>
       <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" required placeholder="https://example.com/sitemap.xml"></div>
       <div class="field"><label>巡检频率</label>
-        <select name="interval_hours">
-          <option value="6">每 6 小时</option>
-          <option value="12" selected>每 12 小时</option>
-          <option value="24">每天</option>
-          <option value="168">每周</option>
-        </select>
+        <div class="xselect">
+          <button type="button" class="xselect-trigger">
+            <span class="xselect-label">每天</span><span class="xselect-caret">▾</span>
+          </button>
+          <input type="hidden" name="interval_hours" value="24">
+          <ul class="xselect-menu" role="listbox">
+            <li data-value="24" class="sel">每天</li>
+            <li data-value="168">每周</li>
+          </ul>
+        </div>
       </div>
       <div class="field"><label>监控深度</label>
         <div class="toggle-card">
