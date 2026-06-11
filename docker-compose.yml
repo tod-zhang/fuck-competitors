@@ -13,5 +13,20 @@ services:
       # - FC_SNAPSHOT_RETENTION=10
     restart: unless-stopped
 
+  # MCP server over HTTP — connect AI clients to http://<host>:9528/mcp
+  mcp:
+    build: .
+    container_name: fuck-competitors-mcp
+    command: ["python", "-m", "app.mcp_server"]
+    ports:
+      - "9528:9528"
+    volumes:
+      - fc-data:/data            # same DB as the app (WAL → safe concurrent read/write)
+    environment:
+      - FC_DB_URL=sqlite:////data/app.db
+      - FC_MCP_TRANSPORT=http
+      # - FC_MCP_TOKEN=change-me  # REQUIRE a token when exposing this port publicly
+    restart: unless-stopped
+
 volumes:
   fc-data:

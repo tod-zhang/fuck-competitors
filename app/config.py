@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     detailed_max_pages: int = 500  # cap pages content-diffed per detailed crawl (safety for huge sites)
     write_batch: int = 200  # commit crawl writes every N rows so the write lock is released often
 
+    # MCP server (app/mcp_server.py)
+    mcp_transport: str = "stdio"   # "http" to serve over a URL (e.g. for remote AI clients)
+    mcp_host: str = "0.0.0.0"
+    mcp_port: int = 9528
+    mcp_token: str = ""            # if set, require "Authorization: Bearer <token>" — use when exposed publicly
+
     model_config = SettingsConfigDict(env_prefix="FC_", env_file=".env", extra="ignore")
 
 

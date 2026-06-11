@@ -105,6 +105,19 @@ Agent 会拉取最近的变化和逐行 diff 自己推理。
 
 然后就能问：「用 summarize_window 看 cowseal 最近 14 天，它在优化什么？」
 
+### HTTP / 远程（自托管后直接输 URL）
+
+`docker compose up` 会同时启动一个 **MCP HTTP 服务(端口 9528)**,和应用共用同一个数据库。
+在支持远程 MCP 的客户端(Claude Desktop / ChatGPT 连接器 / Claude Code `--transport http`)里直接填:
+
+```
+http://<你的服务器>:9528/mcp
+```
+
+> 🔒 **安全**:这个端点是**只读但会暴露你监控的竞品与 diff**。仅本机/内网用可不设鉴权;
+> **暴露到公网必须设 `FC_MCP_TOKEN`**(在 compose 的 `mcp` 服务里),客户端连接时带
+> `Authorization: Bearer <token>`。
+
 ## 监控原理（两层）
 
 | 层级 | 做什么 | 成本 | 覆盖 |

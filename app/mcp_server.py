@@ -14,6 +14,7 @@ from datetime import timedelta
 from mcp.server.fastmcp import FastMCP
 from sqlmodel import Session, select
 
+from .config import settings
 from .db import engine, init_db
 from .models import Change, Competitor, Page
 from .timeutil import utcnow
@@ -203,9 +204,37 @@ def summarize_window(competitor: str, days: int = 14) -> dict:
         }
 
 
+class BearerAuth:
+    """Minimal ASGI middleware: require `Authorization: Bearer <token>` on HTTP requests."""
+
+    def __init__(self, app, token: str):
+        self.app = app
+        self._expected = f"Bearer {token}"
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            headers = dict(scope.get("headers") or [])
+            if headers.get(b"authorization", b"").decode() != self._expected:
+                await send({"type": "http.response.start", "status": 401,
+                            "headers": [(b"content-type", b"application/json")]})
+                await send({"type": "http.response.body", "body": b'{"error":"unauthorized"}'})
+                return
+        await self.app(scope, receive, send)
+
+
 def main() -> None:
     init_db()  # ensure schema exists (idempotent); reads the app's DB
-    mcp.run()
+    if settings.mcp_transport.lower() in ("http", "streamable-http"):
+        import uvicorn
+
+        mcp.settings.host = settings.mcp_host
+        mcp.settings.port = settings.mcp_port
+        asgi_app = mcp.streamable_http_app()
+        if settings.mcp_token:  # optional shared-secret auth; required when exposed publicly
+            asgi_app = BearerAuth(asgi_app, settings.mcp_token)
+        uvicorn.run(asgi_app, host=settings.mcp_host, port=settings.mcp_port, log_level="info")
+    else:
+        mcp.run()  # stdio (local clients launch this as a subprocess)
 
 
 if __name__ == "__main__":
