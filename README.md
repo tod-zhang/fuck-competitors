@@ -84,12 +84,20 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
 ## AI 分析（MCP）
 
 应用自带一个**只读 MCP server**，把竞品的变化和内容 diff 以工具形式开放给 AI Agent
-（Claude Code / Codex / Claude Desktop 等），让你直接问 *“竞品 X 最近在优化什么？”* ——
-Agent 会拉取最近的变化和逐行 diff 自己推理。
+（Claude Code / Codex / Claude Desktop / ChatGPT 等）。接上之后用**自然语言**问就行 ——
+Agent 自己调下面的工具拉数据、读 diff、推理出"对手在优化什么"。
 
-工具：`list_competitors` · `get_changes` · `get_diff` · `get_page_history` · `summarize_window`
+| 工具 | 作用 |
+| --- | --- |
+| `list_competitors` | 列出监控中的竞品（追踪页数、近 7 天活跃度） |
+| `get_changes` | 拉某段时间的增 / 删 / 改（可按竞品、类型过滤） |
+| `get_diff` | 某条变更的**逐行内容 diff**（最强信号） |
+| `get_page_history` | 单个页面随时间的变化轨迹（如 `/pricing`） |
+| `summarize_window` | 一次性打包某竞品 N 天内的全部变化 + diff，直接交给模型分析 |
 
-在 Claude Code 里接入（项目根目录建 `.mcp.json`）：
+### 方式一：本地（stdio）—— Claude Code / Codex
+
+在项目根目录建 `.mcp.json`，然后**重启客户端**：
 
 ```json
 {
@@ -103,20 +111,37 @@ Agent 会拉取最近的变化和逐行 diff 自己推理。
 }
 ```
 
-然后就能问：「用 summarize_window 看 cowseal 最近 14 天，它在优化什么？」
+### 方式二：远程（HTTP）—— 自托管后直接输 URL
 
-### HTTP / 远程（自托管后直接输 URL）
-
-`docker compose up` 会同时启动一个 **MCP HTTP 服务(端口 9528)**,和应用共用同一个数据库。
-在支持远程 MCP 的客户端(Claude Desktop / ChatGPT 连接器 / Claude Code `--transport http`)里直接填:
+`docker compose up` 会同时起一个 **MCP HTTP 服务（端口 9528）**，和应用共用同一个数据库。
+在支持远程 MCP 的客户端里填这个地址即可：
 
 ```
 http://<你的服务器>:9528/mcp
 ```
 
-> 🔒 **安全**:这个端点是**只读但会暴露你监控的竞品与 diff**。仅本机/内网用可不设鉴权;
-> **暴露到公网必须设 `FC_MCP_TOKEN`**(在 compose 的 `mcp` 服务里),客户端连接时带
+- **Claude Code**：`claude mcp add --transport http fuck-competitors http://<host>:9528/mcp`
+  （设了 token 再加 `--header "Authorization: Bearer <token>"`）
+- **Claude Desktop / ChatGPT**：添加远程 MCP / 连接器，粘贴上面的 URL。
+
+> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手以及它们的 diff**。本机 / 内网用可不设鉴权；
+> **暴露到公网必须设 `FC_MCP_TOKEN`**（在 compose 的 `mcp` 服务里），客户端连接时带
 > `Authorization: Bearer <token>`。
+
+### 接上之后这样问
+
+```
+监控了哪些对手？（list_competitors）
+用 summarize_window 看 cowseal 最近 14 天，它在优化什么？按定价 / 定位 / 产品 / 内容分类说。
+get_page_history /pricing —— 各家定价页这段时间怎么变的？
+```
+
+> ⚠️ **前提：库里得有变化数据。** MCP 只读、不爬取。刚加的竞品只有"静默基线"、没有变化，分析不出东西——
+> 变化要随巡检积累（或开详细监控才有内容 diff）。想先试效果，可灌一份演示数据：
+> ```bash
+> FC_DB_URL="sqlite:///./data/demo.db" python tests/seed_demo.py
+> ```
+> 再把上面的 `FC_DB_URL` / URL 指向 `./data/demo.db` 即可。
 
 ## 监控原理（两层）
 
