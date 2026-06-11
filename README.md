@@ -41,7 +41,7 @@ docker compose up
 # 打开 http://localhost:9527
 ```
 
-就这样 —— 一个容器、一个 SQLite 文件（持久化在 `fc-data` 数据卷里），不依赖任何外部服务。
+就这样 —— 一个容器、一个 SQLite 文件（持久化在主机的 `./data` 目录里），不依赖任何外部服务。
 
 ## 安装方式
 
@@ -54,7 +54,9 @@ docker compose up -d          # 后台运行
 # 打开 http://localhost:9527
 ```
 
-数据持久化在 `fc-data` 卷中。需要重置为空白：`docker compose down -v` 后再 `up`。
+数据库就是主机仓库目录下的 `./data/app.db`。它是**目录挂载**（不是 docker 命名卷），所以重建镜像、`docker compose down -v`、改项目名都不会动它——升级代码后重新部署，竞品记录都还在。需要重置为空白：删掉 `./data` 目录再 `up`。
+
+> 从 CI/脚本里**每次 clone 到新目录**部署的话，相对的 `./data` 会落在新目录里。这种情况把 compose 里的挂载改成一个固定的绝对路径（如 `/var/lib/fuck-competitors/data:/data`），数据就和代码目录解耦了。
 
 仓库自带一个 `Makefile` 封装了常用命令（固定 `-p fuck-competitors` 项目名，并在经典构建器下构建，
 这样即使项目目录是中文/非 ASCII 路径也能跑）：
@@ -63,7 +65,7 @@ docker compose up -d          # 后台运行
 make up        # 构建并后台启动 app(:9527) + mcp(:9528)
 make logs      # 跟踪两个服务的日志
 make ps        # 查看容器状态
-make down      # 停止并移除容器（保留 fc-data 数据卷）
+make down      # 停止并移除容器（保留 ./data 里的数据库）
 ```
 
 ### 方式二：源码本地运行

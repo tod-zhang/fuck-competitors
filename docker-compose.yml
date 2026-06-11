@@ -1,3 +1,7 @@
+# Pin the project name so the container/network names never drift, even when launched
+# with a bare `docker compose` from a renamed or non-ASCII directory.
+name: fuck-competitors
+
 services:
   app:
     build: .
@@ -5,7 +9,11 @@ services:
     ports:
       - "9527:9527"
     volumes:
-      - fc-data:/data
+      # DB lives on the host at ./data — survives image rebuilds, `down -v`, and project-name
+      # changes (a bind mount is NOT a named volume, so -v can't delete it). To keep data when
+      # redeploying from a fresh checkout, point this at a fixed absolute path instead, e.g.
+      # /var/lib/fuck-competitors/data:/data
+      - ./data:/data
       - ./app:/srv/app          # live-mount source: edit templates/CSS/JS then just refresh (no rebuild)
     environment:
       - FC_DB_URL=sqlite:////data/app.db
@@ -22,12 +30,9 @@ services:
     ports:
       - "9528:9528"
     volumes:
-      - fc-data:/data            # same DB as the app (WAL → safe concurrent read/write)
+      - ./data:/data            # same DB as the app (WAL → safe concurrent read/write)
     environment:
       - FC_DB_URL=sqlite:////data/app.db
       - FC_MCP_TRANSPORT=http
       # - FC_MCP_TOKEN=change-me  # REQUIRE a token when exposing this port publicly
     restart: unless-stopped
-
-volumes:
-  fc-data:
