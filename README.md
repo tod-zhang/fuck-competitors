@@ -28,6 +28,7 @@
 
 - 📒 **变更日志** —— 竞品页面的新增、删减、内容修改，按日期分组、时间倒序，可按竞品和变更类型筛选
 - 🔍 **两层监控** —— 轻量的 sitemap 增删监控（全站）+ 可选的正文逐行 diff（按竞品开启）
+- 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化和 diff 开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
 - 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会用初始清单刷屏日志
 - ⚙️ **竞品设置** —— 随时改名称 / sitemap 地址 / 巡检频率、立即巡检、删除竞品
 - 🐳 **一条命令部署** —— 单容器 + 单个 SQLite 文件，无需任何外部服务
@@ -79,6 +80,30 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
 3. **盯关键内容** —— 想看定价、文案、客户案例的**逐行内容 diff**，在「竞品列表」里
    对该竞品打开**详细监控**开关。开启后，每次详细巡检会抓取它**全部页面**的正文做对比，
    记录到底改了什么。
+
+## AI 分析（MCP）
+
+应用自带一个**只读 MCP server**，把竞品的变化和内容 diff 以工具形式开放给 AI Agent
+（Claude Code / Codex / Claude Desktop 等），让你直接问 *“竞品 X 最近在优化什么？”* ——
+Agent 会拉取最近的变化和逐行 diff 自己推理。
+
+工具：`list_competitors` · `get_changes` · `get_diff` · `get_page_history` · `summarize_window`
+
+在 Claude Code 里接入（项目根目录建 `.mcp.json`）：
+
+```json
+{
+  "mcpServers": {
+    "fuck-competitors": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "app.mcp_server"],
+      "env": { "FC_DB_URL": "sqlite:///./data/app.db" }
+    }
+  }
+}
+```
+
+然后就能问：「用 summarize_window 看 cowseal 最近 14 天，它在优化什么？」
 
 ## 监控原理（两层）
 
