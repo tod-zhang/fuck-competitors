@@ -25,7 +25,6 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
         entries = fetch_all_pages(
             competitor.sitemap_url,
             timeout=settings.request_timeout,
-            user_agent=settings.user_agent,
             max_urls=settings.max_sitemap_urls,
         )
     except Exception as exc:  # noqa: BLE001
@@ -105,16 +104,21 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
 
 def run_detailed_check(session: Session, competitor: Competitor) -> int:
     """Content-diff every active page (capped). Returns number of modified pages."""
+    from .monitor import fetch  # lazy: keep httpx out of service's import path
+
     pages = session.exec(
         select(Page).where(Page.competitor_id == competitor.id, Page.status == "active")
     ).all()
     if len(pages) > settings.detailed_max_pages:
         pages = pages[: settings.detailed_max_pages]
     modified = 0
-    for page in pages:
-        if check_page_content(session, page) is not None:
-            modified += 1
-        session.commit()  # release the write lock between (network-bound) page checks
+    # One client for the whole run so connections (and per-host rate limiting) are reused
+    # across pages instead of a fresh TCP/TLS handshake per page.
+    with fetch.make_client(settings.request_timeout) as client:
+        for page in pages:
+            if check_page_content(session, page, client) is not None:
+                modified += 1
+            session.commit()  # release the write lock between (network-bound) page checks
     return modified
 
 

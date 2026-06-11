@@ -14,7 +14,7 @@ class Competitor(SQLModel, table=True):
     name: str
     sitemap_url: str
     color: str = "#39332B"               # sidebar monogram color
-    check_interval_hours: int = 12
+    check_interval_hours: int = 24
     detailed_on: bool = False            # opt-in: fetch page content for diffing
     favicon_url: Optional[str] = None    # resolved from the site's <link rel="icon">, if any
     status: str = "ok"                   # ok | error
@@ -30,6 +30,8 @@ class Page(SQLModel, table=True):
     lastmod: Optional[str] = None        # from sitemap <lastmod>, if present
     is_pinned: bool = False              # deprecated/unused — pinning was removed; detailed monitoring now covers all pages
     latest_content_hash: Optional[str] = None
+    etag: Optional[str] = None           # HTTP validators from the last 200, replayed as conditional-GET headers
+    last_modified: Optional[str] = None  # so an unchanged page answers 304 instead of re-sending its whole body
     first_seen_at: datetime = Field(default_factory=utcnow)
     last_seen_at: datetime = Field(default_factory=utcnow)
 

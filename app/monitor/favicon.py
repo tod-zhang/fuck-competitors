@@ -11,8 +11,9 @@ from ..config import settings
 
 
 def resolve_favicon(site_url: str) -> str | None:
-    import httpx  # lazy
     from selectolax.parser import HTMLParser  # lazy
+
+    from . import fetch  # lazy
 
     parts = urlparse(site_url)
     if not parts.netloc:
@@ -20,12 +21,8 @@ def resolve_favicon(site_url: str) -> str | None:
     base = f"{parts.scheme or 'https'}://{parts.netloc}"
 
     try:
-        with httpx.Client(
-            timeout=settings.request_timeout,
-            headers={"User-Agent": settings.user_agent},
-            follow_redirects=True,
-        ) as client:
-            resp = client.get(base)
+        with fetch.make_client(settings.request_timeout) as client:
+            resp = fetch.polite_get(client, base)
             resp.raise_for_status()
             tree = HTMLParser(resp.content)
     except Exception:

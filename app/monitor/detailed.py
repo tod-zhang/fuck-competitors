@@ -35,18 +35,29 @@ def extract_text(html: bytes) -> tuple[str, str]:
     return title, "\n".join(lines)
 
 
-def check_page_content(session: Session, page: Page) -> Change | None:
-    """Fetch + diff a single pinned page. Returns the Change if content changed, else None."""
-    import httpx  # lazy import
+def check_page_content(session: Session, page: Page, client) -> Change | None:
+    """Fetch + diff a single page (via a caller-supplied polite client). Returns the Change if
+    content changed, else None. Replays the page's stored ETag / Last-Modified so an unchanged
+    page answers 304 and we skip the download entirely."""
+    from . import fetch  # lazy import
 
-    headers = {"User-Agent": settings.user_agent}
+    conditional: dict[str, str] = {}
+    if page.etag:
+        conditional["If-None-Match"] = page.etag
+    if page.last_modified:
+        conditional["If-Modified-Since"] = page.last_modified
+
     try:
-        with httpx.Client(timeout=settings.request_timeout, headers=headers, follow_redirects=True) as client:
-            resp = client.get(page.url)
-            resp.raise_for_status()
-            html = resp.content
+        resp = fetch.polite_get(client, page.url, conditional=conditional or None)
+        if resp.status_code == 304:
+            return None  # server confirms unchanged — no body fetched, nothing to diff
+        resp.raise_for_status()
+        html = resp.content
     except Exception:
-        return None  # fetch failures are non-fatal for a single page
+        return None  # fetch failures (including Blocked) are non-fatal for a single page
+
+    page.etag = resp.headers.get("ETag")
+    page.last_modified = resp.headers.get("Last-Modified")
 
     title, text = extract_text(html)
     new_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()

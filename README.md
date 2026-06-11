@@ -56,6 +56,16 @@ docker compose up -d          # 后台运行
 
 数据持久化在 `fc-data` 卷中。需要重置为空白：`docker compose down -v` 后再 `up`。
 
+仓库自带一个 `Makefile` 封装了常用命令（固定 `-p fuck-competitors` 项目名，并在经典构建器下构建，
+这样即使项目目录是中文/非 ASCII 路径也能跑）：
+
+```bash
+make up        # 构建并后台启动 app(:9527) + mcp(:9528)
+make logs      # 跟踪两个服务的日志
+make ps        # 查看容器状态
+make down      # 停止并移除容器（保留 fc-data 数据卷）
+```
+
 ### 方式二：源码本地运行
 
 ```bash
@@ -163,13 +173,16 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
 | `FC_DB_URL` | `sqlite:///./data/app.db` | 数据库位置 |
-| `FC_DEFAULT_INTERVAL_HOURS` | `12` | 默认巡检间隔 |
+| `FC_DEFAULT_INTERVAL_HOURS` | `24` | 默认巡检间隔 |
 | `FC_REQUEST_TIMEOUT` | `20` | 单次请求超时（秒） |
 | `FC_MAX_SITEMAP_URLS` | `50000` | 单个 sitemap 的抓取上限 |
 | `FC_DETAILED_MAX_PAGES` | `500` | 每次详细巡检内容对比的页面上限 |
 | `FC_WRITE_BATCH` | `200` | 巡检写库每 N 行提交一次（频繁释放写锁，避免阻塞并发添加） |
 | `FC_SNAPSHOT_RETENTION` | `10` | 每个页面保留的内容快照数 |
 | `FC_USER_AGENT` | `FuckCompetitors/0.1 …` | 抓取时使用的 User-Agent |
+| `FC_RESPECT_ROBOTS` | `true` | 是否遵守目标站 robots.txt（若某站 robots 误挡了 sitemap，可关掉） |
+| `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
+| `FC_BLOCK_COOLDOWN_SECONDS` | `900` | 遇到 403 / 无 Retry-After 的 429 后，对该域名退避多久 |
 
 ## 开发
 

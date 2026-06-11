@@ -98,7 +98,7 @@ def change_detail(change_id: int, request: Request):
 def create_competitor(
     name: str = Form(...),
     sitemap_url: str = Form(...),
-    interval_hours: int = Form(12),
+    interval_hours: int = Form(24),
     detailed: str = Form(None),
 ):
     with Session(engine) as s:

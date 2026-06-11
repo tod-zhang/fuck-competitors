@@ -40,7 +40,11 @@ def init_db() -> None:
 
 def _migrate() -> None:
     """Tiny best-effort migrations: add columns that create_all won't add to existing tables."""
-    additions = [("competitor", "favicon_url", "VARCHAR")]
+    additions = [
+        ("competitor", "favicon_url", "VARCHAR"),
+        ("page", "etag", "VARCHAR"),
+        ("page", "last_modified", "VARCHAR"),
+    ]
     with engine.connect() as conn:
         for table, column, coltype in additions:
             try:

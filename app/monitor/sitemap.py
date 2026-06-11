@@ -74,24 +74,22 @@ def fetch_all_pages(
     sitemap_url: str,
     *,
     timeout: int = 20,
-    user_agent: str = "FuckCompetitors",
     max_urls: int = 50_000,
 ) -> list[PageEntry]:
     """Fetch a sitemap, following sitemap-index -> child sitemaps, and return all pages."""
-    import httpx  # lazy: keeps the parser importable without httpx installed
+    from . import fetch  # lazy: keeps the parser importable without httpx installed
 
-    headers = {"User-Agent": user_agent}
     seen: set[str] = set()
     out: list[PageEntry] = []
     queue = [sitemap_url]
 
-    with httpx.Client(timeout=timeout, headers=headers, follow_redirects=True) as client:
+    with fetch.make_client(timeout) as client:
         while queue and len(out) < max_urls:
             url = queue.pop(0)
             if url in seen:
                 continue
             seen.add(url)
-            resp = client.get(url)
+            resp = fetch.polite_get(client, url)
             resp.raise_for_status()
             parsed = parse_sitemap(_maybe_gunzip(resp.content, url))
             if parsed["type"] == "index":
