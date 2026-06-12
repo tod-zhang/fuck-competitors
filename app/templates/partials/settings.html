@@ -18,17 +18,18 @@
       </div>
     </div>
     <div class="modal-foot">
+      <button type="submit" class="btn btn-soft" style="margin-right:auto" formaction="/competitors/{{ id }}/check" formnovalidate>立即巡检</button>
       <button type="button" class="btn btn-ghost" onclick="closeSettings()">取消</button>
       <button type="submit" class="btn btn-primary">保存</button>
     </div>
   </form>
-  <form method="post" action="/competitors/{{ id }}/check">
-    <button type="submit" class="btn btn-soft" style="width:100%;justify-content:center;margin-top:4px">↻ 立即巡检一次</button>
-  </form>
   <div class="danger-zone">
-    <div class="dz-label">危险操作</div>
+    <div class="dz-text">
+      <div class="dz-label">危险操作</div>
+      <div class="dz-desc">停止监控，并删除它的全部页面与变更记录</div>
+    </div>
     <form method="post" action="/competitors/{{ id }}/delete" onsubmit="return confirm('确定删除「{{ name }}」？\n它的全部追踪页面、变更记录与快照都会一并删除，不可恢复。')">
-      <button type="submit" class="btn-danger">删除这个竞品</button>
+      <button type="submit" class="btn-danger">删除竞品</button>
     </form>
   </div>
 </div>
