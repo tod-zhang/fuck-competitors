@@ -76,7 +76,6 @@ def index(request: Request):
             "greet_date": _greet_date(today),
             "recent_count": len(recent),
             "stats": vm.overview_stats(recent, len(competitors), len(active_pages)),
-            "overview_groups": vm.group_changes(changes[:40], comp_by_id, page_by_id, today),
             "timeline_groups": vm.group_changes(changes, comp_by_id, page_by_id, today),
             "sites": sites,
             "nav_changes": len(changes),

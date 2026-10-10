@@ -131,15 +131,7 @@
         <div class="stat c-site"><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend">{{ stats.pages }} 页</span></div></div>
       </div>
 
-      <div class="sec-head"><h3>变更日志</h3><span class="ribbon">最近动态</span><span class="line"></span></div>
-      {% for g in overview_groups %}
-      <div class="day-group">
-        <div class="day-tag"><span class="d">{{ g.label }}</span><span class="w">{{ g.weekday }}</span><span class="cnt">{{ g.count }} 处变更</span></div>
-        {% for entry in g.entries %}{{ render_entry(entry) }}{% endfor %}
-      </div>
-      {% else %}
-      <p class="empty-soft" style="padding:18px 0">巡检还没有发现变更——竞品很安静，或者刚添加还在等第一次巡检。</p>
-      {% endfor %}
+      <button type="button" class="btn btn-soft btn-sm" onclick="showView('timeline');resetTimelineFilter()">查看全部变更 →</button>
     </section>
 
     <!-- ===== Timeline ===== -->
