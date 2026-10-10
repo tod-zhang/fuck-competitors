@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-sqlmodel
+sqlmodel==0.0.38  # 0.0.48+ rejects the naive UTC datetimes we store (see app/timeutil.py)
 httpx
 jinja2
 python-multipart
