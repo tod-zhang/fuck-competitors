@@ -332,20 +332,25 @@ def _mask(value: str) -> str:
     return f"已设置 ··· {value[-4:]}" if len(value) > 8 else ("已设置" if value else "")
 
 
+def config_context(s: Session) -> dict:
+    """Context for partials/feed_config.html; also rendered straight into index.html's #view-settings."""
+    sections = []
+    for title, fields, service in CONFIG_SECTIONS:
+        rows = []
+        for key, label, placeholder, hint in fields:
+            value = ai.cfg(key) if key in ai.UI_KEYS else feed.get_setting(s, key)
+            secret = key in ai.SECRET_KEYS
+            rows.append({"key": key, "label": label, "hint": hint, "secret": secret,
+                         "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
+        sections.append({"title": title, "rows": rows, "service": service})
+    return {"sections": sections, "my_posts": len(s.exec(select(MyPost.id)).all()),
+            "sync_status": feed.get_setting(s, "my_sync_status")}
+
+
 @router.get("/config", response_class=HTMLResponse)
 def config_form(request: Request):
     with Session(engine) as s:
-        sections = []
-        for title, fields, service in CONFIG_SECTIONS:
-            rows = []
-            for key, label, placeholder, hint in fields:
-                value = ai.cfg(key) if key in ai.UI_KEYS else feed.get_setting(s, key)
-                secret = key in ai.SECRET_KEYS
-                rows.append({"key": key, "label": label, "hint": hint, "secret": secret,
-                             "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
-            sections.append({"title": title, "rows": rows, "service": service})
-        ctx = {"sections": sections, "my_posts": len(s.exec(select(MyPost.id)).all()),
-               "sync_status": feed.get_setting(s, "my_sync_status")}
+        ctx = config_context(s)
     return templates.TemplateResponse(request, "partials/feed_config.html", ctx)
 
 

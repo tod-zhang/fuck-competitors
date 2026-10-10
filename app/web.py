@@ -81,6 +81,8 @@ def index(request: Request):
             "sites": sites,
             "nav_changes": len(changes),
         }
+        from .feed_web import config_context  # feed_web imports this module
+        ctx.update(config_context(s))
         return templates.TemplateResponse(request, "index.html", ctx)
 
 

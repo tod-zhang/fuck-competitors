@@ -1,10 +1,8 @@
 // view switching (client-side; all four views are rendered server-side into the page)
 document.querySelectorAll('.nav a[data-view]').forEach(a => {
   a.addEventListener('click', () => {
-    document.querySelectorAll('.nav a').forEach(x => x.classList.remove('active'));
-    a.classList.add('active');
     const v = a.dataset.view;
-    document.querySelectorAll('.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + v));
+    showView(v);
     if (v === 'timeline') resetTimelineFilter();
   });
 });
@@ -50,6 +48,8 @@ function applyTimelineFilter() {
 }
 function showView(view) {
   document.querySelectorAll('.nav a').forEach(x => x.classList.toggle('active', x.dataset.view === view));
+  document.querySelector('.side-settings').classList.toggle('active', view === 'settings');
+  document.querySelector('.greet').hidden = view === 'settings';
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + view));
 }
 // clicking a competitor in the sidebar: jump to the changelog filtered to it

@@ -158,16 +158,21 @@ const Feed = (() => {
   }
   function toggleHelp() { const h = $('feedHelp'); if (h) h.classList.toggle('open'); }
 
-  // ---- settings (API keys + my site), in the modal
-  async function openSettings() {
-    openModal('<p class="fd-hint">加载中…</p>');
-    $('feedModal').innerHTML = await (await fetch('/feed/config')).text();
+  // ---- settings (API keys + my site): its own view, rendered server-side into index.html
+  function openSettings() {
+    showView('settings');
+    document.querySelector('.main').scrollTo(0, 0);
   }
   async function saveSettings(form, quiet) {
     const resp = await post('/feed/config', new FormData(form));
     if (!resp.ok) { $('cfgState').textContent = '保存失败（' + resp.status + '）'; return false; }
     form.querySelectorAll('input[type=password]').forEach(i => { i.value = ''; });
-    if (!quiet) { closeModal(); if (state.loaded) load(); }
+    if (!quiet) {
+      // re-render so saved secrets show as "已设置 ··· last4"
+      $('view-settings').innerHTML = await (await fetch('/feed/config')).text();
+      $('cfgState').textContent = '已保存';
+      if (state.loaded) load();
+    }
     return true;
   }
   async function testService(service, btn) {
@@ -184,7 +189,7 @@ const Feed = (() => {
   async function syncBlog() {
     if (!(await saveSettings($('feedConfig'), true))) return;
     const data = await (await post('/feed/sync-my-blog')).json();
-    $('syncState').textContent = data.error || '同步中…（后台抓取和嵌入，稍后再打开设置查看）';
+    $('syncState').textContent = data.error || '同步中…（后台抓取和嵌入，稍后刷新页面查看）';
   }
 
   // ---- trends
