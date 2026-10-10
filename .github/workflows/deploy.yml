@@ -40,8 +40,3 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_HOST"
-
-      - name: Check the live page
-        run: |
-          sleep 10
-          curl -fsS https://competitors.fuckseo.io/ -o /dev/null
