@@ -78,12 +78,15 @@
     </div>
 
     <div class="side-foot">
-      <span class="pill hide-empty">● 巡检运行中</span>
+      <span class="pill hide-empty">● {{ '演示数据' if demo else '巡检运行中' }}</span>
     </div>
   </aside>
 
   <!-- ================= Main ================= -->
   <main class="main">
+    {% if demo %}
+    <div class="demo-banner">这是演示站，页面里的竞品和变更都是虚构的示例数据，不能添加或修改。想监控自己的竞品？<a href="https://github.com/tod-zhang/fuck-competitors" target="_blank" rel="noopener">在 GitHub 上免费自行部署 →</a></div>
+    {% endif %}
 
     <!-- ===== First-run empty state ===== -->
     <section class="onboarding only-empty">
@@ -235,6 +238,7 @@
   <div id="settingsContent"></div>
 </div>
 
+{% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
 <script src="/static/app.js"></script>
 </body>
 </html>

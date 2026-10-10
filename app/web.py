@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from . import viewmodels as vm
+from .config import settings
 from .db import engine
 from .models import Change, Competitor, Page, Snapshot
 from .scheduler import check_now, schedule_competitor, unschedule_competitor
@@ -18,6 +19,7 @@ from .timeutil import utcnow
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.globals["demo"] = settings.demo_mode
 router = APIRouter()
 
 PALETTE = ["#111111", "#5E6AD2", "#635BFF", "#0A0A0A", "#F24E1E", "#2563EB", "#059669", "#DB2777"]

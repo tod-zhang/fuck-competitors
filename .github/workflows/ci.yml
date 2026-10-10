@@ -25,5 +25,7 @@ jobs:
         run: python tests/test_batched_write.py
       - name: MCP server tools
         run: python tests/test_mcp.py
+      - name: demo mode (read-only showcase)
+        run: python tests/test_demo.py
       - name: end-to-end (fetch → diff → SQLite, local server)
         run: python tests/e2e_local.py

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     snapshot_retention: int = 10  # detailed-monitoring snapshots kept per page
     detailed_max_pages: int = 500  # cap pages content-diffed per detailed crawl (safety for huge sites)
     write_batch: int = 200  # commit crawl writes every N rows so the write lock is released often
+    demo_mode: bool = False  # read-only showcase: fake data reseeded daily, no crawling, all writes rejected
 
     # MCP server (app/mcp_server.py)
     mcp_transport: str = "stdio"   # "http" to serve over a URL (e.g. for remote AI clients)
