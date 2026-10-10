@@ -7,5 +7,5 @@ python-multipart
 apscheduler
 pydantic-settings
 defusedxml
-selectolax
-mcp
+selectolax<1  # 1.0 removed the Modest backend (selectolax.parser) we import
+mcp<2  # 2.x renamed FastMCP (mcp.server.fastmcp) to MCPServer
