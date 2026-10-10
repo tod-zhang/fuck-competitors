@@ -35,8 +35,15 @@ def test_demo_mode():
         assert client.get(f"/changes/{change_id}").status_code == 200
         assert client.get(f"/competitors/{cid}/settings").status_code == 200
 
+        # the content feed ships with sample articles and trend reads, so visitors see what it looks like
+        feed = client.get("/feed/list?status=new&window=7").text
+        assert feed.count('class="fd-card') >= 10 and "fd-empty" not in feed
+        assert "fd-theme" in client.get("/feed/list?status=trends").text
+        assert client.get("/feed/config").status_code == 200
+
         for path in ["/competitors", f"/competitors/{cid}/detailed", f"/competitors/{cid}/check",
-                     f"/competitors/{cid}/update", f"/competitors/{cid}/delete", f"/changes/{change_id}/read"]:
+                     f"/competitors/{cid}/update", f"/competitors/{cid}/delete", f"/changes/{change_id}/read",
+                     "/feed/config", "/feed/refresh", "/feed/trends/generate"]:
             r = client.post(path, data={"name": "x", "sitemap_url": "https://x.test/sitemap.xml", "interval_hours": "24"},
                             follow_redirects=False)
             assert r.status_code == 403, (path, r.status_code)

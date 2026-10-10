@@ -12,7 +12,7 @@
   </div>
 </div>
 
-{% if not (ready.dfs and ready.embed and ready.llm) or not (my_domain and my_sitemap_url) %}
+{% if not demo and (not (ready.dfs and ready.embed and ready.llm) or not (my_domain and my_sitemap_url)) %}
 <div class="fd-setup-note">
   <span>{% if not (ready.dfs and ready.embed and ready.llm) %}还缺 API：{% if not ready.dfs %}DataForSEO {% endif %}{% if not ready.embed %}嵌入 {% endif %}{% if not ready.llm %}大模型 {% endif %}{% endif %}{% if not (my_domain and my_sitemap_url) %}{% if not (ready.dfs and ready.embed and ready.llm) %}· {% endif %}还没填我的域名 / 博客 sitemap{% endif %}</span>
   <button type="button" class="btn btn-primary btn-sm" onclick="Feed.openSettings()">打开设置</button>
@@ -62,7 +62,7 @@
     </div>
     {% for it in g['items'] %}
     <article class="fd-card st-{{ it.status }}" data-id="{{ it.id }}" data-url="{{ it.url }}" onclick="Feed.focus({{ it.id }}, event)">
-      <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph">{{ g.comp.monogram }}</span>{% endif %}</div>
+      <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph" style="background:{{ g.comp.color }}">{{ g.comp.monogram }}</span>{% endif %}</div>
       <div class="fd-body">
         <a class="fd-title" href="{{ it.url }}" target="_blank" rel="noopener">{{ it.title }}</a>
         {% if it.description %}<p class="fd-desc">{{ it.description }}</p>{% endif %}

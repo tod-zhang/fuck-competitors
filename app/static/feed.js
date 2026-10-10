@@ -3,7 +3,15 @@
 const Feed = (() => {
   const state = { status: 'new', window: 7, comp: null, current: null, loaded: false };
   const $ = id => document.getElementById(id);
-  const post = (url, data) => fetch(url, { method: 'POST', body: new URLSearchParams(data || {}) });
+  const post = (url, data) => {
+    if (window.FC_DEMO) {
+      // demo site: triage and notes still play out on the page (nothing is saved); everything else explains
+      if (/\/(status|note)$|\/feed\/dismiss$/.test(url)) return Promise.resolve(new Response('{"ok":true}'));
+      alert('这是演示站，不能修改数据，也不调用付费接口。\n想用自己的数据和 API，请到 GitHub 自行部署：\nhttps://github.com/tod-zhang/fuck-competitors');
+      return new Promise(() => {});  // never settles: the caller just stops
+    }
+    return fetch(url, { method: 'POST', body: new URLSearchParams(data || {}) });
+  };
   const cards = () => [...document.querySelectorAll('#feedRoot .fd-card')];
   const card = id => document.querySelector(`#feedRoot .fd-card[data-id="${id}"]`);
 
