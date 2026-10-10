@@ -1,0 +1,15 @@
+{% if matches %}
+<div class="fd-matches">
+  {% for m in matches %}
+  <a class="fd-match" href="{{ m.url }}" target="_blank" rel="noopener">
+    <span class="fd-score" style="--s:{{ (m.score * 100)|round|int }}%">{{ '%.2f'|format(m.score) }}</span>
+    <span class="fd-match-title">{{ m.title }}</span>
+  </a>
+  {% endfor %}
+</div>
+<p class="fd-hint">余弦相似度，越接近 1 越像；0.8 以上基本是同一话题，可能已经写过。</p>
+{% elif error %}<p class="fd-err">{{ error }}</p>
+{% elif not ready.embed %}<p class="fd-hint">配置 FC_EMBEDDING_API_KEY 后可用。</p>
+{% elif not has_posts %}<p class="fd-hint">还没有可比对的文章：在「我的站点」里填博客 sitemap，点「同步我的博客」。</p>
+{% else %}<p class="fd-hint">这篇还没有算出相似文章。</p>
+{% endif %}

@@ -24,6 +24,24 @@ class Settings(BaseSettings):
     mcp_port: int = 9528
     mcp_token: str = ""            # if set, require "Authorization: Bearer <token>" — use when exposed publicly
 
+    # Content feed + AI features (app/feed.py, app/integrations.py). Each one is off until its key is set.
+    my_domain: str = ""            # your own site, for competitor suggestions (editable in the feed view)
+    my_sitemap_url: str = ""       # your blog's sitemap, for "closest post on my blog" (editable in the feed view)
+    my_site_max_pages: int = 300   # cap on how many of your own posts get fetched + embedded
+    feed_seed_days: int = 30       # first crawl seeds the feed with pages whose <lastmod> is this recent
+    feed_enrich_batch: int = 30    # titles fetched per check for new feed items (basic-monitoring competitors)
+    dataforseo_login: str = ""
+    dataforseo_password: str = ""
+    dataforseo_location_code: int = 2840   # 2840 = United States
+    dataforseo_language_code: str = "en"
+    embedding_base_url: str = "https://openrouter.ai/api/v1"
+    embedding_api_key: str = ""
+    embedding_model: str = "qwen/qwen3-embedding-8b"
+    embedding_providers: str = ""  # optional OpenRouter provider order, comma-separated (e.g. "nebius,deepinfra")
+    llm_base_url: str = "https://api.deepseek.com/v1"   # any OpenAI-compatible chat API
+    llm_api_key: str = ""
+    llm_model: str = "deepseek-chat"
+
     model_config = SettingsConfigDict(env_prefix="FC_", env_file=".env", extra="ignore")
 
 

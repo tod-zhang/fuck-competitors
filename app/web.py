@@ -13,7 +13,7 @@ from sqlmodel import Session, select
 from . import viewmodels as vm
 from .config import settings
 from .db import engine
-from .models import Change, Competitor, Page, Snapshot
+from .models import Change, Competitor, FeedItem, Page, Snapshot, StrategySummary
 from .scheduler import check_now, schedule_competitor, unschedule_competitor
 from .timeutil import utcnow
 
@@ -183,6 +183,10 @@ def delete_competitor(competitor_id: int):
             s.delete(snap)
         for change in s.exec(select(Change).where(Change.competitor_id == competitor_id)).all():
             s.delete(change)
+        for row in s.exec(select(FeedItem).where(FeedItem.competitor_id == competitor_id)).all():
+            s.delete(row)
+        for row in s.exec(select(StrategySummary).where(StrategySummary.competitor_id == competitor_id)).all():
+            s.delete(row)
         for page in s.exec(select(Page).where(Page.competitor_id == competitor_id)).all():
             s.delete(page)
         competitor = s.get(Competitor, competitor_id)

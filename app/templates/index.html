@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=2">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
+<link rel="stylesheet" href="/static/feed.css?v=1">
 </head>
 
 {% macro eyes() %}
@@ -61,6 +62,7 @@
 
     <nav class="nav">
       <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span>最近动态</a>
+      <a data-view="feed"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></span>内容 Feed</a>
       <a data-view="timeline"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span>变更日志{% if nav_changes %}<span class="badge hide-empty">{{ nav_changes }}</span>{% endif %}</a>
       <a data-view="sites"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg></span>竞品列表</a>
     </nav>
@@ -186,6 +188,8 @@
         {% endfor %}
       </div>
     </section>
+
+    {% include "partials/feed.html" %}
     </div>
   </main>
 </div>
@@ -241,5 +245,6 @@
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
 <script src="/static/app.js?v=2"></script>
+<script src="/static/feed.js?v=1"></script>
 </body>
 </html>

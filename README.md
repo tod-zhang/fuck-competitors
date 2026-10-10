@@ -29,6 +29,7 @@
 ## 功能特性
 
 - 📒 **变更日志** —— 竞品页面的新增、删减、内容修改，按日期分组、时间倒序，可按竞品和变更类型筛选
+- 📰 **内容 Feed** —— 竞品新发的文章排成收件箱，键盘刷：<kbd>j</kbd>/<kbd>k</kbd> 上下、<kbd>s</kbd> 保存、<kbd>d</kbd> 忽略、<kbd>n</kbd> 写笔记；附带 AI 功能（见下文「内容 Feed」）
 - 🔍 **两层监控** —— 轻量的 sitemap 增删监控（全站）+ 可选的正文逐行 diff（按竞品开启）
 - 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化和 diff 开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
 - 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会用初始清单刷屏日志
@@ -157,6 +158,34 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 > ```
 > 再把上面的 `FC_DB_URL` / URL 指向 `./data/demo.db` 即可。
 
+## 内容 Feed（每天早上刷一遍）
+
+侧边栏「内容 Feed」把竞品**新上线的文章**按竞品分组排成卡片（标题、摘要、缩略图、阅读时长），可按 1 / 3 / 7 / 14 / 30 天和竞品筛选，
+顶部显示上次巡检时间，「立即刷新」马上重新巡检全部竞品。首次巡检时，还会把 `lastmod` 在 30 天内的文章放进来
+（如果一个站把所有页面的 `lastmod` 都标成今天，就不信它）。全程键盘操作：
+
+| 键 | 作用 | 键 | 作用 |
+| --- | --- | --- | --- |
+| `J` / `K` | 下一篇 / 上一篇 | `N` | 写笔记 |
+| `S` | 保存，接着弹出笔记框（`Enter` 保存笔记，`Esc` 跳过） | `O` | 打开原文 |
+| `D` | 忽略（每组还有「全部忽略」） | `M` / `W` | 展开相似文章 / 拉关键词数据 |
+| `U` | 放回待处理 | `?` | 快捷键说明 |
+
+「趋势」标签页给每个竞品一份 30 天内容策略解读（策略判断 + 反复出现的主题和对应文章 + 可跟进的选题），
+超过 7 天或之后又发了新文章的标为过期，可以一键生成全部缺失 / 过期的。
+
+四个 AI 功能，各自填了 key 才启用（写进 `.env`，见 `.env.example`）：
+
+| 功能 | 用什么 | 配置 |
+| --- | --- | --- |
+| **推荐竞品**：按「我的域名」找自然搜索竞品，一键关注并自动找 sitemap | DataForSEO Labs `competitors_domain` | `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` |
+| **我博客里最接近的文章**：同步你的博客 sitemap，向量 + 余弦相似度给每篇竞品文章找最像的 3 篇 | 任意 OpenAI 格式的 embeddings 接口，默认 OpenRouter `qwen/qwen3-embedding-8b` | `FC_EMBEDDING_API_KEY` |
+| **关键词数据**（按需）：这篇文章已排名的词 + 核心词的搜索量 / 难度 / 相关词 | DataForSEO Labs `ranked_keywords` + `related_keywords` | 同上 |
+| **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口，默认 DeepSeek | `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
+
+「我的域名」和「我的博客 sitemap」在 Feed 页右上角「我的站点」里填。DataForSEO 按次计费：推荐竞品的结果会缓存，
+关键词只在你点按钮时才查。
+
 ## 监控原理（两层）
 
 | 层级 | 做什么 | 成本 | 覆盖 |
@@ -188,6 +217,11 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
 | `FC_BLOCK_COOLDOWN_SECONDS` | `900` | 遇到 403 / 无 Retry-After 的 429 后，对该域名退避多久 |
 | `FC_DEMO_MODE` | `false` | 只读演示站：每天重置为虚构示例数据，不巡检，拒绝一切写操作（**会清空数据库**，勿对真实数据开启） |
+| `FC_MY_DOMAIN` / `FC_MY_SITEMAP_URL` | 空 | 我的域名 / 博客 sitemap 的默认值（也可在 Feed 页里改） |
+| `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` | 空 | DataForSEO 账号（推荐竞品 + 关键词数据） |
+| `FC_DATAFORSEO_LOCATION_CODE` / `FC_DATAFORSEO_LANGUAGE_CODE` | `2840` / `en` | 关键词数据的国家和语言 |
+| `FC_EMBEDDING_BASE_URL` / `FC_EMBEDDING_API_KEY` / `FC_EMBEDDING_MODEL` | OpenRouter / 空 / `qwen/qwen3-embedding-8b` | 相似文章用的嵌入接口 |
+| `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` | `https://api.deepseek.com/v1` / 空 / `deepseek-chat` | 策略总结用的大模型（任意 OpenAI 格式） |
 
 ## 开发
 
@@ -198,6 +232,7 @@ uvicorn app.main:app --reload --port 9527   # http://localhost:9527
 
 python tests/test_basic.py             # sitemap 解析 + 增删改 diff（纯标准库）
 python tests/test_security.py          # 拒绝 XXE / 实体炸弹的 sitemap
+python tests/test_feed.py              # 内容 Feed：入库、相似文章、竞品推荐（不联网）
 python tests/e2e_local.py              # 全链路：抓取 → diff → 落库（本地 HTTP 服务）
 python tests/seed_demo.py              # 灌入演示数据，方便逛界面
 ```

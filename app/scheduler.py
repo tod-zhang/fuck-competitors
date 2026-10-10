@@ -10,6 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session, select
 
 from .db import engine
+from .feed import after_check, backfill_all
 from .models import Competitor
 from .service import run_check
 
@@ -20,6 +21,10 @@ def _job(competitor_id: int) -> None:
     try:
         run_check(competitor_id)
     except Exception:  # noqa: BLE001 — a failing check must not kill the scheduler thread
+        pass
+    try:
+        after_check(competitor_id)  # new pages -> content feed (titles, embeddings, matches)
+    except Exception:  # noqa: BLE001
         pass
 
 
@@ -54,3 +59,4 @@ def start_scheduler() -> None:
     with Session(engine) as session:
         for competitor in session.exec(select(Competitor)).all():
             schedule_competitor(competitor)
+    scheduler.add_job(backfill_all, id="feed-backfill", replace_existing=True)

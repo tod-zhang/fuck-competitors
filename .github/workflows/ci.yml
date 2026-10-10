@@ -23,6 +23,8 @@ jobs:
         run: python tests/test_concurrency.py
       - name: batched crawl writes (lock released often)
         run: python tests/test_batched_write.py
+      - name: content feed (ingest, embedding match, suggestions)
+        run: python tests/test_feed.py
       - name: MCP server tools
         run: python tests/test_mcp.py
       - name: demo mode (read-only showcase)

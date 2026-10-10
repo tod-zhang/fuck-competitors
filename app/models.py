@@ -54,3 +54,52 @@ class Snapshot(SQLModel, table=True):
     content_hash: str
     title: Optional[str] = None
     content_text: str = ""
+
+
+class FeedItem(SQLModel, table=True):
+    """One competitor article in the content feed: something to triage (save / decline) and annotate."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    competitor_id: int = Field(foreign_key="competitor.id", index=True)
+    page_id: int = Field(foreign_key="page.id", index=True, unique=True)
+    url: str
+    title: Optional[str] = None
+    excerpt: str = ""                    # start of the body text, used for the embedding
+    description: Optional[str] = None    # <meta name=description> / og:description
+    image: Optional[str] = None          # og:image, shown as the card thumbnail
+    read_minutes: Optional[int] = None
+    source: str = "new"                  # new (appeared in the sitemap) | lastmod (seeded from a recent <lastmod>)
+    published_at: datetime = Field(default_factory=utcnow, index=True)
+    status: str = Field(default="new", index=True)   # new | saved | declined
+    note: str = ""
+    embedding: Optional[list] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))
+    embed_model: Optional[str] = None
+    matches: Optional[list] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))    # closest posts on my blog
+    keywords: Optional[dict] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))   # DataForSEO data, fetched on request
+    fetched: bool = False                # title/excerpt fetch attempted
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class MyPost(SQLModel, table=True):
+    """A post on my own blog, embedded so competitor articles can be matched against it."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    url: str = Field(index=True, unique=True)
+    title: Optional[str] = None
+    embedding: Optional[list] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))
+    embed_model: Optional[str] = None
+    synced_at: datetime = Field(default_factory=utcnow)
+
+
+class StrategySummary(SQLModel, table=True):
+    """An LLM summary of one competitor's last N days of content."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    competitor_id: int = Field(foreign_key="competitor.id", index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    days: int = 30
+    article_count: int = 0
+    text: str = ""                       # JSON {"strategy": str, "themes": [{name, description, urls}]}
+
+
+class AppSetting(SQLModel, table=True):
+    """Key/value settings edited in the UI (my domain, my blog sitemap)."""
+    key: str = Field(primary_key=True)
+    value: str = ""

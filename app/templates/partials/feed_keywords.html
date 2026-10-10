@@ -1,0 +1,15 @@
+{% macro kwtable(rows, with_pos=False) %}
+<table class="fd-kw">
+  <tr><th>关键词</th>{% if with_pos %}<th>排名</th>{% endif %}<th>月搜索量</th><th>难度</th><th>意图</th></tr>
+  {% for r in rows %}<tr><td>{{ r.keyword }}</td>{% if with_pos %}<td>{{ r.position or '—' }}</td>{% endif %}<td>{{ '{:,}'.format(r.volume) if r.volume is not none else '—' }}</td><td>{{ r.kd if r.kd is not none else '—' }}</td><td>{{ r.intent or '—' }}</td></tr>{% endfor %}
+</table>
+{% endmacro %}
+<div class="fd-kw-wrap">
+  <h5>这篇文章已排名的关键词</h5>
+  {% if keywords.ranked %}{{ kwtable(keywords.ranked, True) }}{% else %}<p class="fd-hint">还没有排名数据（新文章通常要过几周才会被收录进数据库）。</p>{% endif %}
+  {% if keywords.seed %}
+  <h5>核心词「{{ keywords.seed }}」{% if keywords.seed_row %} · 月搜索量 {{ '{:,}'.format(keywords.seed_row.volume) if keywords.seed_row.volume is not none else '—' }} · 难度 {{ keywords.seed_row.kd if keywords.seed_row.kd is not none else '—' }}{% endif %}</h5>
+  {% if keywords.related %}{{ kwtable(keywords.related) }}{% else %}<p class="fd-hint">没有相关词数据。</p>{% endif %}
+  {% endif %}
+  <p class="fd-hint">拉取于 {{ keywords.fetched_at }} · <a href="#" onclick="event.preventDefault();Feed.loadKeywords(null, this)">重新拉取</a></p>
+</div>

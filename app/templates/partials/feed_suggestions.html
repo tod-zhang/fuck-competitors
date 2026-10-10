@@ -1,0 +1,13 @@
+<h3>推荐关注的竞品</h3>
+<p class="sub">和 <b>{{ domain }}</b> 抢同一批关键词的网站（DataForSEO 自然搜索竞品，按共同关键词数排序）。关注时会自动找它的 sitemap。</p>
+<table class="fd-kw fd-sugg">
+  <tr><th>网站</th><th>共同关键词</th><th>平均排名</th><th>重叠词流量</th><th></th></tr>
+  {% for r in rows %}
+  <tr>
+    <td><a href="https://{{ r.domain }}" target="_blank" rel="noopener">{{ r.domain }}</a></td>
+    <td>{{ '{:,}'.format(r.intersections) }}</td><td>{{ r.avg_position }}</td><td>{{ '{:,}'.format(r.etv) }}</td>
+    <td>{% if r.tracked %}<span class="fd-hint">已关注</span>{% else %}<button class="btn btn-soft btn-sm" onclick="Feed.follow('{{ r.domain }}', this)">关注</button>{% endif %}</td>
+  </tr>
+  {% else %}<tr><td colspan="5" class="fd-hint">没有找到竞品。</td></tr>{% endfor %}
+</table>
+<div class="modal-foot"><button class="btn btn-ghost btn-sm" onclick="Feed.openSuggestions(1)">重新查询（计费）</button></div>

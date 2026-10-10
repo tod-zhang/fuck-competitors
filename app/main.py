@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import web
+from . import feed_web, web
 from .config import settings
 from .db import init_db
 from .scheduler import scheduler, start_scheduler
@@ -44,3 +44,4 @@ if settings.demo_mode:
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.include_router(web.router)
+app.include_router(feed_web.router)

@@ -1,0 +1,7 @@
+{# Content feed view: a shell; the list is fetched from /feed/list when the view opens (static/feed.js). #}
+<section class="view" id="view-feed">
+  <div id="feedRoot"><p class="empty-soft">加载中…</p></div>
+</section>
+<div class="scrim" id="feedScrim" onclick="if(event.target===this)Feed.closeModal()">
+  <div class="modal fd-modal"><button class="drawer-close" onclick="Feed.closeModal()">✕</button><div id="feedModal"></div></div>
+</div>

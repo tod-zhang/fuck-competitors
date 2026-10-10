@@ -1,0 +1,113 @@
+<div class="fd-head">
+  <div>
+    <h2 class="fd-h">{{ '竞品趋势' if status == 'trends' else '竞品内容 Feed' }}</h2>
+    <p class="fd-sub">{% if status == 'trends' %}每个竞品一份 30 天内容策略解读，点「刷新」重新生成。{% else %}竞品最近 {{ window }} 天发布的新文章{% endif %}</p>
+  </div>
+  <div class="fd-head-actions">
+    <span class="fd-scan{% if scan_error %} err{% endif %}"><i></i>上次巡检 {{ last_scan }}</span>
+    <button type="button" class="btn btn-primary btn-sm" onclick="Feed.refresh(this)">立即刷新</button>
+    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSuggestions()">推荐竞品</button>
+    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.toggleSetup()">我的站点</button>
+    <button type="button" class="btn btn-soft btn-sm" onclick="showView('sites')">竞品列表</button>
+  </div>
+</div>
+
+<form class="fd-setup{% if not my_domain and not my_sitemap_url %} open{% endif %}" id="feedSetup" onsubmit="event.preventDefault();Feed.saveSetup(this)">
+  <div class="field"><label>我的域名 <span class="fd-hint">用来推荐竞品（DataForSEO 自然搜索竞品）</span></label><input name="my_domain" value="{{ my_domain }}" placeholder="example.com"></div>
+  <div class="field"><label>我的博客 sitemap <span class="fd-hint">用来找"我博客里最接近的文章"（向量相似度）</span></label><input name="my_sitemap_url" value="{{ my_sitemap_url }}" placeholder="https://example.com/post-sitemap.xml"></div>
+  <div class="fd-setup-foot">
+    <span class="fd-hint" id="syncState">已嵌入 {{ my_posts }} 篇{% if sync_status %} · {{ sync_status }}{% endif %}</span>
+    <span class="fd-spacer"></span>
+    <button class="btn btn-soft btn-sm" type="button" onclick="Feed.syncBlog()">同步我的博客</button>
+    <button class="btn btn-primary btn-sm" type="submit">保存</button>
+  </div>
+  {% if not (ready.dfs and ready.embed and ready.llm) %}
+  <p class="fd-hint">未配置：{% if not ready.dfs %}DataForSEO（FC_DATAFORSEO_LOGIN / PASSWORD） {% endif %}{% if not ready.embed %}嵌入（FC_EMBEDDING_API_KEY） {% endif %}{% if not ready.llm %}大模型（FC_LLM_API_KEY）{% endif %}</p>
+  {% endif %}
+</form>
+
+<div class="fd-tabs">
+  {% for key, label in [('new', '待处理'), ('saved', '已保存 · 灵感'), ('declined', '已忽略'), ('trends', '趋势')] %}
+  <button type="button" class="fd-tab{% if status == key %} on{% endif %}" data-status="{{ key }}" onclick="Feed.load({status:'{{ key }}'})">{{ label }}{% if key in ('new', 'saved') %} <span class="fd-cnt">{{ counts.get(key, 0) }}</span>{% endif %}</button>
+  {% endfor %}
+</div>
+
+{% if status == 'trends' %}
+  <div class="fd-trend-bar">
+    <span><b>监控 {{ competitors|length }} 个竞品。</b>{% if need %}<span class="fd-warn">{{ need }} 个需要更新。</span>{% else %}都是最新的。{% endif %}{% if trends_status %} <span class="fd-hint" id="trendsState">{{ trends_status }}</span>{% endif %}</span>
+    <span class="fd-spacer"></span>
+    {% if ready.llm %}
+    {% if need %}<button class="btn btn-primary btn-sm" onclick="Feed.generateTrends(0, this)">生成 {{ need }} 个缺失 / 过期的</button>{% endif %}
+    <button class="btn btn-soft btn-sm" onclick="Feed.generateTrends(1, this)">全部重新生成</button>
+    {% else %}<span class="fd-hint">配置 FC_LLM_API_KEY 后可用</span>{% endif %}
+  </div>
+  {% for c in cards %}{% include "partials/feed_trend_card.html" %}{% else %}<p class="empty-soft">还没有竞品。</p>{% endfor %}
+{% else %}
+  <div class="fd-filters">
+    <div class="fd-frow"><span class="fd-flabel">时间</span>
+      {% for w in windows %}<button type="button" class="fd-chip{% if w == window %} on{% endif %}" onclick="Feed.load({window:{{ w }}})">{{ w }} 天</button>{% endfor %}
+    </div>
+    <div class="fd-frow"><span class="fd-flabel">竞品</span>
+      <button type="button" class="fd-chip{% if not comp %} on{% endif %}" onclick="Feed.load({comp:null})">全部</button>
+      {% for c in competitors %}<button type="button" class="fd-chip{% if comp == c.id %} on{% endif %}" onclick="Feed.load({comp:{{ c.id }}})">{{ c.host or c.name }}</button>{% endfor %}
+    </div>
+  </div>
+
+  <div class="fd-keys">按 <kbd>J</kbd><kbd>K</kbd> 上下，<kbd>S</kbd> 保存，<kbd>D</kbd> 忽略 <button type="button" class="fd-qbtn" onclick="Feed.toggleHelp()">?</button></div>
+  <div class="fd-help" id="feedHelp">
+    <kbd>J</kbd>/<kbd>K</kbd> 下一篇 / 上一篇 · <kbd>S</kbd> 保存（接着写笔记，<kbd>Enter</kbd> 保存笔记，<kbd>Esc</kbd> 跳过） · <kbd>D</kbd> 忽略 · <kbd>U</kbd> 放回待处理 · <kbd>N</kbd> 写笔记 · <kbd>O</kbd> 打开原文 · <kbd>M</kbd> 展开相似文章 · <kbd>W</kbd> 拉关键词
+  </div>
+
+  {% for g in groups %}
+  <section class="fd-group" data-comp="{{ g.id }}">
+    <div class="fd-group-head">
+      {% with c = g.comp %}{% include "partials/_feed_avatar.html" %}{% endwith %}
+      <h3>{{ g.comp.host or g.comp.name }}</h3>
+      <span class="fd-spacer"></span>
+      <span class="fd-hint"><span class="fd-gcount">{{ g['items']|length }}</span> 篇</span>
+      {% if status == 'new' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.dismissGroup(this)">全部忽略</button>{% endif %}
+    </div>
+    {% for it in g['items'] %}
+    <article class="fd-card st-{{ it.status }}" data-id="{{ it.id }}" data-url="{{ it.url }}" onclick="Feed.focus({{ it.id }}, event)">
+      <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph">{{ g.comp.monogram }}</span>{% endif %}</div>
+      <div class="fd-body">
+        <a class="fd-title" href="{{ it.url }}" target="_blank" rel="noopener">{{ it.title }}</a>
+        {% if it.description %}<p class="fd-desc">{{ it.description }}</p>{% endif %}
+        <div class="fd-meta">{% if it.read_minutes %}<span>⏱ {{ it.read_minutes }} 分钟读完</span>{% endif %}<span class="fd-url">{{ it.url }}</span>{% if it.seeded %}<span>首次巡检时 lastmod 较新</span>{% endif %}</div>
+      </div>
+      <div class="fd-side">
+        <span class="fd-date">{{ it.date }}</span>
+        <div class="fd-btns">
+          {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.save({{ it.id }})">★ 保存</button>{% endif %}
+          {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.dismiss({{ it.id }})">✕ 忽略</button>{% endif %}
+          {% if it.status != 'new' %}<button type="button" class="btn btn-ghost btn-sm" onclick="Feed.restore({{ it.id }})">放回待处理</button>{% endif %}
+        </div>
+      </div>
+
+      <div class="fd-notebox{% if it.status == 'saved' %} open{% endif %}">
+        <div class="fd-note-label"><b class="fd-saved-tag">★ 已保存，写个笔记？</b> <span class="fd-hint">Enter 保存 · Esc 跳过</span></div>
+        <textarea class="fd-note" rows="2" placeholder="你的角度、暂定标题、草稿链接、为什么存它……">{{ it.note }}</textarea>
+        <div class="fd-note-foot"><span class="fd-hint fd-note-state"></span><span class="fd-spacer"></span>
+          {% if it.status == 'new' %}<button type="button" class="btn btn-ghost btn-sm" onclick="Feed.skipNote({{ it.id }})">跳过 (Esc)</button>{% endif %}
+          <button type="button" class="btn btn-primary btn-sm" onclick="Feed.saveNote({{ it.id }})">保存笔记 (Enter)</button></div>
+      </div>
+
+      <details class="fd-more" data-kind="matches" ontoggle="Feed.loadMatches(this, {{ it.id }})">
+        <summary>我博客里最接近的文章{% if it.matches %} · 最高 {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</summary>
+        <div class="fd-more-body">{% if it.matches %}{% with matches = it.matches, ready = ready, has_posts = true %}{% include "partials/feed_matches.html" %}{% endwith %}{% endif %}</div>
+      </details>
+      <details class="fd-more" data-kind="keywords"{% if it.keywords %} open{% endif %}>
+        <summary>关键词数据{% if it.keywords %} · 已拉取{% endif %}</summary>
+        <div class="fd-more-body">
+          {% if it.keywords %}{% with keywords = it.keywords %}{% include "partials/feed_keywords.html" %}{% endwith %}
+          {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取 (W)</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
+          {% else %}<p class="fd-hint">配置 FC_DATAFORSEO_LOGIN / FC_DATAFORSEO_PASSWORD 后可用。</p>{% endif %}
+        </div>
+      </details>
+    </article>
+    {% endfor %}
+  </section>
+  {% else %}
+  <p class="empty-soft fd-empty">{% if status == 'new' %}这段时间的文章都刷完了，竞品发了新文章会出现在这里。可以把时间窗放大看看。{% else %}这里还没有文章。{% endif %}</p>
+  {% endfor %}
+{% endif %}

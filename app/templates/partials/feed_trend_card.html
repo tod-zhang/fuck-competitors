@@ -1,0 +1,31 @@
+<section class="fd-trend" data-comp="{{ c.id }}">
+  <div class="fd-trend-head">
+    {% with c = c.comp %}{% include "partials/_feed_avatar.html" %}{% endwith %}
+    <h3>{{ c.comp.host or c.comp.name }}</h3>
+    <span class="fd-hint">30 天内 {{ c.posts }} 篇{% if c.summary %}{% if c.stale %} · <span class="fd-warn">过期</span>{% endif %} · 更新于 {{ c.summary.at }}{% endif %}</span>
+    <span class="fd-spacer"></span>
+    {% if ready.llm and c.posts %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.refreshTrend({{ c.id }}, this)">{{ '刷新' if c.summary else '生成' }}</button>{% endif %}
+  </div>
+  {% if c.error %}<p class="fd-err">{{ c.error }}</p>{% endif %}
+  {% if c.summary %}
+  <div class="fd-trend-body">
+    <div class="fd-label">策略</div>
+    <p class="fd-strategy">{{ c.summary.strategy }}</p>
+    {% if c.summary.themes %}
+    <div class="fd-label">反复出现的主题</div>
+    {% for t in c.summary.themes %}
+    <div class="fd-theme">
+      <div class="fd-theme-name">{{ t.name }}{% if t.urls %} <span class="fd-hint">{{ t.urls|length }} 篇</span>{% endif %}</div>
+      {% if t.description %}<p class="fd-theme-desc">{{ t.description }}</p>{% endif %}
+      {% for u in t.urls or [] %}<a class="fd-theme-url" href="{{ u }}" target="_blank" rel="noopener">{{ u }}</a>{% endfor %}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if c.summary.ideas %}
+    <div class="fd-label">我可以跟进的选题</div>
+    <ul class="fd-ideas">{% for i in c.summary.ideas %}<li>{{ i }}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+  {% elif not c.posts %}<p class="fd-hint fd-trend-empty">最近 30 天没有新文章。</p>
+  {% else %}<p class="fd-hint fd-trend-empty">还没有解读，点「生成」。</p>{% endif %}
+</section>
