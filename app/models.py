@@ -15,7 +15,7 @@ class Competitor(SQLModel, table=True):
     sitemap_url: str
     color: str = "#39332B"               # sidebar monogram color
     check_interval_hours: int = 24
-    detailed_on: bool = False            # opt-in: fetch page content for diffing
+    detailed_on: bool = False            # deprecated/unused — detailed monitoring was removed
     favicon_url: Optional[str] = None    # resolved from the site's <link rel="icon">, if any
     status: str = "ok"                   # ok | error
     last_checked_at: Optional[datetime] = None
@@ -47,7 +47,7 @@ class Change(SQLModel, table=True):
 
 
 class Snapshot(SQLModel, table=True):
-    """Page content history for detailed monitoring (used to compute content diffs)."""
+    """Page content history from the removed detailed monitoring; no longer written (old rows are still read as the feed fallback)."""
     id: Optional[int] = Field(default=None, primary_key=True)
     page_id: int = Field(foreign_key="page.id", index=True)
     captured_at: datetime = Field(default_factory=utcnow)

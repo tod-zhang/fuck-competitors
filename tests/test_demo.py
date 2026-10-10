@@ -41,7 +41,7 @@ def test_demo_mode():
         assert "fd-theme" in client.get("/feed/list?status=trends").text
         assert client.get("/feed/config").status_code == 200
 
-        for path in ["/competitors", f"/competitors/{cid}/detailed", f"/competitors/{cid}/check",
+        for path in ["/competitors", f"/competitors/{cid}/check",
                      f"/competitors/{cid}/update", f"/competitors/{cid}/delete", f"/changes/{change_id}/read",
                      "/feed/config", "/feed/refresh", "/feed/trends/generate"]:
             r = client.post(path, data={"name": "x", "sitemap_url": "https://x.test/sitemap.xml", "interval_hours": "24"},

@@ -3,7 +3,7 @@
 - ingest(): turn new sitemap pages ("added" changes) into feed items; the first crawl of a
   competitor also seeds the feed with pages whose <lastmod> is recent.
 - enrich(): fetch each new article once for title, description, thumbnail and read time (a
-  detailed-monitoring snapshot is the fallback), embed it, and match it against my own blog posts.
+  a stored page snapshot, if any, is the fallback), embed it, and match it against my own blog posts.
 - sync_my_posts(): fetch + embed my blog (its sitemap) so matching has something to compare to.
 - keywords / strategy / suggestions: on-request calls to DataForSEO and the chat model.
 """
@@ -104,7 +104,7 @@ def page_meta(html: bytes, url: str) -> dict:
     """Title, body text, description, thumbnail and read time from a fetched article."""
     from selectolax.parser import HTMLParser
 
-    from .monitor.detailed import extract_text
+    from .monitor.extract import extract_text
 
     tree = HTMLParser(html)
 
@@ -128,7 +128,7 @@ def page_meta(html: bytes, url: str) -> dict:
 
 
 def _fill_text(session: Session, items: list[FeedItem]) -> None:
-    """Fetch each new article once for its metadata; fall back to a detailed-monitoring snapshot."""
+    """Fetch each new article once for its metadata; fall back to a stored snapshot."""
     from .monitor import fetch
 
     with fetch.make_client(settings.request_timeout) as client:
@@ -232,7 +232,7 @@ def backfill_all() -> None:
 def sync_my_posts() -> dict:
     """Fetch my blog's sitemap, embed every post (capped), then re-match the whole feed."""
     from .monitor import fetch
-    from .monitor.detailed import extract_text
+    from .monitor.extract import extract_text
     from .monitor.sitemap import fetch_all_pages
 
     with Session(engine) as session:

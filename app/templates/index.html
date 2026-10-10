@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/app.css?v=2">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
+<link rel="stylesheet" href="/static/app.css?v=3">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
 <link rel="stylesheet" href="/static/feed.css?v=4">
 </head>
 
@@ -112,7 +112,7 @@
       <div class="ob-features">
         <div class="ob-feat"><div class="fi" style="background:var(--add-bg);color:var(--add)">＋</div><h4>捕捉新增</h4><p>竞品上线新页面（新品、新案例、新博客）第一时间记录。</p></div>
         <div class="ob-feat"><div class="fi" style="background:var(--del-bg);color:var(--del)">－</div><h4>追踪删减</h4><p>页面悄悄下线，往往是产品线调整或策略转向的信号。</p></div>
-        <div class="ob-feat"><div class="fi" style="background:var(--mod-bg);color:var(--mod)">±</div><h4>内容变化</h4><p>基础监控提示「疑似修改」；开启详细监控看定价、文案的逐行 diff。</p></div>
+        <div class="ob-feat"><div class="fi" style="background:var(--mod-bg);color:var(--mod)">±</div><h4>内容变化</h4><p>sitemap 里的 <code>lastmod</code> 变了，会提示「疑似修改」。</p></div>
       </div>
     </section>
 
@@ -163,11 +163,6 @@
             <div><div class="k">追踪页面</div><div class="v">{{ s.tracked }}</div></div>
             <div><div class="k">近 7 天变更</div><div class="v" style="color:var(--accent)">{{ s.week_changes }}</div></div>
           </div>
-          <form method="post" action="/competitors/{{ s.id }}/detailed" class="card-foot">
-            <span class="lvl {{ 'deep' if s.detailed else 'basic' }}">{{ '详细监控' if s.detailed else '基础监控' }}</span>
-            <span>{{ '抓取全部页面正文、逐行对比' if s.detailed else '仅 sitemap 增删' }}</span>
-            <label class="switch"><input type="checkbox" name="on" {% if s.detailed %}checked{% endif %} onchange="this.form.submit()"><span class="track"></span></label>
-          </form>
         </div>
         {% else %}
         <p class="empty-soft">还没有竞品，点右上角「＋ 添加竞品」。</p>
@@ -208,15 +203,6 @@
             <li data-value="24" class="sel">每天</li>
             <li data-value="168">每周</li>
           </ul>
-        </div>
-      </div>
-      <div class="field"><label>监控深度</label>
-        <div class="toggle-card">
-          <div style="flex:1">
-            <div class="t">详细内容监控 <span class="lvl deep" style="margin-left:4px">可选</span></div>
-            <div class="d">基础监控（默认）：检测页面新增 / 删减，并在 sitemap 带 <code>lastmod</code> 时提示「疑似修改」。开启后抓取正文，逐行对比定价、文案等<b>具体</b>改动。可稍后对单个竞品开启。</div>
-          </div>
-          <label class="switch"><input type="checkbox" name="detailed"><span class="track"></span></label>
         </div>
       </div>
       <div class="modal-foot">

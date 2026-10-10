@@ -13,8 +13,6 @@ class Settings(BaseSettings):
     crawl_delay_seconds: float = 1.0   # min spacing between requests to the same host (robots Crawl-delay can raise it)
     block_cooldown_seconds: int = 900  # after a 403 / 429-without-Retry-After, skip that host for this long
     max_sitemap_urls: int = 50_000
-    snapshot_retention: int = 10  # detailed-monitoring snapshots kept per page
-    detailed_max_pages: int = 500  # cap pages content-diffed per detailed crawl (safety for huge sites)
     write_batch: int = 200  # commit crawl writes every N rows so the write lock is released often
     demo_mode: bool = False  # read-only showcase: fake data reseeded daily, no crawling, all writes rejected
 

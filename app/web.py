@@ -63,7 +63,6 @@ def index(request: Request):
                 "tracked": active_by_comp.get(c.id, 0),
                 "week_changes": week_by_comp.get(c.id, 0),
                 "freq": vm.interval_label(c.check_interval_hours),
-                "detailed": c.detailed_on,
                 "favicon": vm.favicon_url_for(c),
             }
             for c in competitors
@@ -102,7 +101,6 @@ def create_competitor(
     name: str = Form(...),
     sitemap_url: str = Form(...),
     interval_hours: int = Form(24),
-    detailed: str = Form(None),
 ):
     with Session(engine) as s:
         count = len(s.exec(select(Competitor)).all())
@@ -110,7 +108,6 @@ def create_competitor(
             name=name.strip(),
             sitemap_url=sitemap_url.strip(),
             check_interval_hours=interval_hours,
-            detailed_on=bool(detailed),
             color=PALETTE[count % len(PALETTE)],
         )
         s.add(competitor)
@@ -118,17 +115,6 @@ def create_competitor(
         s.refresh(competitor)
     schedule_competitor(competitor)
     check_now(competitor.id)
-    return RedirectResponse("/", status_code=303)
-
-
-@router.post("/competitors/{competitor_id}/detailed")
-def toggle_detailed(competitor_id: int, on: str = Form(None)):
-    with Session(engine) as s:
-        competitor = s.get(Competitor, competitor_id)
-        if competitor:
-            competitor.detailed_on = bool(on)
-            s.add(competitor)
-            s.commit()
     return RedirectResponse("/", status_code=303)
 
 

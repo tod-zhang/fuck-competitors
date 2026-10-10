@@ -66,7 +66,6 @@ def list_competitors() -> list[dict]:
                 "host": host_of(c.sitemap_url),
                 "tracked_pages": tracked,
                 "changes_last_7d": recent,
-                "detailed_monitoring": c.detailed_on,
                 "status": c.status,
                 "last_checked": c.last_checked_at.isoformat() if c.last_checked_at else None,
             })

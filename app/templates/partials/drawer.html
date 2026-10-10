@@ -8,14 +8,10 @@
   </div>
 
   {% if mode == 'suspected' %}
-  <div class="dh">为什么看不到具体改动？ <span class="line"></span><span class="tag susp">基础监控</span></div>
+  <div class="dh">为什么看不到具体改动？ <span class="line"></span></div>
   <div class="upsell">
-    <div class="pd">基础监控只读取 sitemap，检测到该页 <b>lastmod {{ lastmod }}</b>，说明页面<b>可能有改动</b>，但未抓取正文，<b>无法显示改了什么</b>。</div>
+    <div class="pd">巡检只读取 sitemap，检测到该页 <b>lastmod {{ lastmod }}</b>，说明页面<b>可能有改动</b>，但未抓取正文，<b>无法显示改了什么</b>。</div>
     <div class="why"><svg class="wic" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="2"/><rect x="0" y="6" width="8" height="1"/></svg>该提示依赖站点诚实填写 lastmod；未提供 lastmod 的站点连「疑似修改」也无法判断。</div>
-    <form method="post" action="/competitors/{{ competitor_id }}/detailed">
-      <input type="hidden" name="on" value="1">
-      <button class="btn btn-primary" type="submit" style="margin-top:13px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg> 为该竞品开启详细监控</button>
-    </form>
   </div>
 
   {% elif mode == 'diff' %}

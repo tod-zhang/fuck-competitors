@@ -7,7 +7,6 @@ from .config import settings
 from .db import engine
 from .models import Change, Competitor, Page
 from .monitor.basic import diff_pages
-from .monitor.detailed import check_page_content
 from .monitor.favicon import resolve_favicon
 from .monitor.sitemap import fetch_all_pages
 from .timeutil import utcnow
@@ -102,31 +101,11 @@ def run_basic_check(session: Session, competitor: Competitor) -> dict:
     return {"baseline": is_baseline, "tracked": len(entries), **logged}
 
 
-def run_detailed_check(session: Session, competitor: Competitor) -> int:
-    """Content-diff every active page (capped). Returns number of modified pages."""
-    from .monitor import fetch  # lazy: keep httpx out of service's import path
-
-    pages = session.exec(
-        select(Page).where(Page.competitor_id == competitor.id, Page.status == "active")
-    ).all()
-    if len(pages) > settings.detailed_max_pages:
-        pages = pages[: settings.detailed_max_pages]
-    modified = 0
-    # One client for the whole run so connections (and per-host rate limiting) are reused
-    # across pages instead of a fresh TCP/TLS handshake per page.
-    with fetch.make_client(settings.request_timeout) as client:
-        for page in pages:
-            if check_page_content(session, page, client) is not None:
-                modified += 1
-            session.commit()  # release the write lock between (network-bound) page checks
-    return modified
-
-
 def run_check(competitor_id: int) -> dict:
-    """Full check for one competitor: basic always, detailed if opted in.
+    """Full check for one competitor (sitemap diff).
 
-    run_basic_check / run_detailed_check commit their own work in batches (so the write lock
-    is released frequently); the final commit here just flushes any straggler.
+    run_basic_check commits its own work in batches (so the write lock is released
+    frequently); the final commit here just flushes any straggler.
     """
     with Session(engine) as session:
         competitor = session.get(Competitor, competitor_id)
@@ -134,8 +113,6 @@ def run_check(competitor_id: int) -> dict:
             raise ValueError(f"competitor {competitor_id} not found")
 
         result = {"checked": competitor.name, **run_basic_check(session, competitor)}
-        if competitor.detailed_on:
-            result["modified"] = run_detailed_check(session, competitor)
 
         session.commit()
         return result

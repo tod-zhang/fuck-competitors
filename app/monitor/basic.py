@@ -4,8 +4,7 @@ Pure-python, dependency-free, so it can be unit-tested directly. Given the previ
 stored pages and a freshly-fetched sitemap, it produces added / removed / suspected records.
 
 'suspected' = a page present in both runs whose <lastmod> changed. It only means "this page
-probably changed" — sitemaps never reveal *what* changed. Seeing the actual content diff is
-the job of detailed monitoring (see detailed.py, milestone M4).
+probably changed" — sitemaps never reveal *what* changed.
 """
 from __future__ import annotations
 

@@ -172,11 +172,11 @@ def build_detail_vm(change: Change, page: Page | None, competitor: Competitor | 
         vm["title"] = detail.get("title") or "内容已修改"
         vm["mode"] = "diff"
         vm["hunks"] = detail.get("hunks", [])
-        vm["meta"] = [("检测时间", dt), ("监控深度", "详细"), ("正文标题", detail.get("title") or "—")]
+        vm["meta"] = [("检测时间", dt), ("正文标题", detail.get("title") or "—")]
     elif change.type == "suspected":
         vm["title"] = "页面可能已修改"
         vm["mode"] = "suspected"
         vm["lastmod"] = f"{detail.get('lastmod_from') or '—'} → {detail.get('lastmod_to') or '—'}"
-        vm["meta"] = [("检测时间", dt), ("lastmod", vm["lastmod"]), ("监控深度", "基础")]
+        vm["meta"] = [("检测时间", dt), ("lastmod", vm["lastmod"])]
 
     return vm

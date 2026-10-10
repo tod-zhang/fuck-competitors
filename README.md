@@ -21,8 +21,8 @@
 | 内容 Feed | 变更日志 |
 | --- | --- |
 | ![内容 Feed](docs/screenshots/feed.png) | ![变更日志](docs/screenshots/changelog.png) |
-| **内容 diff** | **竞品列表** |
-| ![内容 diff](docs/screenshots/diff-drawer.png) | ![竞品列表](docs/screenshots/sites.png) |
+| **竞品列表** | **设置** |
+| ![竞品列表](docs/screenshots/sites.png) | ![设置](docs/screenshots/settings.png) |
 
 ---
 
@@ -30,8 +30,8 @@
 
 - 📒 **变更日志** —— 竞品页面的新增、删减、内容修改，按日期分组、时间倒序，可按竞品和变更类型筛选
 - 📰 **内容 Feed** —— 竞品新发的文章排成收件箱，键盘刷：<kbd>j</kbd>/<kbd>k</kbd> 上下、<kbd>s</kbd> 保存、<kbd>d</kbd> 忽略、<kbd>n</kbd> 写笔记；附带 AI 功能（见下文「内容 Feed」）
-- 🔍 **两层监控** —— 轻量的 sitemap 增删监控（全站）+ 可选的正文逐行 diff（按竞品开启）
-- 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化和 diff 开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
+- 🔍 **sitemap 监控** —— 只读 sitemap，轻量地发现全站页面的新增、删减和「疑似修改」
+- 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
 - 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会用初始清单刷屏日志
 - ⚙️ **竞品设置** —— 随时改名称 / sitemap 地址 / 巡检频率、立即巡检、删除竞品
 - 🐳 **一条命令部署** —— 单容器 + 单个 SQLite 文件，无需任何外部服务
@@ -91,24 +91,21 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
    首次巡检是**静默建基线**：只记录当前全部页面，**不会**给每个页面灌一条"新增"
    —— 初始清单里没有"变化"这个信号。
 2. **让它跑** —— 每个竞品按各自频率自动重抓（或在卡片设置里点「立即巡检」马上查一次）。
-   从第二次巡检起，只有真正的 **新增 / 删减 / 疑似修改** 才会进变更日志。
-3. **盯关键内容** —— 想看定价、文案、客户案例的**逐行内容 diff**，在「竞品列表」里
-   对该竞品打开**详细监控**开关。开启后，每次详细巡检会抓取它**全部页面**的正文做对比，
-   记录到底改了什么。
+   从第二次巡检起，只有真正的 **新增 / 删减 / 疑似修改** 才会进变更日志，新文章同时进「内容 Feed」。
 
 ## AI 分析（MCP）
 
-应用自带一个**只读 MCP server**，把竞品的变化和内容 diff 以工具形式开放给 AI Agent
+应用自带一个**只读 MCP server**，把竞品的变化以工具形式开放给 AI Agent
 （Claude Code / Codex / Claude Desktop / ChatGPT 等）。接上之后用**自然语言**问就行 ——
-Agent 自己调下面的工具拉数据、读 diff、推理出"对手在优化什么"。
+Agent 自己调下面的工具拉数据、推理出"对手在优化什么"。
 
 | 工具 | 作用 |
 | --- | --- |
 | `list_competitors` | 列出监控中的竞品（追踪页数、近 7 天活跃度） |
 | `get_changes` | 拉某段时间的增 / 删 / 改（可按竞品、类型过滤） |
-| `get_diff` | 某条变更的**逐行内容 diff**（最强信号） |
+| `get_diff` | 某条变更的详情（如疑似修改的 `lastmod` 变化） |
 | `get_page_history` | 单个页面随时间的变化轨迹（如 `/pricing`） |
-| `summarize_window` | 一次性打包某竞品 N 天内的全部变化 + diff，直接交给模型分析 |
+| `summarize_window` | 一次性打包某竞品 N 天内的全部变化，直接交给模型分析 |
 
 ### 方式一：本地（stdio）—— Claude Code / Codex
 
@@ -139,7 +136,7 @@ http://<你的服务器>:9528/mcp
   （设了 token 再加 `--header "Authorization: Bearer <token>"`）
 - **Claude Desktop / ChatGPT**：添加远程 MCP / 连接器，粘贴上面的 URL。
 
-> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手以及它们的 diff**。本机 / 内网用可不设鉴权；
+> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手以及它们的变化**。本机 / 内网用可不设鉴权；
 > **暴露到公网必须设 `FC_MCP_TOKEN`**（在 compose 的 `mcp` 服务里），客户端连接时带
 > `Authorization: Bearer <token>`。
 
@@ -152,7 +149,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 ```
 
 > ⚠️ **前提：库里得有变化数据。** MCP 只读、不爬取。刚加的竞品只有"静默基线"、没有变化，分析不出东西——
-> 变化要随巡检积累（或开详细监控才有内容 diff）。想先试效果，可灌一份演示数据：
+> 变化要随巡检积累。想先试效果，可灌一份演示数据：
 > ```bash
 > FC_DB_URL="sqlite:///./data/demo.db" python tests/seed_demo.py
 > ```
@@ -186,18 +183,12 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 「我的域名」和「我的博客 sitemap」也在「设置」里填，填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
 关键词只在你点按钮时才查。
 
-## 监控原理（两层）
+## 监控原理
 
-| 层级 | 做什么 | 成本 | 覆盖 |
-| --- | --- | --- | --- |
-| **基础**（始终开启） | 每次巡检 diff sitemap → 页面**新增 / 删减**；若页面带 `<lastmod>`，时间戳变化会标记一条**「疑似修改」** | 低 | 全部页面 |
-| **详细**（每个竞品可选） | 抓取该竞品**全部页面**的正文，逐行 **内容 diff** —— 抓到定价 / 定位 / 文案的具体改动 | 中 | 全部页面（受上限约束） |
+每次巡检只读竞品的 sitemap，和上次对比得出页面**新增 / 删减**；若页面带 `<lastmod>`，时间戳变化会标记一条**「疑似修改」**。
+新增的文章会单独抓一次正文，给「内容 Feed」生成标题、摘要和相似文章。
 
-> **诚实说明**：基础监控只能"**疑似**"判断修改（且仅当站点诚实填写了 `<lastmod>`），
-> 它永远看不到*改了什么*。要看到真正的逐行 diff，必须开启详细监控。界面上这两者刻意区分清楚。
-
-详细监控对全站正文做对比，比只盯几页更吃资源、噪音也更大 —— 所以它**默认关闭、按竞品单独开**，
-并用 `FC_DETAILED_MAX_PAGES`（默认 500）兜底，避免超大站把自己拖垮。
+> **诚实说明**：「疑似修改」只是推测（且仅当站点诚实填写了 `<lastmod>`），看不到*改了什么*。
 
 ## 配置
 
@@ -209,9 +200,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | `FC_DEFAULT_INTERVAL_HOURS` | `24` | 默认巡检间隔 |
 | `FC_REQUEST_TIMEOUT` | `20` | 单次请求超时（秒） |
 | `FC_MAX_SITEMAP_URLS` | `50000` | 单个 sitemap 的抓取上限 |
-| `FC_DETAILED_MAX_PAGES` | `500` | 每次详细巡检内容对比的页面上限 |
 | `FC_WRITE_BATCH` | `200` | 巡检写库每 N 行提交一次（频繁释放写锁，避免阻塞并发添加） |
-| `FC_SNAPSHOT_RETENTION` | `10` | 每个页面保留的内容快照数 |
 | `FC_USER_AGENT` | `FuckCompetitors/0.1 …` | 抓取时使用的 User-Agent |
 | `FC_RESPECT_ROBOTS` | `true` | 是否遵守目标站 robots.txt（若某站 robots 误挡了 sitemap，可关掉） |
 | `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
@@ -243,18 +232,18 @@ python tests/seed_demo.py              # 灌入演示数据，方便逛界面
 - **APScheduler** 每个竞品一个进程内定时任务 → **请用单 worker 运行**。
 - **SQLite**（经 SQLModel）：`competitors / pages / changes / snapshots` 四张表。
 - `app/monitor/` 是零依赖的核心：`sitemap.py`（抓取 + 解析）、`basic.py`（增删改 diff）、
-  `detailed.py`（正文抓取 + 提取）、`diff.py`（逐行 diff）、`favicon.py`（站点图标解析）。
+  `extract.py`（正文提取）、`favicon.py`（站点图标解析）。
 
 ```
 app/
 ├── main.py          # FastAPI 入口 + lifespan（启动调度器）
 ├── web.py           # 页面路由 + 表单/接口端点
-├── service.py       # 巡检编排（基础 + 详细）
+├── service.py       # 巡检编排
 ├── scheduler.py     # APScheduler 定时任务
 ├── models.py        # SQLModel 表
 ├── viewmodels.py    # DB 行 → 模板数据
 ├── config.py · db.py · timeutil.py
-├── monitor/         # sitemap.py · basic.py · detailed.py · diff.py · favicon.py
+├── monitor/         # sitemap.py · basic.py · extract.py · favicon.py
 ├── templates/       # index.html + partials/(drawer.html · settings.html)
 └── static/          # app.css · app.js · favicon.svg
 ```

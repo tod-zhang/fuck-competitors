@@ -248,7 +248,7 @@ def follow(domain: str = Form(...)):
     if not sitemap:
         return _err(ValueError(f"没找到 {domain} 的 sitemap，可以手动添加"))
     name = domain.split(".")[0].capitalize()
-    create_competitor(name=name, sitemap_url=sitemap, interval_hours=settings.default_interval_hours, detailed=None)
+    create_competitor(name=name, sitemap_url=sitemap, interval_hours=settings.default_interval_hours)
     return {"ok": True, "sitemap": sitemap, "name": name}
 
 

@@ -118,11 +118,4 @@ document.addEventListener('keydown', e => {
 if (window.FC_DEMO) {
   const demoNotice = () => alert('这是演示站，不能添加或修改数据。\n想监控自己的竞品，请到 GitHub 自行部署：\nhttps://github.com/tod-zhang/fuck-competitors');
   document.addEventListener('submit', e => { e.preventDefault(); demoNotice(); }, true);
-  // the monitoring-depth switches submit via an inline onchange; stop that and undo the flip
-  document.addEventListener('change', e => {
-    if (!e.target.hasAttribute('onchange')) return;
-    e.stopPropagation();
-    e.target.checked = !e.target.checked;
-    demoNotice();
-  }, true);
 }
