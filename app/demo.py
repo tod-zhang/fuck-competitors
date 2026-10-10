@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 from datetime import timedelta
 
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session, SQLModel, select
 
 from .db import engine, init_db
-from .models import AppSetting, Change, Competitor, FeedItem, MyPost, Page, StrategySummary
+from .models import Change, Competitor, FeedItem, MyPost, Page, Site, StrategySummary
 from .timeutil import utcnow
 
 
@@ -28,8 +28,15 @@ def reseed() -> None:
     first_seen = now - timedelta(days=9)
 
     with Session(engine) as s:
-        def comp(name, color, host, interval=24):
-            c = Competitor(name=name, color=color, sitemap_url=f"https://{host}/sitemap.xml",
+        # two of my own sites: Paylane competes with the second one, everyone else with the first
+        main = s.exec(select(Site)).first()
+        main.name, main.domain, main.blog_sitemap = "SaaS 工具博客", "mine.example", "https://mine.example/post-sitemap.xml"
+        payments = Site(name="支付知识站", domain="pay.mine.example", blog_sitemap="https://pay.mine.example/sitemap.xml",
+                        location_code="2826", language_code="en")
+        s.add(main); s.add(payments); s.commit(); s.refresh(main); s.refresh(payments)
+
+        def comp(name, color, host, interval=24, site=main):
+            c = Competitor(site_id=site.id, name=name, color=color, sitemap_url=f"https://{host}/sitemap.xml",
                            check_interval_hours=interval,
                            last_checked_at=now, status="ok", created_at=first_seen)
             s.add(c); s.commit(); s.refresh(c)
@@ -52,7 +59,7 @@ def reseed() -> None:
 
         nimbus = comp("Nimbus", "#111111", "nimbus.example")
         trackly = comp("Trackly", "#5E6AD2", "trackly.example")
-        paylane = comp("Paylane", "#635BFF", "paylane.example")
+        paylane = comp("Paylane", "#635BFF", "paylane.example", site=payments)
         notewise = comp("Notewise", "#059669", "notewise.example", interval=168)
         canvasly = comp("Canvasly", "#F24E1E", "canvasly.example")
         for c, n in [(nimbus, 40), (trackly, 18), (paylane, 93), (notewise, 60), (canvasly, 27)]:
@@ -164,11 +171,9 @@ TRENDS = {
 
 
 def _seed_feed(s, now, page, comps) -> None:
-    for key, slug in [("my_domain", "mine.example"), ("my_sitemap_url", "https://mine.example/post-sitemap.xml")]:
-        s.add(AppSetting(key=key, value=slug))
     slugs = {m[0] for row in FEED for m in row[8]}
     for slug in sorted(slugs):
-        s.add(MyPost(url=MY_BLOG + slug, title=slug.replace("-", " ").capitalize(), embed_model="demo"))
+        s.add(MyPost(site_id=comps["nimbus"].site_id, url=MY_BLOG + slug, title=slug.replace("-", " ").capitalize(), embed_model="demo"))
     for i, (ck, path, ago, mins, title, desc, status, note, matches) in enumerate(FEED):
         c = comps[ck]
         p = page(c, path)

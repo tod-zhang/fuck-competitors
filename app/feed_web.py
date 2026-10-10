@@ -16,10 +16,10 @@ from . import integrations as ai
 from . import viewmodels as vm
 from .config import settings
 from .db import engine
-from .models import Competitor, FeedItem, MyPost
+from .models import Competitor, FeedItem, MyPost, Site
 from .scheduler import check_now, scheduler
 from .timeutil import utcnow
-from .web import create_competitor, templates
+from .web import create_competitor, current_site, site_competitors, templates
 
 router = APIRouter(prefix="/feed")
 STATUSES = ("new", "saved", "declined")
@@ -77,11 +77,13 @@ def feed_list(request: Request, status: str = "new", window: int = 7, comp: int 
     status = status if status in STATUSES + ("trends",) else "new"
     window = window if window in WINDOWS else 7
     with Session(engine) as s:
-        comps = s.exec(select(Competitor).order_by(Competitor.created_at)).all()
+        site = current_site(s, request)
+        comps = site_competitors(s, site)
         by_id = {c.id: c for c in comps}
         cutoff = utcnow() - timedelta(days=window)
-        base = select(FeedItem).where(FeedItem.published_at >= cutoff)
-        count_q = select(FeedItem.status, func.count()).where(FeedItem.published_at >= cutoff)
+        mine = FeedItem.competitor_id.in_(list(by_id))
+        base = select(FeedItem).where(mine, FeedItem.published_at >= cutoff)
+        count_q = select(FeedItem.status, func.count()).where(mine, FeedItem.published_at >= cutoff)
         if comp:
             base = base.where(FeedItem.competitor_id == comp)
             count_q = count_q.where(FeedItem.competitor_id == comp)
@@ -106,12 +108,12 @@ def feed_list(request: Request, status: str = "new", window: int = 7, comp: int 
             "competitors": [{"id": c.id, **_comp_vm(c)} for c in comps],
             "last_scan": _ago(last_scan),
             "scan_error": any(c.status == "error" for c in comps),
-            "my_domain": feed.get_setting(s, "my_domain"),
-            "my_sitemap_url": feed.get_setting(s, "my_sitemap_url"),
+            "my_domain": site.domain,
+            "my_sitemap_url": site.blog_sitemap,
             "ready": _ready(),
         }
         if status == "trends":
-            ctx.update(_trends_ctx(s, comps))
+            ctx.update(_trends_ctx(s, comps, site))
     return templates.TemplateResponse(request, "partials/feed_list.html", ctx)
 
 
@@ -159,13 +161,14 @@ def item_matches(item_id: int, request: Request):
         if item is None:
             return HTMLResponse("not found", status_code=404)
         error = None
-        if item.matches is None and not settings.demo_mode and s.exec(select(MyPost.id)).first():
+        comp = s.get(Competitor, item.competitor_id)
+        has_posts = bool(s.exec(select(MyPost.id).where(MyPost.site_id == (comp.site_id if comp else None))).first())
+        if item.matches is None and not settings.demo_mode and has_posts:
             try:
                 feed._embed_and_match(s, [item])
             except (ai.NotConfigured, ai.ApiError) as exc:
                 error = str(exc)
-        ctx = {"matches": item.matches, "error": error, "ready": _ready(),
-               "has_posts": bool(s.exec(select(MyPost.id)).first())}
+        ctx = {"matches": item.matches, "error": error, "ready": _ready(), "has_posts": has_posts}
     return templates.TemplateResponse(request, "partials/feed_matches.html", ctx)
 
 
@@ -183,10 +186,10 @@ def item_keywords(item_id: int, request: Request):
 
 
 @router.post("/refresh")
-def refresh_now():
-    """Re-crawl every competitor now (each one's feed hook runs when its check finishes)."""
+def refresh_now(request: Request):
+    """Re-crawl this site's competitors now (each one's feed hook runs when its check finishes)."""
     with Session(engine) as s:
-        ids = [c.id for c in s.exec(select(Competitor)).all()]
+        ids = [c.id for c in site_competitors(s, current_site(s, request))]
     for cid in ids:
         check_now(cid)
     return {"ok": True, "count": len(ids)}
@@ -198,20 +201,23 @@ def _set_status_text(key: str, text: str) -> None:
         s.commit()
 
 
-def _sync_job() -> None:
-    _set_status_text("my_sync_status", "同步中…")
+def _sync_job(site_id: int) -> None:
+    key = feed.site_key("my_sync_status", site_id)
+    _set_status_text(key, "同步中…")
     try:
-        r = feed.sync_my_posts()
-        _set_status_text("my_sync_status", r["error"] if "error" in r else f"已同步 {r['posts']} 篇（新嵌入 {r['embedded']} 篇）")
+        r = feed.sync_my_posts(site_id)
+        _set_status_text(key, r["error"] if "error" in r else f"已同步 {r['posts']} 篇（新嵌入 {r['embedded']} 篇）")
     except Exception as exc:  # noqa: BLE001
-        _set_status_text("my_sync_status", f"同步失败：{exc}"[:300])
+        _set_status_text(key, f"同步失败：{exc}"[:300])
 
 
 @router.post("/sync-my-blog")
-def sync_my_blog():
+def sync_my_blog(request: Request):
     if not ai.embedding_ready():
         return _err(ai.NotConfigured("还没填嵌入接口的 API Key，到「设置」里填"))
-    scheduler.add_job(_sync_job, id="sync-my-blog", replace_existing=True)
+    with Session(engine) as s:
+        site_id = current_site(s, request).id
+    scheduler.add_job(_sync_job, args=[site_id], id=f"sync-my-blog-{site_id}", replace_existing=True)
     return {"ok": True}
 
 
@@ -219,35 +225,39 @@ def sync_my_blog():
 
 @router.get("/suggestions", response_class=HTMLResponse)
 def suggestions(request: Request, refresh: int = 0):
-    """Organic competitors from DataForSEO. Cached in the DB, since every call costs money."""
+    """Organic competitors from DataForSEO. Cached in the DB per site, since every call costs money."""
     if settings.demo_mode:
         return _err_html(ValueError("演示站不调用付费接口。"))
     with Session(engine) as s:
-        cached = feed.get_setting(s, "suggestions_cache")
+        site = current_site(s, request)
+        key = feed.site_key("suggestions_cache", site.id)
+        cached = feed.get_setting(s, key)
         data = json.loads(cached) if cached else None
-        domain = feed._bare(feed.get_setting(s, "my_domain"))
+        domain = feed._bare(site.domain)
         if refresh or not data or data.get("domain") != domain:
             try:
-                rows = feed.suggest_competitors(s)
+                rows = feed.suggest_competitors(s, site)
             except Exception as exc:  # noqa: BLE001
                 return _err_html(exc)
             data = {"domain": domain, "rows": rows}
-            feed.set_setting(s, "suggestions_cache", json.dumps(data))
+            feed.set_setting(s, key, json.dumps(data))
             s.commit()
-        tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in s.exec(select(Competitor)).all()}
+        tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
         for row in data["rows"]:
             row["tracked"] = row["domain"] in tracked
     return templates.TemplateResponse(request, "partials/feed_suggestions.html", data)
 
 
 @router.post("/suggestions/follow")
-def follow(domain: str = Form(...)):
+def follow(request: Request, domain: str = Form(...)):
     domain = feed._bare(domain)
     sitemap = feed.discover_sitemap(domain)
     if not sitemap:
         return _err(ValueError(f"没找到 {domain} 的 sitemap，可以手动添加"))
     name = domain.split(".")[0].capitalize()
-    create_competitor(name=name, sitemap_url=sitemap, interval_hours=settings.default_interval_hours)
+    with Session(engine) as s:
+        site_id = current_site(s, request).id
+    create_competitor(site_id, name, sitemap, settings.default_interval_hours)
     return {"ok": True, "sitemap": sitemap, "name": name}
 
 
@@ -266,12 +276,12 @@ def _trend_card(s: Session, c: Competitor) -> dict:
     }
 
 
-def _trends_ctx(s: Session, comps: list[Competitor]) -> dict:
+def _trends_ctx(s: Session, comps: list[Competitor], site: Site) -> dict:
     cards = [_trend_card(s, c) for c in comps]
     # stale-with-posts first, then by how much they published
     cards.sort(key=lambda c: (not (c["stale"] and c["posts"]), -c["posts"]))
     return {"cards": cards, "need": sum(1 for c in cards if c["stale"] and c["posts"]),
-            "trends_status": feed.get_setting(s, "trends_status")}
+            "trends_status": feed.get_setting(s, feed.site_key("trends_status", site.id))}
 
 
 @router.post("/strategy/{competitor_id}", response_class=HTMLResponse)
@@ -289,37 +299,47 @@ def make_strategy(competitor_id: int, request: Request):
     return templates.TemplateResponse(request, "partials/feed_trend_card.html", {"c": card, "ready": _ready()})
 
 
-def _trends_job(regenerate_all: bool) -> None:
+def _trends_job(site_id: int, regenerate_all: bool) -> None:
+    key = feed.site_key("trends_status", site_id)
     with Session(engine) as s:
-        todo = [c for c in s.exec(select(Competitor)).all()
+        todo = [c for c in s.exec(select(Competitor).where(Competitor.site_id == site_id)).all()
                 if (n := len(feed.window_items(s, c.id))) and (regenerate_all or feed.is_stale(feed.latest_summary(s, c.id), n))]
         failed = 0
         for i, c in enumerate(todo, 1):
-            _set_status_text("trends_status", f"生成中 {i}/{len(todo)}：{c.name}")
+            _set_status_text(key, f"生成中 {i}/{len(todo)}：{c.name}")
             try:
                 feed.summarize_strategy(s, c)
             except Exception:  # noqa: BLE001 — keep going; that card stays stale
                 failed += 1
-    _set_status_text("trends_status", f"完成 {len(todo) - failed} 个" + (f"，{failed} 个失败" if failed else ""))
+    _set_status_text(key, f"完成 {len(todo) - failed} 个" + (f"，{failed} 个失败" if failed else ""))
 
 
 @router.post("/trends/generate")
-def generate_trends(all: int = Form(0)):
+def generate_trends(request: Request, all: int = Form(0)):
     if not ai.llm_ready():
         return _err(ai.NotConfigured("还没填大模型的 API Key，到「设置」里填"))
-    _set_status_text("trends_status", "排队中…")
-    scheduler.add_job(_trends_job, args=[bool(all)], id="trends", replace_existing=True)
+    with Session(engine) as s:
+        site_id = current_site(s, request).id
+    _set_status_text(feed.site_key("trends_status", site_id), "排队中…")
+    scheduler.add_job(_trends_job, args=[site_id, bool(all)], id=f"trends-{site_id}", replace_existing=True)
     return {"ok": True}
 
 
 # ---------------------------------------------------------------- settings (API keys + my site)
 
+# The current site's own fields (form name, Site attribute, label, placeholder, hint).
+SITE_FIELDS = [
+    ("site_name", "name", "站点名称", "例如：宠物用品站", "只在侧边栏切换站点时显示"),
+    ("site_domain", "domain", "域名", "example.com", "推荐竞品时用"),
+    ("site_blog_sitemap", "blog_sitemap", "博客 sitemap", "https://example.com/post-sitemap.xml", "找「我博客里最接近的文章」时用"),
+    ("site_location_code", "location_code", "DataForSEO 国家代码", "留空用默认", "2840 = 美国，2826 = 英国"),
+    ("site_language_code", "language_code", "DataForSEO 语言", "留空用默认", "例如 en、de、ja"),
+]
+
 CONFIG_SECTIONS = [
-    ("我的站点", [("my_domain", "我的域名", "example.com", "推荐竞品时用"),
-                 ("my_sitemap_url", "我的博客 sitemap", "https://example.com/post-sitemap.xml", "找「我博客里最接近的文章」时用")], None),
     ("DataForSEO", [("dataforseo_login", "账号（邮箱）", "", ""), ("dataforseo_password", "API 密码", "", "在 DataForSEO 后台 API Access 里看"),
-                    ("dataforseo_location_code", "国家代码", "2840", "2840 = 美国，2826 = 英国"),
-                    ("dataforseo_language_code", "语言", "en", "")], "dataforseo"),
+                    ("dataforseo_location_code", "默认国家代码", "2840", "站点没单独设置时用；2840 = 美国，2826 = 英国"),
+                    ("dataforseo_language_code", "默认语言", "en", "")], "dataforseo"),
     ("嵌入（相似文章）", [("embedding_base_url", "接口地址", "https://openrouter.ai/api/v1", "任意 OpenAI 格式的 /embeddings"),
                      ("embedding_api_key", "API Key", "", ""), ("embedding_model", "模型", "qwen/qwen3-embedding-8b", "换模型后需要重新同步博客")], "embedding"),
     ("大模型（趋势总结）", [("llm_base_url", "接口地址", "https://api.deepseek.com/v1", "任意 OpenAI 格式的 /chat/completions"),
@@ -331,7 +351,7 @@ def _mask(value: str) -> str:
     return f"已设置 ··· {value[-4:]}" if len(value) > 8 else ("已设置" if value else "")
 
 
-def config_context(s: Session) -> dict:
+def config_context(s: Session, site: Site) -> dict:
     """Context for partials/feed_config.html; also rendered straight into index.html's #view-settings."""
     sections = []
     for title, fields, service in CONFIG_SECTIONS:
@@ -342,14 +362,20 @@ def config_context(s: Session) -> dict:
             rows.append({"key": key, "label": label, "hint": hint, "secret": secret,
                          "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
         sections.append({"title": title, "rows": rows, "service": service})
-    return {"sections": sections, "my_posts": len(s.exec(select(MyPost.id)).all()),
-            "sync_status": feed.get_setting(s, "my_sync_status")}
+    sites = s.exec(select(Site).order_by(Site.id)).all()
+    counts = dict(s.exec(select(Competitor.site_id, func.count()).group_by(Competitor.site_id)).all())
+    return {"sections": sections, "site": site,
+            "site_rows": [{"form": f, "label": label, "placeholder": ph, "hint": hint, "value": getattr(site, attr)}
+                          for f, attr, label, ph, hint in SITE_FIELDS],
+            "site_list": [{"id": x.id, "name": x.name, "domain": x.domain, "competitors": counts.get(x.id, 0)} for x in sites],
+            "my_posts": len(s.exec(select(MyPost.id).where(MyPost.site_id == site.id)).all()),
+            "sync_status": feed.get_setting(s, feed.site_key("my_sync_status", site.id))}
 
 
 @router.get("/config", response_class=HTMLResponse)
 def config_form(request: Request):
     with Session(engine) as s:
-        ctx = config_context(s)
+        ctx = config_context(s, current_site(s, request))
     return templates.TemplateResponse(request, "partials/feed_config.html", ctx)
 
 
@@ -357,6 +383,12 @@ def config_form(request: Request):
 async def config_save(request: Request):
     form = await request.form()
     with Session(engine) as s:
+        site = current_site(s, request)
+        for f, attr, *_ in SITE_FIELDS:
+            if f in form:
+                setattr(site, attr, form[f].strip())
+        site.name = site.name or site.domain or "我的网站"
+        s.add(site)
         for _, fields, _ in CONFIG_SECTIONS:
             for key, *_ in fields:
                 if form.get(f"clear_{key}"):

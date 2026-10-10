@@ -18,21 +18,19 @@
 
 ## 界面截图
 
-| 内容 Feed | 变更日志 |
+| 内容 Feed | 设置（多站点） |
 | --- | --- |
-| ![内容 Feed](docs/screenshots/feed.png) | ![变更日志](docs/screenshots/changelog.png) |
-| **竞品列表** | **设置** |
-| ![竞品列表](docs/screenshots/sites.png) | ![设置](docs/screenshots/settings.png) |
+| ![内容 Feed](docs/screenshots/feed.png) | ![设置](docs/screenshots/settings.png) |
 
 ---
 
 ## 功能特性
 
-- 📒 **变更日志** —— 竞品页面的新增、删减、内容修改，按日期分组、时间倒序，可按竞品和变更类型筛选
 - 📰 **内容 Feed** —— 竞品新发的文章排成收件箱，键盘刷：<kbd>j</kbd>/<kbd>k</kbd> 上下、<kbd>s</kbd> 保存、<kbd>d</kbd> 忽略、<kbd>n</kbd> 写笔记；附带 AI 功能（见下文「内容 Feed」）
-- 🔍 **sitemap 监控** —— 只读 sitemap，轻量地发现全站页面的新增、删减和「疑似修改」
+- 🗂️ **多站点** —— 运营好几个不同品类的站？每个站点有自己的竞品、Feed 和博客文章，侧边栏一键切换
+- 🔍 **sitemap 监控** —— 只读 sitemap，轻量地发现竞品新发布的页面
 - 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
-- 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会用初始清单刷屏日志
+- 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会把旧文章当成新文章刷屏
 - ⚙️ **竞品设置** —— 随时改名称 / sitemap 地址 / 巡检频率、立即巡检、删除竞品
 - 🐳 **一条命令部署** —— 单容器 + 单个 SQLite 文件，无需任何外部服务
 - 🪶 **无前端构建** —— 服务端渲染 + 原生 JS，克隆即跑
@@ -91,7 +89,7 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
    首次巡检是**静默建基线**：只记录当前全部页面，**不会**给每个页面灌一条"新增"
    —— 初始清单里没有"变化"这个信号。
 2. **让它跑** —— 每个竞品按各自频率自动重抓（或在卡片设置里点「立即巡检」马上查一次）。
-   从第二次巡检起，只有真正的 **新增 / 删减 / 疑似修改** 才会进变更日志，新文章同时进「内容 Feed」。
+   从第二次巡检起，新发布的文章进「内容 Feed」。
 
 ## AI 分析（MCP）
 
@@ -180,7 +178,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | **关键词数据**（按需）：这篇文章已排名的词 + 核心词的搜索量 / 难度 / 相关词 | DataForSEO Labs `ranked_keywords` + `related_keywords` | 同上 |
 | **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口，默认 DeepSeek | `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
 
-「我的域名」和「我的博客 sitemap」也在「设置」里填，填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
+每个站点的域名、博客 sitemap 和 DataForSEO 国家 / 语言在「设置 → 我的站点」里填（侧边栏顶部切换当前站点），填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
 关键词只在你点按钮时才查。
 
 ## 监控原理
@@ -206,7 +204,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
 | `FC_BLOCK_COOLDOWN_SECONDS` | `900` | 遇到 403 / 无 Retry-After 的 429 后，对该域名退避多久 |
 | `FC_DEMO_MODE` | `false` | 只读演示站：每天重置为虚构示例数据，不巡检，拒绝一切写操作（**会清空数据库**，勿对真实数据开启） |
-| `FC_MY_DOMAIN` / `FC_MY_SITEMAP_URL` | 空 | 我的域名 / 博客 sitemap 的默认值（也可在 Feed 页里改） |
+| `FC_MY_DOMAIN` / `FC_MY_SITEMAP_URL` | 空 | 老数据库升级时，用来生成第一个站点的域名 / 博客 sitemap（之后在「设置」里改） |
 | `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` | 空 | DataForSEO 账号（推荐竞品 + 关键词数据） |
 | `FC_DATAFORSEO_LOCATION_CODE` / `FC_DATAFORSEO_LANGUAGE_CODE` | `2840` / `en` | 关键词数据的国家和语言 |
 | `FC_EMBEDDING_BASE_URL` / `FC_EMBEDDING_API_KEY` / `FC_EMBEDDING_MODEL` | OpenRouter / 空 / `qwen/qwen3-embedding-8b` | 相似文章用的嵌入接口 |
@@ -244,7 +242,7 @@ app/
 ├── viewmodels.py    # DB 行 → 模板数据
 ├── config.py · db.py · timeutil.py
 ├── monitor/         # sitemap.py · basic.py · extract.py · favicon.py
-├── templates/       # index.html + partials/(drawer.html · settings.html)
+├── templates/       # index.html + partials/（Feed、设置、竞品设置等片段）
 └── static/          # app.css · app.js · favicon.svg
 ```
 

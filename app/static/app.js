@@ -1,71 +1,20 @@
-// view switching (client-side; all four views are rendered server-side into the page)
-document.querySelectorAll('.nav a[data-view]').forEach(a => {
-  a.addEventListener('click', () => {
-    const v = a.dataset.view;
-    showView(v);
-    if (v === 'timeline') resetTimelineFilter();
-  });
-});
+// view switching (client-side; the views are rendered server-side into the page)
+document.querySelectorAll('.nav a[data-view]').forEach(a => a.addEventListener('click', () => showView(a.dataset.view)));
 
-// competitor filter is driven by the sidebar (no competitor chips in the bar); held here.
-let currentComp = null;
-
-// reset the changelog filters to "all competitors + all types"
-function resetTimelineFilter() {
-  currentComp = null;
-  const scope = document.getElementById('tlScope');
-  if (scope) scope.textContent = '全部';
-  document.querySelectorAll('#view-timeline .fchip[data-type]').forEach(c => c.classList.add('on'));
-  applyTimelineFilter();
+// /#settings (after adding / switching / deleting a site from the settings page) reopens it
+if (location.hash === '#settings') {
+  document.body.classList.remove('first-run');
+  showView('settings');
 }
 
 // add-modal chips (visual selection only)
 document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('on')));
 
-// timeline filtering: by competitor (sidebar selection) AND by change type (toggle chips), combined.
-function applyTimelineFilter() {
-  const comp = currentComp;
-  const types = new Set([...document.querySelectorAll('#view-timeline .fchip[data-type].on')].map(c => c.dataset.type));
-
-  document.querySelectorAll('#view-timeline .entry').forEach(e => {
-    const compOk = !comp || e.dataset.comp === comp;
-    let anyRow = false;
-    e.querySelectorAll('.change').forEach(row => {
-      const show = compOk && types.has(row.dataset.cat);
-      row.style.display = show ? '' : 'none';
-      if (show) anyRow = true;
-    });
-    // keep the entry-head summary tags consistent with the visible rows
-    e.querySelectorAll('.summary-tags .tag[data-cat]').forEach(t => {
-      t.style.display = types.has(t.dataset.cat) ? '' : 'none';
-    });
-    e.style.display = (compOk && anyRow) ? '' : 'none';
-  });
-  document.querySelectorAll('#view-timeline .day-group').forEach(g => {
-    const anyVisible = [...g.querySelectorAll('.entry')].some(e => e.style.display !== 'none');
-    g.style.display = anyVisible ? '' : 'none';
-  });
-}
 function showView(view) {
   document.querySelectorAll('.nav a').forEach(x => x.classList.toggle('active', x.dataset.view === view));
   document.querySelector('.side-settings').classList.toggle('active', view === 'settings');
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + view));
 }
-// clicking a competitor in the sidebar: jump to the changelog filtered to it
-function filterCompetitor(name) {
-  currentComp = name;
-  const scope = document.getElementById('tlScope');
-  if (scope) scope.textContent = name || '全部';
-  showView('timeline');
-  applyTimelineFilter();
-  document.querySelector('.main').scrollTo(0, 0);  // .main is the scroll container inside the framed window
-}
-// change-type chips toggle which types are shown
-document.querySelectorAll('.fchip[data-type]').forEach(c => c.addEventListener('click', () => {
-  c.classList.toggle('on');
-  applyTimelineFilter();
-}));
-
 // custom dropdown (.xselect) — delegated so it also works in the on-demand settings modal
 document.addEventListener('click', e => {
   const trigger = e.target.closest('.xselect-trigger');
@@ -94,23 +43,10 @@ async function openSettings(competitorId) {
 }
 function closeSettings() { document.getElementById('settingsScrim').classList.remove('open'); }
 
-// change-detail drawer: load a server-rendered partial, then slide in
-async function openDetail(changeId) {
-  const resp = await fetch('/changes/' + changeId);
-  if (!resp.ok) return;
-  document.getElementById('drawerContent').innerHTML = await resp.text();
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('drawerScrim').classList.add('open');
-}
-function closeDrawer() {
-  document.getElementById('drawer').classList.remove('open');
-  document.getElementById('drawerScrim').classList.remove('open');
-}
-
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.xselect.open').forEach(x => x.classList.remove('open'));
-    closeDrawer(); closeModal(); closeSettings();
+    closeModal(); closeSettings();
   }
 });
 

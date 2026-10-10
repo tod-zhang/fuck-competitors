@@ -19,7 +19,7 @@ from sqlmodel import Session, select
 from . import integrations as ai
 from .config import settings
 from .db import engine
-from .models import AppSetting, Change, Competitor, FeedItem, MyPost, Page, Snapshot, StrategySummary
+from .models import AppSetting, Change, Competitor, FeedItem, MyPost, Page, Site, Snapshot, StrategySummary
 from .timeutil import utcnow
 
 # Archive / listing URLs that aren't articles.
@@ -42,6 +42,21 @@ def set_setting(session: Session, key: str, value: str) -> None:
     row = session.get(AppSetting, key) or AppSetting(key=key)
     row.value = value.strip()
     session.add(row)
+
+
+def site_key(key: str, site_id: int) -> str:
+    """AppSetting key for per-site status text (blog sync, suggestion cache, trends progress)."""
+    return f"{key}:{site_id}"
+
+
+def market(site: Site | None) -> dict:
+    """DataForSEO location / language overrides for this site (blank fields fall back to the global ones)."""
+    out = {}
+    if site and site.location_code.strip().isdigit():
+        out["location_code"] = int(site.location_code)
+    if site and site.language_code.strip():
+        out["language_code"] = site.language_code.strip()
+    return out
 
 
 # ---------------------------------------------------------------- ingest + enrich
@@ -183,11 +198,15 @@ def _embed_and_match(session: Session, items: list[FeedItem]) -> None:
             item.embedding, item.embed_model = vec, _embed_tag()
             session.add(item)
         session.commit()
-    posts = session.exec(select(MyPost).where(MyPost.embed_model == _embed_tag())).all()
-    if not posts:
+    posts_by_site: dict[int | None, list[MyPost]] = {}
+    for p in session.exec(select(MyPost).where(MyPost.embed_model == _embed_tag())).all():
+        posts_by_site.setdefault(p.site_id, []).append(p)
+    if not posts_by_site:
         return
+    site_of = {c.id: c.site_id for c in session.exec(select(Competitor)).all()}
     for item in items:
-        if item.embedding is not None:
+        posts = posts_by_site.get(site_of.get(item.competitor_id))  # only my posts on the same site
+        if item.embedding is not None and posts:
             item.matches = _match(item, posts)
             session.add(item)
     session.commit()
@@ -234,19 +253,20 @@ def backfill_all() -> None:
 
 # ---------------------------------------------------------------- my blog
 
-def sync_my_posts() -> dict:
-    """Fetch my blog's sitemap, embed every post (capped), then re-match the whole feed."""
+def sync_my_posts(site_id: int) -> dict:
+    """Fetch this site's blog sitemap, embed every post (capped), then re-match that site's feed."""
     from .monitor import fetch
     from .monitor.extract import extract_text
     from .monitor.sitemap import fetch_all_pages
 
     with Session(engine) as session:
-        sitemap = get_setting(session, "my_sitemap_url")
+        site = session.get(Site, site_id)
+        sitemap = site.blog_sitemap if site else ""
         if not sitemap:
             return {"error": "先填你自己博客的 sitemap"}
         entries = fetch_all_pages(sitemap, timeout=settings.request_timeout, max_urls=settings.max_sitemap_urls)
         urls = [e.loc for e in entries if _is_article(e.loc)][: settings.my_site_max_pages]
-        existing = {p.url: p for p in session.exec(select(MyPost)).all()}
+        existing = {p.url: p for p in session.exec(select(MyPost).where(MyPost.site_id == site_id)).all()}
 
         todo = [u for u in urls if u not in existing or existing[u].embed_model != _embed_tag()]
         texts: list[tuple[str, str, str]] = []
@@ -262,7 +282,7 @@ def sync_my_posts() -> dict:
 
         vecs = ai.embed([_embed_text(t, x, u) for u, t, x in texts]) if texts else []
         for (url, title, _), vec in zip(texts, vecs):
-            post = existing.get(url) or MyPost(url=url)
+            post = existing.get(url) or MyPost(url=url, site_id=site_id)
             post.title, post.embedding, post.embed_model, post.synced_at = title, vec, _embed_tag(), utcnow()
             session.add(post)
         for url, post in existing.items():  # posts no longer in my sitemap
@@ -270,8 +290,8 @@ def sync_my_posts() -> dict:
                 session.delete(post)
         session.commit()
 
-        items = session.exec(select(FeedItem)).all()
-        _embed_and_match(session, items)
+        comp_ids = [c.id for c in session.exec(select(Competitor).where(Competitor.site_id == site_id)).all()]
+        _embed_and_match(session, session.exec(select(FeedItem).where(FeedItem.competitor_id.in_(comp_ids))).all())
         return {"posts": len(urls), "embedded": len(vecs)}
 
 
@@ -285,7 +305,9 @@ KEYWORD_PROMPT = (
 
 
 def fetch_keywords(session: Session, item: FeedItem) -> dict:
-    ranked = ai.ranked_keywords(item.url)
+    comp = session.get(Competitor, item.competitor_id)
+    mkt = market(session.get(Site, comp.site_id) if comp and comp.site_id else None)
+    ranked = ai.ranked_keywords(item.url, market=mkt)
     seeds: list[str] = []
     if ai.llm_ready():
         try:
@@ -298,7 +320,7 @@ def fetch_keywords(session: Session, item: FeedItem) -> dict:
     # Niche long-tail seeds often have no data: fall back to the broader variants.
     seed, seed_row, related = (seeds[0] if seeds else None), None, []
     for candidate in seeds:
-        seed_row, related = ai.related_keywords(candidate)
+        seed_row, related = ai.related_keywords(candidate, market=mkt)
         if seed_row or related:
             seed = candidate
             break
@@ -382,13 +404,14 @@ def _bare(host: str) -> str:
     return host[4:] if host.startswith("www.") else host
 
 
-def suggest_competitors(session: Session) -> list[dict]:
-    domain = _bare(get_setting(session, "my_domain"))
+def suggest_competitors(session: Session, site: Site) -> list[dict]:
+    domain = _bare(site.domain)
     if not domain:
-        raise ai.ApiError("先填你自己的域名")
-    tracked = {_bare(urlparse(c.sitemap_url).netloc) for c in session.exec(select(Competitor)).all()}
+        raise ai.ApiError("先在设置里填这个站点的域名")
+    tracked = {_bare(urlparse(c.sitemap_url).netloc)
+               for c in session.exec(select(Competitor).where(Competitor.site_id == site.id)).all()}
     out = []
-    for row in ai.organic_competitors(domain):
+    for row in ai.organic_competitors(domain, market=market(site)):
         d = _bare(row["domain"])
         if d == domain or d in GIANTS or row["domain"] in GIANTS:
             continue

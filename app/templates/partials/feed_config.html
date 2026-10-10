@@ -1,8 +1,38 @@
 <div class="fd-head"><div><h2 class="fd-h">设置</h2><p class="fd-sub">API key 存在本机数据库里，优先于 <code>.env</code>；密钥栏留空表示不改。</p></div></div>
+<div class="fd-cfg">
+  <div class="fd-cfg-sec">
+    <div class="fd-cfg-head"><h4>我的站点</h4><span class="fd-hint">每个站点有自己的竞品、Feed 和博客文章</span></div>
+    <div class="fd-sites">
+      {% for x in site_list %}
+      <div class="fd-site-row{% if x.id == site.id %} on{% endif %}">
+        <b>{{ x.name }}</b><span class="fd-hint">{{ x.domain or '未填域名' }} · {{ x.competitors }} 个竞品</span><span class="fd-spacer"></span>
+        {% if x.id == site.id %}<span class="fd-cur">当前</span>{% else %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.switchSite({{ x.id }}, true)">切换</button>{% endif %}
+        {% if site_list|length > 1 %}<button type="button" class="btn btn-ghost btn-sm" data-name="{{ x.name }}" onclick="Feed.deleteSite({{ x.id }}, this.dataset.name)">删除</button>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="fd-site-add">
+        <input id="newSiteName" placeholder="新站点名称" autocomplete="off">
+        <input id="newSiteDomain" placeholder="域名，例如 example.com" autocomplete="off">
+        <button type="button" class="btn btn-soft btn-sm" onclick="Feed.addSite(this)">添加站点</button>
+      </div>
+    </div>
+  </div>
+</div>
 <form id="feedConfig" class="fd-cfg" onsubmit="event.preventDefault();Feed.saveSettings(this)">
+  <div class="fd-cfg-sec">
+    <div class="fd-cfg-head"><h4>当前站点：{{ site.name }}</h4></div>
+    {% for r in site_rows %}
+    <div class="field">
+      <label>{{ r.label }}{% if r.hint %} <span class="fd-hint">{{ r.hint }}</span>{% endif %}</label>
+      <div class="fd-cfg-input"><input name="{{ r.form }}" value="{{ r.value }}" placeholder="{{ r.placeholder }}" autocomplete="off"></div>
+    </div>
+    {% endfor %}
+    <div class="fd-setup-foot"><span class="fd-hint" id="syncState">已嵌入 {{ my_posts }} 篇{% if sync_status %} · {{ sync_status }}{% endif %}</span><span class="fd-spacer"></span>
+      <button class="btn btn-soft btn-sm" type="button" onclick="Feed.syncBlog()">同步我的博客</button></div>
+  </div>
   {% for sec in sections %}
   <div class="fd-cfg-sec">
-    <div class="fd-cfg-head"><h4>{{ sec.title }}</h4>
+    <div class="fd-cfg-head"><h4>{{ sec.title }}</h4>{% if loop.first %}<span class="fd-hint">以下 API 所有站点共用</span>{% endif %}
       {% if sec.service %}<span class="fd-spacer"></span><span class="fd-hint fd-test-msg" data-service="{{ sec.service }}"></span>
       <button type="button" class="btn btn-soft btn-sm" onclick="Feed.testService('{{ sec.service }}', this)">测试连接</button>{% endif %}
     </div>
@@ -15,10 +45,6 @@
       </div>
     </div>
     {% endfor %}
-    {% if sec.title == '我的站点' %}
-    <div class="fd-setup-foot"><span class="fd-hint" id="syncState">已嵌入 {{ my_posts }} 篇{% if sync_status %} · {{ sync_status }}{% endif %}</span><span class="fd-spacer"></span>
-      <button class="btn btn-soft btn-sm" type="button" onclick="Feed.syncBlog()">同步我的博客</button></div>
-    {% endif %}
   </div>
   {% endfor %}
   <div class="fd-cfg-foot"><span class="fd-hint" id="cfgState"></span><span class="fd-spacer"></span>

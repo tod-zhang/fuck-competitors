@@ -9,8 +9,20 @@ from sqlmodel import JSON, Column, Field, SQLModel
 from .timeutil import utcnow
 
 
+class Site(SQLModel, table=True):
+    """One of my own sites. Competitors, my blog posts and everything derived from them belong to one site."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    domain: str = ""                     # for competitor suggestions
+    blog_sitemap: str = ""               # for "closest post on my blog"
+    location_code: str = ""              # DataForSEO market; blank = the global default in 设置
+    language_code: str = ""
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Competitor(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    site_id: Optional[int] = Field(default=None, foreign_key="site.id", index=True)
     name: str
     sitemap_url: str
     color: str = "#39332B"               # sidebar monogram color
@@ -82,6 +94,7 @@ class FeedItem(SQLModel, table=True):
 class MyPost(SQLModel, table=True):
     """A post on my own blog, embedded so competitor articles can be matched against it."""
     id: Optional[int] = Field(default=None, primary_key=True)
+    site_id: Optional[int] = Field(default=None, foreign_key="site.id", index=True)
     url: str = Field(index=True, unique=True)
     title: Optional[str] = None
     embedding: Optional[list] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))
@@ -100,6 +113,6 @@ class StrategySummary(SQLModel, table=True):
 
 
 class AppSetting(SQLModel, table=True):
-    """Key/value settings edited in the UI (my domain, my blog sitemap)."""
+    """Key/value settings edited in the UI (API keys; per-site status text is keyed 'name:site_id')."""
     key: str = Field(primary_key=True)
     value: str = ""

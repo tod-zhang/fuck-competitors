@@ -21,7 +21,7 @@ from sqlmodel import Session, select  # noqa: E402
 
 from app import feed, integrations as ai  # noqa: E402
 from app.db import engine, init_db  # noqa: E402
-from app.models import Change, Competitor, FeedItem, MyPost, Page  # noqa: E402
+from app.models import Change, Competitor, FeedItem, MyPost, Page, Site  # noqa: E402
 from app.timeutil import utcnow  # noqa: E402
 
 
@@ -83,13 +83,28 @@ def test_embed_and_match():
         ai.httpx.post = httpx_post
 
 
+def test_matches_stay_within_site():
+    with Session(engine) as s:
+        other = Site(name="Other")
+        s.add(other); s.commit()
+        item = s.exec(select(FeedItem).where(FeedItem.matches != None)).first()  # noqa: E711
+        comp = s.get(Competitor, item.competitor_id)
+        comp.site_id, item.matches = other.id, None
+        s.add(comp); s.add(item); s.commit()
+        feed._embed_and_match(s, [item])   # none of my posts are on this site
+        assert item.matches is None
+        comp.site_id = None
+        s.add(comp); s.commit()
+
+
 def test_suggestions_filter():
     httpx_post, ai.httpx.post = ai.httpx.post, fake_post
     try:
         with Session(engine) as s:
-            feed.set_setting(s, "my_domain", "https://www.mine.com/")
-            s.commit()
-            rows = feed.suggest_competitors(s)
+            site = s.exec(select(Site)).first()
+            site.domain = "https://www.mine.com/"
+            s.add(site); s.commit()
+            rows = feed.suggest_competitors(s, site)
         assert [r["domain"] for r in rows] == ["rival.com"], rows   # giants and myself dropped
         assert rows[0]["avg_position"] == 12.3 and rows[0]["etv"] == 100
     finally:
@@ -118,6 +133,7 @@ def test_page_meta():
 if __name__ == "__main__":
     test_ingest_and_seed()
     test_embed_and_match()
+    test_matches_stay_within_site()
     test_suggestions_filter()
     test_unconfigured_llm_and_summary_parsing()
     test_page_meta()

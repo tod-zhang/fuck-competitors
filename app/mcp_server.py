@@ -16,7 +16,7 @@ from sqlmodel import Session, select
 
 from .config import settings
 from .db import engine, init_db
-from .models import Change, Competitor, Page
+from .models import Change, Competitor, Page, Site
 from .timeutil import utcnow
 from .viewmodels import host_of, url_path
 
@@ -53,16 +53,25 @@ def _hunks_to_text(hunks: list[dict]) -> str:
 
 
 @mcp.tool()
-def list_competitors() -> list[dict]:
-    """List monitored competitors with tracked-page counts and how active they've been (last 7 days)."""
+def list_competitors(site: str | None = None) -> list[dict]:
+    """List monitored competitors with tracked-page counts and how active they've been (last 7 days).
+
+    Each competitor belongs to one of my sites ("site" in the output); pass site (name or domain) to filter.
+    """
     week_ago = utcnow() - timedelta(days=7)
     with Session(engine) as s:
+        sites = {x.id: x for x in s.exec(select(Site)).all()}
+        want = (site or "").strip().lower()
         out = []
         for c in s.exec(select(Competitor).order_by(Competitor.created_at)).all():
+            mine = sites.get(c.site_id)
+            if want and not (mine and want in (mine.name.lower(), mine.domain.lower())):
+                continue
             tracked = len(s.exec(select(Page).where(Page.competitor_id == c.id, Page.status == "active")).all())
             recent = len(s.exec(select(Change).where(Change.competitor_id == c.id, Change.detected_at >= week_ago)).all())
             out.append({
                 "name": c.name,
+                "site": mine.name if mine else None,
                 "host": host_of(c.sitemap_url),
                 "tracked_pages": tracked,
                 "changes_last_7d": recent,

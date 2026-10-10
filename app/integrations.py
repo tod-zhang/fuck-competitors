@@ -87,8 +87,8 @@ def _kw_row(kd: dict) -> dict:
     }
 
 
-def organic_competitors(domain: str, limit: int = 30) -> list[dict]:
-    result = _dfs("competitors_domain", {"target": domain, "limit": limit, "exclude_top_domains": True})
+def organic_competitors(domain: str, limit: int = 30, market: dict | None = None) -> list[dict]:
+    result = _dfs("competitors_domain", {"target": domain, "limit": limit, "exclude_top_domains": True, **(market or {})})
     out = []
     for it in result.get("items") or []:
         organic = (it.get("metrics") or {}).get("organic") or {}
@@ -102,12 +102,13 @@ def organic_competitors(domain: str, limit: int = 30) -> list[dict]:
     return out
 
 
-def ranked_keywords(page_url: str, limit: int = 20) -> list[dict]:
+def ranked_keywords(page_url: str, limit: int = 20, market: dict | None = None) -> list[dict]:
     """Keywords this exact page ranks for (target must be a full URL with https://)."""
     result = _dfs("ranked_keywords", {
         "target": page_url,
         "limit": limit,
         "order_by": ["keyword_data.keyword_info.search_volume,desc"],
+        **(market or {}),
     })
     rows = []
     for it in result.get("items") or []:
@@ -118,13 +119,14 @@ def ranked_keywords(page_url: str, limit: int = 20) -> list[dict]:
     return rows
 
 
-def related_keywords(seed: str, limit: int = 15) -> tuple[dict | None, list[dict]]:
+def related_keywords(seed: str, limit: int = 15, market: dict | None = None) -> tuple[dict | None, list[dict]]:
     """(seed keyword's own data, related keywords) — one call returns both."""
     result = _dfs("related_keywords", {
         "keyword": seed,
         "depth": 1,
         "limit": limit,
         "order_by": ["keyword_data.keyword_info.search_volume,desc"],
+        **(market or {}),
     })
     seed_row = None
     if result.get("seed_keyword_data"):

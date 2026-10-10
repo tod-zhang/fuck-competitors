@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     mcp_token: str = ""            # if set, require "Authorization: Bearer <token>" — use when exposed publicly
 
     # Content feed + AI features (app/feed.py, app/integrations.py). Each one is off until its key is set.
-    my_domain: str = ""            # your own site, for competitor suggestions (editable in the feed view)
-    my_sitemap_url: str = ""       # your blog's sitemap, for "closest post on my blog" (editable in the feed view)
+    my_domain: str = ""            # seeds the first site on an old database (sites are edited in 设置)
+    my_sitemap_url: str = ""       # likewise: the first site's blog sitemap
     my_site_max_pages: int = 300   # cap on how many of your own posts get fetched + embedded
     feed_seed_days: int = 30       # first crawl seeds the feed with pages whose <lastmod> is this recent
     feed_enrich_batch: int = 30    # titles fetched per check for new feed items (basic-monitoring competitors)

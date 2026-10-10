@@ -15,7 +15,7 @@ from sqlmodel import Session, select  # noqa: E402
 
 from app.db import engine  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Change, Competitor  # noqa: E402
+from app.models import Competitor, Site  # noqa: E402
 from app.scheduler import scheduler  # noqa: E402
 
 
@@ -24,15 +24,15 @@ def test_demo_mode():
         with Session(engine) as s:
             competitors = s.exec(select(Competitor)).all()
             assert competitors and all(c.sitemap_url.split("/")[2].endswith(".example") for c in competitors)
-            change_id = s.exec(select(Change)).first().id
             cid = competitors[0].id
+            sites = s.exec(select(Site).order_by(Site.id)).all()
+            assert len(sites) == 2
 
         # nothing crawls: the only job is the daily reseed
         assert [j.id for j in scheduler.get_jobs()] == ["demo-reseed"]
 
         home = client.get("/")
         assert home.status_code == 200 and "这是演示站" in home.text
-        assert client.get(f"/changes/{change_id}").status_code == 200
         assert client.get(f"/competitors/{cid}/settings").status_code == 200
 
         # the content feed ships with sample articles and trend reads, so visitors see what it looks like
@@ -41,8 +41,15 @@ def test_demo_mode():
         assert "fd-theme" in client.get("/feed/list?status=trends").text
         assert client.get("/feed/config").status_code == 200
 
+        # the second sample site has its own competitor and articles
+        client.cookies.set("fc_site", str(sites[1].id))
+        other = client.get("/feed/list?status=new&window=7").text
+        assert "paylane.example" in other and "nimbus.example" not in other
+        assert "nimbus.example" in feed and "paylane.example" not in feed
+        client.cookies.clear()
+
         for path in ["/competitors", f"/competitors/{cid}/check",
-                     f"/competitors/{cid}/update", f"/competitors/{cid}/delete", f"/changes/{change_id}/read",
+                     f"/competitors/{cid}/update", f"/competitors/{cid}/delete", "/sites", f"/sites/{sites[1].id}/delete",
                      "/feed/config", "/feed/refresh", "/feed/trends/generate"]:
             r = client.post(path, data={"name": "x", "sitemap_url": "https://x.test/sitemap.xml", "interval_hours": "24"},
                             follow_redirects=False)
@@ -50,7 +57,7 @@ def test_demo_mode():
 
         with Session(engine) as s:
             assert len(s.exec(select(Competitor)).all()) == len(competitors)
-            assert not s.get(Change, change_id).is_read
+            assert len(s.exec(select(Site)).all()) == 2
 
 
 if __name__ == "__main__":
