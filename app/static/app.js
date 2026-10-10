@@ -59,7 +59,7 @@ function filterCompetitor(name) {
   if (scope) scope.textContent = name || '全部';
   showView('timeline');
   applyTimelineFilter();
-  window.scrollTo(0, 0);
+  document.querySelector('.main').scrollTo(0, 0);  // .main is the scroll container inside the framed window
 }
 // change-type chips toggle which types are shown
 document.querySelectorAll('.fchip[data-type]').forEach(c => c.addEventListener('click', () => {

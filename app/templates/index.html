@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>Fuck Competitors</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Caveat:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css">
 </head>
@@ -14,9 +15,9 @@
 {% macro eyes() %}
 <svg viewBox="0 0 11 4" aria-label="盯梢的像素眼睛">
   <g class="eyes">
-    <rect x="1" y="0" width="2" height="1" fill="#F6E9C8"/><rect x="0" y="1" width="4" height="2" fill="#F6E9C8"/><rect x="1" y="3" width="2" height="1" fill="#F6E9C8"/>
-    <rect x="8" y="0" width="2" height="1" fill="#F6E9C8"/><rect x="7" y="1" width="4" height="2" fill="#F6E9C8"/><rect x="8" y="3" width="2" height="1" fill="#F6E9C8"/>
-    <g class="pupils"><rect x="1" y="1" width="2" height="2" fill="#39332B"/><rect x="8" y="1" width="2" height="2" fill="#39332B"/></g>
+    <rect x="1" y="0" width="2" height="1" fill="#FFFFFF"/><rect x="0" y="1" width="4" height="2" fill="#FFFFFF"/><rect x="1" y="3" width="2" height="1" fill="#FFFFFF"/>
+    <rect x="8" y="0" width="2" height="1" fill="#FFFFFF"/><rect x="7" y="1" width="4" height="2" fill="#FFFFFF"/><rect x="8" y="3" width="2" height="1" fill="#FFFFFF"/>
+    <g class="pupils"><rect x="1" y="1" width="2" height="2" fill="#111111"/><rect x="8" y="1" width="2" height="2" fill="#111111"/></g>
   </g>
 </svg>
 {% endmacro %}
@@ -55,13 +56,13 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="mark pixel-eyes" title="we're watching">{{ eyes() }}</div>
-      <div><h1>Fuck<br>Competitors</h1></div>
+      <div><h1>Fuck Competitors</h1></div>
     </div>
 
     <nav class="nav">
-      <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="3" height="3"/><rect x="5" y="0" width="3" height="3"/><rect x="0" y="5" width="3" height="3"/><rect x="5" y="5" width="3" height="3"/></svg></span>最近动态</a>
-      <a data-view="timeline"><span class="ic"><svg viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="1"/><rect x="0" y="3" width="6" height="1"/><rect x="0" y="6" width="7" height="1"/></svg></span>变更日志{% if nav_changes %}<span class="badge hide-empty">{{ nav_changes }}</span>{% endif %}</a>
-      <a data-view="sites"><span class="ic"><svg viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="3" y="6" width="2" height="2"/><rect x="0" y="3" width="2" height="2"/><rect x="6" y="3" width="2" height="2"/><rect x="3" y="3" width="2" height="2"/></svg></span>竞品列表</a>
+      <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span>最近动态</a>
+      <a data-view="timeline"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span>变更日志{% if nav_changes %}<span class="badge hide-empty">{{ nav_changes }}</span>{% endif %}</a>
+      <a data-view="sites"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg></span>竞品列表</a>
     </nav>
 
     <div class="hide-empty">
@@ -74,7 +75,7 @@
     </div>
     <div class="only-empty">
       <div class="nav-label">监控中 · 0</div>
-      <div class="empty-side">还空空如也～<br>添加第一个竞品<br>开启你的手账 ✦</div>
+      <div class="empty-side">还没有竞品<br>添加第一个开始监控</div>
     </div>
 
     <div class="side-foot">
@@ -84,6 +85,13 @@
 
   <!-- ================= Main ================= -->
   <main class="main">
+    <!-- header bar (like fuckseo's site toolbar): search on the left, primary action on the right -->
+    <div class="topbar">
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="搜索页面 / 关键词"></div>
+      <button class="btn btn-primary btn-sm" onclick="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>添加竞品</button>
+    </div>
+
+    <div class="content">
     {% if demo %}
     <div class="demo-banner">这是演示站，页面里的竞品和变更都是虚构的示例数据，不能添加或修改。想监控自己的竞品？<a href="https://github.com/tod-zhang/fuck-competitors" target="_blank" rel="noopener">在 GitHub 上免费自行部署 →</a></div>
     {% endif %}
@@ -91,7 +99,6 @@
     <!-- ===== First-run empty state ===== -->
     <section class="onboarding only-empty">
       <div class="ob-card">
-        <div class="ob-tape"></div>
         <div class="ob-eyes pixel-eyes">{{ eyes() }}</div>
         <h2>开始 <span class="hl">盯死</span> 你的对手</h2>
         <p class="lead">填入竞品的 sitemap 地址，<b>Fuck Competitors</b> 会定期巡检，把它网站上每一次页面的<b>新增</b>、<b>删减</b>、<b>修改</b>都记成一篇日志——像写观察日记一样，看懂对手的每一步动作。</p>
@@ -107,27 +114,21 @@
       </div>
     </section>
 
-    <div class="topbar">
-      <div class="greet">
-        <div class="date">{{ greet_date }}</div>
-        <h2>{% if recent_count %}最近竞品有 <span class="hl">{{ recent_count }} 处</span> 新动静。{% else %}最近暂无新动静，<span class="hl">一切平静</span>。{% endif %}</h2>
-      </div>
-      <div class="top-actions">
-        <div class="search"><svg viewBox="0 0 8 8"><rect x="1" y="0" width="4" height="1"/><rect x="1" y="4" width="4" height="1"/><rect x="0" y="1" width="1" height="3"/><rect x="5" y="1" width="1" height="3"/><rect x="5" y="5" width="2" height="2"/></svg><input placeholder="搜索页面 / 关键词"></div>
-        <button class="btn btn-primary" onclick="openModal()">＋ 添加竞品</button>
-      </div>
+    <div class="greet hide-empty">
+      <div class="date">{{ greet_date }}</div>
+      <h2>{% if recent_count %}最近竞品有 <span class="hl">{{ recent_count }} 处</span> 新动静。{% else %}最近暂无新动静，<span class="hl">一切平静</span>。{% endif %}</h2>
     </div>
 
     <!-- ===== Overview ===== -->
     <section class="view show" id="view-overview">
       <div class="stats">
-        <div class="stat c-add"><div class="tape" style="background:repeating-linear-gradient(45deg,#B7D9B4 0 6px,#D6ECD3 6px 12px)"></div><div class="num">{{ stats.added }}</div><div class="lab">新增页面 <span class="trend" style="background:var(--add-bg);color:var(--add)">近 7 天</span></div></div>
-        <div class="stat c-del"><div class="tape" style="background:repeating-linear-gradient(45deg,#E8BCAE 0 6px,#F3D9CF 6px 12px)"></div><div class="num">{{ stats.removed }}</div><div class="lab">删减页面 <span class="trend" style="background:var(--del-bg);color:var(--del)">近 7 天</span></div></div>
-        <div class="stat c-mod"><div class="tape" style="background:repeating-linear-gradient(45deg,#EBD49E 0 6px,#F4E6C2 6px 12px)"></div><div class="num">{{ stats.modified }}</div><div class="lab">内容修改 <span class="trend" style="background:var(--mod-bg);color:var(--mod)">含疑似</span></div></div>
-        <div class="stat c-site"><div class="tape" style="background:repeating-linear-gradient(45deg,#B9C2DA 0 6px,#D9DEEC 6px 12px)"></div><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend" style="background:var(--accent-bg);color:var(--accent)">{{ stats.pages }} 页</span></div></div>
+        <div class="stat c-add"><div class="num">{{ stats.added }}</div><div class="lab">新增页面 <span class="trend">近 7 天</span></div></div>
+        <div class="stat c-del"><div class="num">{{ stats.removed }}</div><div class="lab">删减页面 <span class="trend">近 7 天</span></div></div>
+        <div class="stat c-mod"><div class="num">{{ stats.modified }}</div><div class="lab">内容修改 <span class="trend">含疑似</span></div></div>
+        <div class="stat c-site"><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend">{{ stats.pages }} 页</span></div></div>
       </div>
 
-      <div class="sec-head"><h3>变更日志</h3><span class="ribbon">~ 最近动态 ~</span><span class="line"></span></div>
+      <div class="sec-head"><h3>变更日志</h3><span class="ribbon">最近动态</span><span class="line"></span></div>
       {% for g in overview_groups %}
       <div class="day-group">
         <div class="day-tag"><span class="d">{{ g.label }}</span><span class="w">{{ g.weekday }}</span><span class="cnt">{{ g.count }} 处变更</span></div>
@@ -140,11 +141,11 @@
 
     <!-- ===== Timeline ===== -->
     <section class="view" id="view-timeline">
-      <div class="sec-head"><h3>变更日志 · <span id="tlScope">全部</span></h3><span class="ribbon">~ 按时间倒序 ~</span><span class="line"></span></div>
+      <div class="sec-head"><h3>变更日志 · <span id="tlScope">全部</span></h3><span class="ribbon">按时间倒序</span><span class="line"></span></div>
       <div class="filterbar">
-        <span class="fchip on" data-type="add">＋ 新增</span>
-        <span class="fchip on" data-type="del">－ 删减</span>
-        <span class="fchip on" data-type="mod">± 修改</span>
+        <span class="fchip on" data-type="add"><i class="dot"></i>新增</span>
+        <span class="fchip on" data-type="del"><i class="dot"></i>删减</span>
+        <span class="fchip on" data-type="mod"><i class="dot"></i>修改</span>
       </div>
       {% for g in timeline_groups %}
       <div class="day-group">
@@ -158,7 +159,7 @@
 
     <!-- ===== Sites ===== -->
     <section class="view" id="view-sites">
-      <div class="sec-head"><h3>竞品列表</h3><span class="ribbon">~ {{ competitors|length }} 本观察册 ~</span><span class="line"></span></div>
+      <div class="sec-head"><h3>竞品列表</h3><span class="ribbon">{{ competitors|length }} 个竞品</span><span class="line"></span></div>
       <div class="grid">
         {% for s in sites %}
         <div class="site-card">
@@ -185,6 +186,7 @@
         {% endfor %}
       </div>
     </section>
+    </div>
   </main>
 </div>
 
@@ -198,7 +200,6 @@
 <!-- ================= Add modal ================= -->
 <div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <div class="washi-top"></div>
     <h3>盯上一个新对手</h3>
     <p class="sub">填入站点地图地址，我们会定期巡检并记录每一次增删改。</p>
     <form method="post" action="/competitors">
@@ -220,7 +221,7 @@
         <div class="toggle-card">
           <div style="flex:1">
             <div class="t">详细内容监控 <span class="lvl deep" style="margin-left:4px">可选</span></div>
-            <div class="d">基础监控（默认）：检测页面新增 / 删减，并在 sitemap 带 <code style="background:#F3EEE2;padding:0 4px;border-radius:4px">lastmod</code> 时提示「疑似修改」。开启后抓取正文，逐行对比定价、文案等<b>具体</b>改动。可稍后对单个竞品开启。</div>
+            <div class="d">基础监控（默认）：检测页面新增 / 删减，并在 sitemap 带 <code>lastmod</code> 时提示「疑似修改」。开启后抓取正文，逐行对比定价、文案等<b>具体</b>改动。可稍后对单个竞品开启。</div>
           </div>
           <label class="switch"><input type="checkbox" name="detailed"><span class="track"></span></label>
         </div>

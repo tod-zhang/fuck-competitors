@@ -14,7 +14,7 @@
     <div class="why"><svg class="wic" viewBox="0 0 8 8"><rect x="3" y="0" width="2" height="2"/><rect x="2" y="2" width="4" height="2"/><rect x="1" y="4" width="6" height="2"/><rect x="0" y="6" width="8" height="1"/></svg>该提示依赖站点诚实填写 lastmod；未提供 lastmod 的站点连「疑似修改」也无法判断。</div>
     <form method="post" action="/competitors/{{ competitor_id }}/detailed">
       <input type="hidden" name="on" value="1">
-      <button class="btn btn-primary" type="submit" style="margin-top:13px"><svg class="xic" viewBox="0 0 8 8"><rect x="4" y="0" width="2" height="3"/><rect x="1" y="3" width="5" height="1"/><rect x="2" y="4" width="2" height="3"/></svg> 为该竞品开启详细监控</button>
+      <button class="btn btn-primary" type="submit" style="margin-top:13px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg> 为该竞品开启详细监控</button>
     </form>
   </div>
 
@@ -36,7 +36,7 @@
   {% endif %}
 
   <div class="drawer-actions">
-    <a class="btn {{ 'btn-soft' if suspected else 'btn-primary' }}" href="{{ full_url }}" target="_blank" rel="noopener"><svg class="xic" viewBox="0 0 8 8"><rect x="3" y="0" width="4" height="1"/><rect x="6" y="0" width="1" height="4"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/></svg> 在浏览器打开</a>
-    <form method="post" action="/changes/{{ change_id }}/read"><button class="btn btn-soft" type="submit"><svg class="xic" viewBox="0 0 8 8"><rect x="1" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/></svg> 标记已读</button></form>
+    <a class="btn {{ 'btn-soft' if suspected else 'btn-primary' }}" href="{{ full_url }}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg> 在浏览器打开</a>
+    <form method="post" action="/changes/{{ change_id }}/read"><button class="btn btn-soft" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 标记已读</button></form>
   </div>
 </div>
