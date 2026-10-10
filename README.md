@@ -12,6 +12,8 @@
 一个自托管、开源的竞品监控应用。填入竞品的 `sitemap.xml`，它会定期巡检页面的
 **新增 / 删减 / 修改**，像写观察日记一样记录下来。温暖的手账风界面，自带像素眼睛吉祥物。
 
+**[👀 在线演示 → competitors.fuckseo.io](https://competitors.fuckseo.io)**（示例数据，只读）
+
 </div>
 
 ## 界面截图
@@ -185,6 +187,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | `FC_RESPECT_ROBOTS` | `true` | 是否遵守目标站 robots.txt（若某站 robots 误挡了 sitemap，可关掉） |
 | `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
 | `FC_BLOCK_COOLDOWN_SECONDS` | `900` | 遇到 403 / 无 Retry-After 的 429 后，对该域名退避多久 |
+| `FC_DEMO_MODE` | `false` | 只读演示站：每天重置为虚构示例数据，不巡检，拒绝一切写操作（**会清空数据库**，勿对真实数据开启） |
 
 ## 开发
 
