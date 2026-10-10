@@ -40,7 +40,6 @@ def _item_vm(item: FeedItem) -> dict:
         "url": item.url,
         "description": item.description,
         "image": item.image,
-        "read_minutes": item.read_minutes,
         "date": f"{item.published_at.year}-{item.published_at.month:02d}-{item.published_at.day:02d}",
         "status": item.status,
         "seeded": item.source == "lastmod",

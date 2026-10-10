@@ -61,7 +61,6 @@ kbd{display:inline-block;min-width:18px;padding:0 4px;border:1.5px solid var(--n
 .fd-title:hover{text-decoration:underline}
 .fd-desc{font-size:14px;color:#333;line-height:1.55;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .fd-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted-fg);margin-top:8px}
-.fd-url{font-family:var(--mono);word-break:break-all}
 .fd-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .fd-date{font-size:12px;color:var(--muted-fg);white-space:nowrap}
 .fd-btns{display:flex;gap:6px}

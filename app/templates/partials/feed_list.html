@@ -64,7 +64,7 @@
       <div class="fd-body">
         <a class="fd-title" href="{{ it.url }}" target="_blank" rel="noopener">{{ it.title }}</a>
         {% if it.description %}<p class="fd-desc">{{ it.description }}</p>{% endif %}
-        <div class="fd-meta">{% if it.read_minutes %}<span>⏱ {{ it.read_minutes }} 分钟读完</span>{% endif %}<span class="fd-url">{{ it.url }}</span>{% if it.seeded %}<span>首次巡检时 lastmod 较新</span>{% endif %}</div>
+        {% if it.seeded %}<div class="fd-meta"><span>首次巡检时 lastmod 较新</span></div>{% endif %}
       </div>
       <div class="fd-side">
         <span class="fd-date">{{ it.date }}</span>
