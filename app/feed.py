@@ -24,7 +24,7 @@ from .timeutil import utcnow
 
 # Archive / listing URLs that aren't articles.
 SKIP_PATH = re.compile(r"/(tag|tags|category|categories|author|page|feed|search|wp-json)(/|$)|\.(xml|pdf|jpe?g|png|gif|webp)$", re.I)
-EXCERPT_CHARS = 1500
+EXCERPT_CHARS = 6000  # title + this much of the body is what gets embedded
 MATCH_COUNT = 3
 SEED_MAX = 30
 
@@ -155,7 +155,12 @@ def _fill_text(session: Session, items: list[FeedItem]) -> None:
 
 
 def _embed_text(title: str | None, excerpt: str, url: str) -> str:
-    return f"{title or urlparse(url).path}\n\n{excerpt}"[:4000]
+    return f"{title or urlparse(url).path}\n\n{excerpt}"[:EXCERPT_CHARS + 500]
+
+
+def _embed_tag() -> str:
+    """Stored with each vector: changing the model or the excerpt length re-embeds on the next run / blog sync."""
+    return f"{ai.cfg('embedding_model')}@{EXCERPT_CHARS}"
 
 
 def _match(item: FeedItem, posts: list[MyPost]) -> list[dict]:
@@ -171,14 +176,14 @@ def _match(item: FeedItem, posts: list[MyPost]) -> list[dict]:
 def _embed_and_match(session: Session, items: list[FeedItem]) -> None:
     if not ai.embedding_ready():
         return
-    todo = [i for i in items if i.fetched and (i.embedding is None or i.embed_model != ai.cfg("embedding_model"))]
+    todo = [i for i in items if i.fetched and (i.embedding is None or i.embed_model != _embed_tag())]
     if todo:
         vecs = ai.embed([_embed_text(i.title, i.excerpt, i.url) for i in todo])
         for item, vec in zip(todo, vecs):
-            item.embedding, item.embed_model = vec, ai.cfg("embedding_model")
+            item.embedding, item.embed_model = vec, _embed_tag()
             session.add(item)
         session.commit()
-    posts = session.exec(select(MyPost).where(MyPost.embed_model == ai.cfg("embedding_model"))).all()
+    posts = session.exec(select(MyPost).where(MyPost.embed_model == _embed_tag())).all()
     if not posts:
         return
     for item in items:
@@ -243,7 +248,7 @@ def sync_my_posts() -> dict:
         urls = [e.loc for e in entries if _is_article(e.loc)][: settings.my_site_max_pages]
         existing = {p.url: p for p in session.exec(select(MyPost)).all()}
 
-        todo = [u for u in urls if u not in existing or existing[u].embed_model != ai.cfg("embedding_model")]
+        todo = [u for u in urls if u not in existing or existing[u].embed_model != _embed_tag()]
         texts: list[tuple[str, str, str]] = []
         with fetch.make_client(settings.request_timeout) as client:
             for url in todo:
@@ -258,7 +263,7 @@ def sync_my_posts() -> dict:
         vecs = ai.embed([_embed_text(t, x, u) for u, t, x in texts]) if texts else []
         for (url, title, _), vec in zip(texts, vecs):
             post = existing.get(url) or MyPost(url=url)
-            post.title, post.embedding, post.embed_model, post.synced_at = title, vec, ai.cfg("embedding_model"), utcnow()
+            post.title, post.embedding, post.embed_model, post.synced_at = title, vec, _embed_tag(), utcnow()
             session.add(post)
         for url, post in existing.items():  # posts no longer in my sitemap
             if url not in urls:

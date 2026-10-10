@@ -2,8 +2,10 @@
 <div class="fd-matches">
   {% for m in matches %}
   <a class="fd-match" href="{{ m.url }}" target="_blank" rel="noopener">
-    <span class="fd-score" style="--s:{{ (m.score * 100)|round|int }}%">{{ '%.2f'|format(m.score) }}</span>
+    {% set tier = 'hi' if m.score >= 0.8 else ('mid' if m.score >= 0.6 else 'lo') %}
+    <span class="fd-score {{ tier }}">{{ '%.2f'|format(m.score) }}</span>
     <span class="fd-match-title">{{ m.title }}</span>
+    <span class="fd-verdict {{ tier }}">{{ {'hi': '可能写过', 'mid': '相关', 'lo': '不太像'}[tier] }}</span>
   </a>
   {% endfor %}
 </div>

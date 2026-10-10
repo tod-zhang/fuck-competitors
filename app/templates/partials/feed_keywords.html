@@ -1,7 +1,7 @@
 {% macro kwtable(rows, with_pos=False) %}
 <table class="fd-kw">
   <tr><th>关键词</th>{% if with_pos %}<th>排名</th>{% endif %}<th>月搜索量</th><th>难度</th><th>意图</th></tr>
-  {% for r in rows %}<tr><td>{{ r.keyword }}</td>{% if with_pos %}<td>{{ r.position or '—' }}</td>{% endif %}<td>{{ '{:,}'.format(r.volume) if r.volume is not none else '—' }}</td><td>{{ r.kd if r.kd is not none else '—' }}</td><td>{{ r.intent or '—' }}</td></tr>{% endfor %}
+  {% for r in rows %}<tr><td>{{ r.keyword }}</td>{% if with_pos %}<td>{{ r.position or '—' }}</td>{% endif %}<td>{{ '{:,}'.format(r.volume) if r.volume is not none else '—' }}</td><td>{% if r.kd is not none %}<span class="fd-kd {{ 'e' if r.kd < 30 else ('m' if r.kd < 60 else 'h') }}">{{ r.kd }}</span>{% else %}—{% endif %}</td><td>{% if r.intent %}<span class="fd-intent">{{ r.intent }}</span>{% else %}—{% endif %}</td></tr>{% endfor %}
 </table>
 {% endmacro %}
 <div class="fd-kw-wrap">

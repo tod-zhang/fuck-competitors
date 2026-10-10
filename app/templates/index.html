@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=3">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=5">
+<link rel="stylesheet" href="/static/feed.css?v=6">
 </head>
 
 {% macro eyes() %}
@@ -125,7 +125,7 @@
       <div class="stats">
         <div class="stat c-add"><div class="num">{{ stats.added }}</div><div class="lab">新增页面 <span class="trend">近 7 天</span></div></div>
         <div class="stat c-del"><div class="num">{{ stats.removed }}</div><div class="lab">删减页面 <span class="trend">近 7 天</span></div></div>
-        <div class="stat c-mod"><div class="num">{{ stats.modified }}</div><div class="lab">内容修改 <span class="trend">含疑似</span></div></div>
+        <div class="stat c-mod"><div class="num">{{ stats.modified }}</div><div class="lab">疑似修改 <span class="trend">近 7 天</span></div></div>
         <div class="stat c-site"><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend">{{ stats.pages }} 页</span></div></div>
       </div>
 
@@ -133,7 +133,7 @@
       <div class="filterbar">
         <span class="fchip on" data-type="add"><i class="dot"></i>新增</span>
         <span class="fchip on" data-type="del"><i class="dot"></i>删减</span>
-        <span class="fchip on" data-type="mod"><i class="dot"></i>修改</span>
+        <span class="fchip on" data-type="mod"><i class="dot"></i>疑似修改</span>
       </div>
       {% for g in timeline_groups %}
       <div class="day-group">
@@ -220,6 +220,6 @@
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
 <script src="/static/app.js?v=3"></script>
-<script src="/static/feed.js?v=5"></script>
+<script src="/static/feed.js?v=6"></script>
 </body>
 </html>

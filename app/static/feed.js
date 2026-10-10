@@ -91,7 +91,7 @@ const Feed = (() => {
     await post(`/feed/item/${id}/status`, { status: 'saved' });
     if (state.status === 'saved') return;
     c.classList.add('just-saved');
-    c.querySelectorAll('.fd-btns .btn').forEach(b => { if (b.textContent.includes('保存')) b.remove(); });
+    c.querySelectorAll('.fd-btns [data-act=save]').forEach(b => b.remove());
     const box = c.querySelector('.fd-notebox');
     box.classList.add('open');
     box.querySelector('textarea').focus();

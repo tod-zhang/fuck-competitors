@@ -60,7 +60,7 @@
     </div>
     {% for it in g['items'] %}
     <article class="fd-card st-{{ it.status }}" data-id="{{ it.id }}" data-url="{{ it.url }}" onclick="Feed.focus({{ it.id }}, event)">
-      <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph" style="background:{{ g.comp.color }}">{{ g.comp.monogram }}</span>{% endif %}</div>
+      <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph" style="--c:{{ g.comp.color }}">{{ g.comp.monogram }}</span>{% endif %}</div>
       <div class="fd-body">
         <a class="fd-title" href="{{ it.url }}" target="_blank" rel="noopener">{{ it.title }}</a>
         {% if it.description %}<p class="fd-desc">{{ it.description }}</p>{% endif %}
@@ -69,8 +69,8 @@
       <div class="fd-side">
         <span class="fd-date">{{ it.date }}</span>
         <div class="fd-btns">
-          {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.save({{ it.id }})">★ 保存</button>{% endif %}
-          {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.dismiss({{ it.id }})">✕ 忽略</button>{% endif %}
+          {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm fd-ico" data-act="save" title="保存 (S)" onclick="Feed.save({{ it.id }})">★</button>{% endif %}
+          {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm fd-ico" title="忽略 (D)" onclick="Feed.dismiss({{ it.id }})">✕</button>{% endif %}
           {% if it.status != 'new' %}<button type="button" class="btn btn-ghost btn-sm" onclick="Feed.restore({{ it.id }})">放回待处理</button>{% endif %}
         </div>
       </div>
@@ -83,18 +83,20 @@
           <button type="button" class="btn btn-primary btn-sm" onclick="Feed.saveNote({{ it.id }})">保存笔记 (Enter)</button></div>
       </div>
 
+      <div class="fd-foot">
       <details class="fd-more" data-kind="matches" ontoggle="Feed.loadMatches(this, {{ it.id }})">
-        <summary>我博客里最接近的文章{% if it.matches %} · 最高 {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</summary>
+        <summary>相似文章{% if it.matches %} {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</summary>
         <div class="fd-more-body">{% if it.matches %}{% with matches = it.matches, ready = ready, has_posts = true %}{% include "partials/feed_matches.html" %}{% endwith %}{% endif %}</div>
       </details>
       <details class="fd-more" data-kind="keywords"{% if it.keywords %} open{% endif %}>
-        <summary>关键词数据{% if it.keywords %} · 已拉取{% endif %}</summary>
+        <summary>关键词数据</summary>
         <div class="fd-more-body">
           {% if it.keywords %}{% with keywords = it.keywords %}{% include "partials/feed_keywords.html" %}{% endwith %}
           {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取 (W)</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
           {% else %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">去设置</button> <span class="fd-hint">填好 DataForSEO 账号后可查这篇的关键词数据</span>{% endif %}
         </div>
       </details>
+      </div>
     </article>
     {% endfor %}
   </section>

@@ -68,8 +68,8 @@ def test_embed_and_match():
     httpx_post, ai.httpx.post = ai.httpx.post, fake_post
     try:
         with Session(engine) as s:
-            s.add(MyPost(url="https://mine.com/seal-guide", title="Seal guide", embedding=[1.0, 0.0], embed_model=ai.settings.embedding_model))
-            s.add(MyPost(url="https://mine.com/pricing", title="Pricing", embedding=[0.0, 1.0], embed_model=ai.settings.embedding_model))
+            s.add(MyPost(url="https://mine.com/seal-guide", title="Seal guide", embedding=[1.0, 0.0], embed_model=feed._embed_tag()))
+            s.add(MyPost(url="https://mine.com/pricing", title="Pricing", embedding=[0.0, 1.0], embed_model=feed._embed_tag()))
             s.add(MyPost(url="https://mine.com/old", title="Other model", embedding=[1.0, 0.0], embed_model="other"))
             s.commit()
             item = s.exec(select(FeedItem)).first()

@@ -35,7 +35,9 @@ def index(request: Request):
         competitors = s.exec(select(Competitor).order_by(Competitor.created_at)).all()
         comp_by_id = {c.id: c for c in competitors}
 
-        changes = s.exec(select(Change).order_by(Change.detected_at.desc()).limit(500)).all()
+        # new pages that became feed items live in the content feed, so the changelog leaves them out
+        in_feed = (Change.type == "added") & Change.page_id.in_(select(FeedItem.page_id))
+        changes = s.exec(select(Change).where(~in_feed).order_by(Change.detected_at.desc()).limit(500)).all()
         page_ids = [ch.page_id for ch in changes if ch.page_id]
         page_by_id = {}
         if page_ids:
