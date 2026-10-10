@@ -40,7 +40,8 @@
     <div class="field">
       <label>{{ r.label }}{% if r.hint %} <span class="fd-hint">{{ r.hint }}</span>{% endif %}</label>
       <div class="fd-cfg-input">
-        <input name="{{ r.key }}" value="{{ r.value }}" placeholder="{{ r.placeholder }}" {% if r.secret %}type="password" autocomplete="new-password"{% else %}autocomplete="off"{% endif %}>
+        {% if r.choices %}<select name="{{ r.key }}">{% for v, l in r.choices %}<option value="{{ v }}"{% if v == r.value %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+        {% else %}<input name="{{ r.key }}" value="{{ r.value }}" placeholder="{{ r.placeholder }}" {% if r.secret %}type="password" autocomplete="new-password"{% else %}autocomplete="off"{% endif %}>{% endif %}
         {% if r.secret and r.placeholder %}<label class="fd-clear"><input type="checkbox" name="clear_{{ r.key }}" value="1"> 清除</label>{% endif %}
       </div>
     </div>

@@ -176,7 +176,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | **推荐竞品**：按「我的域名」找自然搜索竞品，一键关注并自动找 sitemap | DataForSEO Labs `competitors_domain` | `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` |
 | **我博客里最接近的文章**：同步你的博客 sitemap，向量 + 余弦相似度给每篇竞品文章找最像的 3 篇 | 任意 OpenAI 格式的 embeddings 接口，默认 OpenRouter `qwen/qwen3-embedding-8b` | `FC_EMBEDDING_API_KEY` |
 | **关键词数据**（按需）：这篇文章已排名的词 + 核心词的搜索量 / 难度 / 相关词 | DataForSEO Labs `ranked_keywords` + `related_keywords` | 同上 |
-| **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口，默认 DeepSeek | `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
+| **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口（默认 DeepSeek），或 Claude 官方 API | `FC_LLM_PROVIDER` / `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
 
 每个站点的域名、博客 sitemap 和 DataForSEO 国家 / 语言在「设置 → 我的站点」里填（侧边栏顶部切换当前站点），填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
 关键词只在你点按钮时才查。
@@ -208,7 +208,8 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` | 空 | DataForSEO 账号（推荐竞品 + 关键词数据） |
 | `FC_DATAFORSEO_LOCATION_CODE` / `FC_DATAFORSEO_LANGUAGE_CODE` | `2840` / `en` | 关键词数据的国家和语言 |
 | `FC_EMBEDDING_BASE_URL` / `FC_EMBEDDING_API_KEY` / `FC_EMBEDDING_MODEL` | OpenRouter / 空 / `qwen/qwen3-embedding-8b` | 相似文章用的嵌入接口 |
-| `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` | `https://api.deepseek.com/v1` / 空 / `deepseek-chat` | 策略总结用的大模型（任意 OpenAI 格式） |
+| `FC_LLM_PROVIDER` | `openai` | 大模型接口类型：`openai`（任意 OpenAI 格式）或 `anthropic`（Claude 官方 API，模型默认 `claude-opus-5-5`，不用填接口地址） |
+| `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` | `https://api.deepseek.com/v1` / 空 / `deepseek-chat` | 策略总结用的大模型 |
 
 ## 开发
 

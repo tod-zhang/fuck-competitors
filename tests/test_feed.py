@@ -122,6 +122,40 @@ def test_unconfigured_llm_and_summary_parsing():
     assert feed.parse_summary("plain text")["strategy"] == "plain text"
 
 
+def test_claude_provider():
+    import anthropic
+    from types import SimpleNamespace
+    seen = {}
+
+    class FakeClient:
+        def __init__(self, **kw):
+            seen["client"] = kw
+            self.beta = SimpleNamespace(messages=SimpleNamespace(create=self.create))
+
+        def create(self, **kw):
+            seen["request"] = kw
+            return SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="thinking"),
+                                                                    SimpleNamespace(type="text", text=" OK ")])
+
+    real, anthropic.Anthropic = anthropic.Anthropic, FakeClient
+    try:
+        with Session(engine) as s:
+            feed.set_setting(s, "llm_provider", "anthropic")
+            feed.set_setting(s, "llm_api_key", "sk-ant-test")
+            s.commit()
+        assert ai.chat("sys", "hi") == "OK"
+        req = seen["request"]
+        # the DeepSeek default model name is replaced by the Claude default; fallbacks on for it
+        assert req["model"] == "claude-opus-5-5" and req["system"] == "sys" and req["fallbacks"] == "default"
+        assert seen["client"]["api_key"] == "sk-ant-test"
+    finally:
+        anthropic.Anthropic = real
+        with Session(engine) as s:
+            feed.set_setting(s, "llm_provider", "")
+            feed.set_setting(s, "llm_api_key", "")
+            s.commit()
+
+
 def test_page_meta():
     html = (b'<html><head><title>T | Site</title><meta property="og:image" content="/img/a.png">'
             b'<meta name="description" content="Short summary"></head><body><p>' + b"word " * 460 + b"</p></body></html>")
@@ -136,6 +170,7 @@ if __name__ == "__main__":
     test_matches_stay_within_site()
     test_suggestions_filter()
     test_unconfigured_llm_and_summary_parsing()
+    test_claude_provider()
     test_page_meta()
     os.unlink(_tmp.name)
     print("ok: feed ingest/seed, embedding match, competitor suggestions, LLM guard, summary JSON, page metadata")

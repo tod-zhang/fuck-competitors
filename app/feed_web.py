@@ -342,9 +342,15 @@ CONFIG_SECTIONS = [
                     ("dataforseo_language_code", "默认语言", "en", "")], "dataforseo"),
     ("嵌入（相似文章）", [("embedding_base_url", "接口地址", "https://openrouter.ai/api/v1", "任意 OpenAI 格式的 /embeddings"),
                      ("embedding_api_key", "API Key", "", ""), ("embedding_model", "模型", "qwen/qwen3-embedding-8b", "换模型后需要重新同步博客")], "embedding"),
-    ("大模型（趋势总结）", [("llm_base_url", "接口地址", "https://api.deepseek.com/v1", "任意 OpenAI 格式的 /chat/completions"),
-                      ("llm_api_key", "API Key", "", ""), ("llm_model", "模型", "deepseek-chat", "用非推理模型")], "llm"),
+    ("大模型（趋势总结）", [("llm_provider", "接口类型", "", ""),
+                      ("llm_base_url", "接口地址", "https://api.deepseek.com/v1", "任意 OpenAI 格式的 /chat/completions；Claude 官方 API 不用填"),
+                      ("llm_api_key", "API Key", "", ""),
+                      ("llm_model", "模型", "deepseek-chat", "OpenAI 兼容接口用非推理模型；Claude 留空或非 claude- 开头时用 claude-opus-5-5")], "llm"),
 ]
+
+
+# Settings shown as a dropdown: key -> [(value, label)]
+CONFIG_CHOICES = {"llm_provider": [("openai", "OpenAI 兼容（DeepSeek、OpenRouter 等）"), ("anthropic", "Claude 官方 API")]}
 
 
 def _mask(value: str) -> str:
@@ -359,7 +365,7 @@ def config_context(s: Session, site: Site) -> dict:
         for key, label, placeholder, hint in fields:
             value = ai.cfg(key) if key in ai.UI_KEYS else feed.get_setting(s, key)
             secret = key in ai.SECRET_KEYS
-            rows.append({"key": key, "label": label, "hint": hint, "secret": secret,
+            rows.append({"key": key, "label": label, "hint": hint, "secret": secret, "choices": CONFIG_CHOICES.get(key),
                          "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
         sections.append({"title": title, "rows": rows, "service": service})
     sites = s.exec(select(Site).order_by(Site.id)).all()

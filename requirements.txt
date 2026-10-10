@@ -9,3 +9,4 @@ pydantic-settings
 defusedxml
 selectolax<1  # 1.0 removed the Modest backend (selectolax.parser) we import
 mcp<2  # 2.x renamed FastMCP (mcp.server.fastmcp) to MCPServer
+anthropic>=1.13,<2  # Claude API for the trend summaries (设置 → 大模型 → 接口类型)

@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     embedding_api_key: str = ""
     embedding_model: str = "qwen/qwen3-embedding-8b"
     embedding_providers: str = ""  # optional OpenRouter provider order, comma-separated (e.g. "nebius,deepinfra")
-    llm_base_url: str = "https://api.deepseek.com/v1"   # any OpenAI-compatible chat API
+    llm_provider: str = "openai"   # "openai" = any OpenAI-compatible chat API; "anthropic" = the Claude API
+    llm_base_url: str = "https://api.deepseek.com/v1"   # any OpenAI-compatible chat API (not used for Claude)
     llm_api_key: str = ""
     llm_model: str = "deepseek-chat"
 

@@ -2,7 +2,7 @@
 
 - DataForSEO Labs: organic competitors of my domain, keywords a page ranks for, related keywords.
 - Embeddings: any OpenAI-compatible /embeddings endpoint (default OpenRouter + qwen3-embedding-8b).
-- Chat: any OpenAI-compatible /chat/completions endpoint (default DeepSeek).
+- Chat: any OpenAI-compatible /chat/completions endpoint (default DeepSeek), or the Claude API.
 
 Every client raises NotConfigured when its key is missing, so the UI can say so instead of erroring.
 """
@@ -20,7 +20,7 @@ DFS_BASE = "https://api.dataforseo.com/v3/dataforseo_labs/google"
 # Settings that can be filled in from the UI (设置). A value saved there wins over the env / .env.
 UI_KEYS = ("dataforseo_login", "dataforseo_password", "dataforseo_location_code", "dataforseo_language_code",
            "embedding_base_url", "embedding_api_key", "embedding_model", "embedding_providers",
-           "llm_base_url", "llm_api_key", "llm_model")
+           "llm_provider", "llm_base_url", "llm_api_key", "llm_model")
 SECRET_KEYS = ("dataforseo_password", "embedding_api_key", "llm_api_key")
 
 
@@ -188,9 +188,22 @@ def llm_ready() -> bool:
     return bool(cfg("llm_api_key"))
 
 
+CLAUDE_DEFAULT_MODEL = "claude-opus-5-5"
+CLAUDE_FALLBACK_MODELS = {"claude-fable-5-1", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
+
+
+def llm_model() -> str:
+    model = cfg("llm_model")
+    if cfg("llm_provider") == "anthropic" and not model.startswith("claude-"):
+        return CLAUDE_DEFAULT_MODEL  # e.g. the DeepSeek default still filled in after switching to Claude
+    return model
+
+
 def chat(system: str, user: str, max_tokens: int = 1500) -> str:
     if not llm_ready():
         raise NotConfigured("还没填大模型的 API Key，到「设置」里填")
+    if cfg("llm_provider") == "anthropic":
+        return _chat_claude(system, user)
     resp = httpx.post(
         cfg("llm_base_url").rstrip("/") + "/chat/completions",
         json={
@@ -206,7 +219,30 @@ def chat(system: str, user: str, max_tokens: int = 1500) -> str:
         raise ApiError(f"大模型接口出错 {resp.status_code}: {resp.text[:200]}")
     content = (resp.json()["choices"][0]["message"]["content"] or "").strip()
     if not content:  # reasoning models can spend the whole token budget thinking
-        raise ApiError(f"大模型没有返回内容，换一个非推理模型试试（当前 {cfg('llm_model')}）")
+        raise ApiError(f"大模型没有返回内容，换一个非推理模型试试（当前 {llm_model()}）")
+    return content
+
+
+def _chat_claude(system: str, user: str) -> str:
+    """The Claude Messages API. Thinking is on for current models, so max_tokens leaves it room;
+    a refusal on one of the newest models is retried server-side on a fallback model."""
+    import anthropic
+
+    model = llm_model()
+    extra = {"betas": ["server-side-fallback-2026-07-01"], "fallbacks": "default"} if model in CLAUDE_FALLBACK_MODELS else {}
+    client = anthropic.Anthropic(api_key=cfg("llm_api_key"), timeout=300)
+    try:
+        resp = client.beta.messages.create(model=model, max_tokens=16000, system=system,
+                                           messages=[{"role": "user", "content": user}], **extra)
+    except anthropic.APIStatusError as exc:
+        raise ApiError(f"Claude 接口出错 {exc.status_code}: {exc.message[:200]}") from exc
+    except anthropic.APIConnectionError as exc:
+        raise ApiError(f"连不上 Claude 接口：{exc}") from exc
+    if resp.stop_reason == "refusal":
+        raise ApiError("Claude 拒绝回答这个请求")
+    content = "".join(b.text for b in resp.content if b.type == "text").strip()
+    if not content:
+        raise ApiError(f"Claude 没有返回内容（stop_reason: {resp.stop_reason}）")
     return content
 
 
@@ -229,5 +265,5 @@ def test_service(service: str) -> str:
         return f"连接成功，{cfg('embedding_model')} 返回 {len(vec)} 维向量"
     if service == "llm":
         reply = chat("Reply with the single word OK.", "ping", max_tokens=200)
-        return f"连接成功，{cfg('llm_model')} 回复：{reply[:40]}"
+        return f"连接成功，{llm_model()} 回复：{reply[:40]}"
     raise ValueError(service)
