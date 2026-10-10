@@ -3,28 +3,47 @@
 const Feed = (() => {
   const state = { status: 'new', window: 7, comp: null, current: null, loaded: false };
   const $ = id => document.getElementById(id);
+  // Tab HTML fetched ahead of time (each request is a full round trip through Cloudflare, ~1 s),
+  // so switching tabs is instant. Any write drops it, since counts and lists may have changed.
+  const cache = new Map();
   const post = (url, data) => {
+    cache.clear();
     if (window.FC_DEMO) {
       // demo site: triage and notes still play out on the page (nothing is saved); everything else explains
       if (/\/(status|note)$|\/feed\/dismiss$/.test(url)) return Promise.resolve(new Response('{"ok":true}'));
       alert('这是演示站，不能修改数据，也不调用付费接口。\n想用自己的数据和 API，请到 GitHub 自行部署：\nhttps://github.com/tod-zhang/fuck-competitors');
       return new Promise(() => {});  // never settles: the caller just stops
     }
-    return fetch(url, { method: 'POST', body: new URLSearchParams(data || {}) });
+    return fetch(url, { method: 'POST', body: new URLSearchParams(data || {}) }).then(r => { if (state.loaded) prefetch(); return r; });
   };
   const cards = () => [...document.querySelectorAll('#feedRoot .fd-card')];
   const card = id => document.querySelector(`#feedRoot .fd-card[data-id="${id}"]`);
 
+  function query(status) {
+    const q = new URLSearchParams({ status: status || state.status, window: state.window });
+    if (state.comp) q.set('comp', state.comp);
+    return q.toString();
+  }
+  function prefetch() {
+    for (const status of ['new', 'saved', 'declined', 'trends']) {
+      const q = query(status);
+      if (status === state.status || cache.has(q)) continue;
+      cache.set(q, fetch('/feed/list?' + q).then(r => r.text()));
+    }
+  }
   async function load(opts) {
     Object.assign(state, opts || {});
-    const q = new URLSearchParams({ status: state.status, window: state.window });
-    if (state.comp) q.set('comp', state.comp);
-    const resp = await fetch('/feed/list?' + q);
-    $('feedRoot').innerHTML = await resp.text();
+    const q = query();
+    const pending = cache.get(q) || fetch('/feed/list?' + q).then(r => r.text());
+    cache.delete(q);  // shown once; the next visit gets a fresh copy from prefetch()
+    const html = await pending;
+    if (q !== query()) return;  // the user already switched again
+    $('feedRoot').innerHTML = html;
     state.loaded = true;
     state.current = null;
     const first = cards()[0];
     if (first) focus(+first.dataset.id);
+    prefetch();
   }
 
   // ---- selection
