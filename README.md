@@ -18,9 +18,9 @@
 
 ## 界面截图
 
-| 最近动态 | 变更日志 |
+| 内容 Feed | 变更日志 |
 | --- | --- |
-| ![最近动态](docs/screenshots/overview.png) | ![变更日志](docs/screenshots/changelog.png) |
+| ![内容 Feed](docs/screenshots/feed.png) | ![变更日志](docs/screenshots/changelog.png) |
 | **内容 diff** | **竞品列表** |
 | ![内容 diff](docs/screenshots/diff-drawer.png) | ![竞品列表](docs/screenshots/sites.png) |
 
