@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=5">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=9">
+<link rel="stylesheet" href="/static/feed.css?v=10">
 </head>
 
 {% macro eyes() %}
@@ -41,9 +41,11 @@
 {% else %}
     <a class="back-link" href="/">← 全部站点</a>
     <div class="site-switch">
-      <select aria-label="切换站点" onchange="location.href = '/?site=' + this.value">
-        {% for x in all_sites %}<option value="{{ x.id }}"{% if x.id == site.id %} selected{% endif %}>{{ x.name }}</option>{% endfor %}
-      </select>
+      <div class="xselect" data-nav="/?site=">
+        <button type="button" class="xselect-trigger" aria-label="切换站点"><span class="xselect-label">{{ site.name }}</span><span class="xselect-caret">▾</span></button>
+        <input type="hidden" value="{{ site.id }}">
+        <ul class="xselect-menu" role="listbox">{% for x in all_sites %}<li data-value="{{ x.id }}"{% if x.id == site.id %} class="sel"{% endif %}>{{ x.name }}</li>{% endfor %}</ul>
+      </div>
     </div>
 
     <nav class="nav">
@@ -198,7 +200,7 @@
 </div>
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
-<script src="/static/app.js?v=5"></script>
+<script src="/static/app.js?v=6"></script>
 <script src="/static/feed.js?v=8"></script>
 </body>
 </html>
