@@ -1,7 +1,19 @@
+// The current site lives in the URL (/?site=3). Every request this page makes is about that
+// site, so carry it on same-origin fetches too; the server reads ?site= on the API routes.
+(() => {
+  const site = document.body.dataset.site;
+  if (!site) return;
+  const fetch0 = window.fetch.bind(window);
+  window.fetch = (url, opts) => {
+    if (typeof url === 'string' && url.startsWith('/') && !/[?&]site=/.test(url)) url += (url.includes('?') ? '&' : '?') + 'site=' + site;
+    return fetch0(url, opts);
+  };
+})();
+
 // view switching (client-side; the views are rendered server-side into the page)
 document.querySelectorAll('.nav a[data-view]').forEach(a => a.addEventListener('click', () => showView(a.dataset.view)));
 
-// /#settings (after adding / switching / deleting a site from the settings page) reopens it
+// /#settings opens the settings page directly
 if (location.hash === '#settings') {
   document.body.classList.remove('first-run');
   showView('settings');

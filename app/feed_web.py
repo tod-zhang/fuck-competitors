@@ -357,7 +357,7 @@ def _mask(value: str) -> str:
     return f"已设置 ··· {value[-4:]}" if len(value) > 8 else ("已设置" if value else "")
 
 
-def config_context(s: Session, site: Site) -> dict:
+def config_context(s: Session, site: Site | None) -> dict:
     """Context for partials/feed_config.html; also rendered straight into index.html's #view-settings."""
     sections = []
     for title, fields, service in CONFIG_SECTIONS:
@@ -370,18 +370,20 @@ def config_context(s: Session, site: Site) -> dict:
         sections.append({"title": title, "rows": rows, "service": service})
     sites = s.exec(select(Site).order_by(Site.id)).all()
     counts = dict(s.exec(select(Competitor.site_id, func.count()).group_by(Competitor.site_id)).all())
-    return {"sections": sections, "site": site,
-            "site_rows": [{"form": f, "label": label, "placeholder": ph, "hint": hint, "value": getattr(site, attr)}
-                          for f, attr, label, ph, hint in SITE_FIELDS],
-            "site_list": [{"id": x.id, "name": x.name, "domain": x.domain, "competitors": counts.get(x.id, 0)} for x in sites],
-            "my_posts": len(s.exec(select(MyPost.id).where(MyPost.site_id == site.id)).all()),
-            "sync_status": feed.get_setting(s, feed.site_key("my_sync_status", site.id))}
+    ctx = {"sections": sections, "site": site,
+           "site_list": [{"id": x.id, "name": x.name, "domain": x.domain, "competitors": counts.get(x.id, 0)} for x in sites]}
+    if site is not None:  # on the all-sites home there's no current site to edit
+        ctx.update({"site_rows": [{"form": f, "label": label, "placeholder": ph, "hint": hint, "value": getattr(site, attr)}
+                                  for f, attr, label, ph, hint in SITE_FIELDS],
+                    "my_posts": len(s.exec(select(MyPost.id).where(MyPost.site_id == site.id)).all()),
+                    "sync_status": feed.get_setting(s, feed.site_key("my_sync_status", site.id))})
+    return ctx
 
 
 @router.get("/config", response_class=HTMLResponse)
 def config_form(request: Request):
     with Session(engine) as s:
-        ctx = config_context(s, current_site(s, request))
+        ctx = config_context(s, current_site(s, request) if request.query_params.get("site") else None)
     return templates.TemplateResponse(request, "partials/feed_config.html", ctx)
 
 
@@ -389,12 +391,13 @@ def config_form(request: Request):
 async def config_save(request: Request):
     form = await request.form()
     with Session(engine) as s:
-        site = current_site(s, request)
-        for f, attr, *_ in SITE_FIELDS:
-            if f in form:
-                setattr(site, attr, form[f].strip())
-        site.name = site.name or site.domain or "我的网站"
-        s.add(site)
+        if "site_name" in form:  # the current-site fields are only on the page inside a site
+            site = current_site(s, request)
+            for f, attr, *_ in SITE_FIELDS:
+                if f in form:
+                    setattr(site, attr, form[f].strip())
+            site.name = site.name or site.domain or "我的网站"
+            s.add(site)
         for _, fields, _ in CONFIG_SECTIONS:
             for key, *_ in fields:
                 if form.get(f"clear_{key}"):

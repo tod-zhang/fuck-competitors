@@ -184,32 +184,22 @@ const Feed = (() => {
     document.querySelector('.main').scrollTo(0, 0);  // .main is the scroll container inside the framed window
   }
 
-  // ---- my sites: the current one is a cookie the server reads on every request
-  function reloadAt(hash) { history.replaceState(null, '', '/' + hash); location.reload(); }
-  function switchSite(id, toSettings) {
-    if (id === 'new') {
-      const sel = document.querySelector('.site-switch select');
-      sel.value = sel.dataset.current;
-      openSettings();
-      $('newSiteName').focus();
-      return;
-    }
-    document.cookie = `fc_site=${id}; path=/; max-age=31536000; samesite=lax`;
-    reloadAt(toSettings ? '#settings' : '');
-  }
+  // ---- my sites: the current one is ?site= in the URL (app.js adds it to every fetch)
   async function addSite(btn) {
-    const name = $('newSiteName').value.trim(), domain = $('newSiteDomain').value.trim();
-    if (!name && !domain) return $('newSiteName').focus();
+    const [nameInput, domainInput] = btn.parentElement.querySelectorAll('input');
+    const name = nameInput.value.trim(), domain = domainInput.value.trim();
+    if (!name && !domain) return nameInput.focus();
     btn.disabled = true;
-    const resp = await post('/sites', { name, domain });  // the server also switches to it
+    const resp = await post('/sites', { name, domain });
     if (!resp.ok) { btn.disabled = false; return alert('添加失败（' + resp.status + '）'); }
-    reloadAt('#settings');
+    location.href = '/?site=' + (await resp.json()).id;  // straight into the new, empty site
   }
   async function deleteSite(id, name) {
     if (!confirm(`删除站点「${name}」？它的竞品、巡检记录、Feed 文章和同步的博客文章都会一起删除，无法恢复。`)) return;
     const data = await (await post(`/sites/${id}/delete`)).json();
     if (data.error) return alert(data.error);
-    reloadAt('#settings');
+    if (String(id) === document.body.dataset.site) location.href = '/';
+    else location.reload();
   }
 
   // ---- settings (API keys + my sites): its own view, rendered server-side into index.html
@@ -319,6 +309,6 @@ const Feed = (() => {
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
   return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
-           refresh, toggleHelp, filterCompetitor, switchSite, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
+           refresh, toggleHelp, filterCompetitor, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, closeModal };
 })();

@@ -18,16 +18,18 @@
 
 ## 界面截图
 
-| 内容 Feed | 设置（多站点） |
+| 全部站点 | 内容 Feed |
 | --- | --- |
-| ![内容 Feed](docs/screenshots/feed.png) | ![设置](docs/screenshots/settings.png) |
+| ![全部站点](docs/screenshots/sites.png) | ![内容 Feed](docs/screenshots/feed.png) |
+| **设置** | |
+| ![设置](docs/screenshots/settings.png) | |
 
 ---
 
 ## 功能特性
 
 - 📰 **内容 Feed** —— 竞品新发的文章排成收件箱，键盘刷：<kbd>j</kbd>/<kbd>k</kbd> 上下、<kbd>s</kbd> 保存、<kbd>d</kbd> 忽略、<kbd>n</kbd> 写笔记；附带 AI 功能（见下文「内容 Feed」）
-- 🗂️ **多站点** —— 运营好几个不同品类的站？每个站点有自己的竞品、Feed 和博客文章，侧边栏一键切换
+- 🗂️ **多站点** —— 运营好几个不同品类的站？首页是所有站点的卡片，点进去看各自的竞品、Feed 和博客文章；站点 ID 在网址里（`/?site=2`），可以多开、分享
 - 🔍 **sitemap 监控** —— 只读 sitemap，轻量地发现竞品新发布的页面
 - 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
 - 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会把旧文章当成新文章刷屏
@@ -178,7 +180,7 @@ get_page_history /pricing —— 各家定价页这段时间怎么变的？
 | **关键词数据**（按需）：这篇文章已排名的词 + 核心词的搜索量 / 难度 / 相关词 | DataForSEO Labs `ranked_keywords` + `related_keywords` | 同上 |
 | **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口（默认 DeepSeek），或 Claude 官方 API | `FC_LLM_PROVIDER` / `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
 
-每个站点的域名、博客 sitemap 和 DataForSEO 国家 / 语言在「设置 → 我的站点」里填（侧边栏顶部切换当前站点），填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
+每个站点的域名、博客 sitemap 和 DataForSEO 国家 / 语言在「设置 → 我的站点」里填（进入站点后，侧边栏顶部可切换站点），填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
 关键词只在你点按钮时才查。
 
 ## 监控原理

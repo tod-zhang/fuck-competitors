@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=5">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=8">
+<link rel="stylesheet" href="/static/feed.css?v=9">
 </head>
 
 {% macro eyes() %}
@@ -25,7 +25,7 @@
 
 {% macro avatar(letter, color, favicon, extra='') %}<span class="monogram no-fav" style="background:{{ color }};{{ extra }}">{% if favicon %}<img class="favicon" src="{{ favicon }}" alt="" referrerpolicy="no-referrer" onload="this.closest('.monogram').classList.remove('no-fav')" onerror="this.remove()">{% endif %}<span class="letter">{{ letter }}</span></span>{% endmacro %}
 
-<body{% if not has_data %} class="first-run"{% endif %}>
+<body{% if not has_data %} class="first-run"{% endif %} data-site="{{ site.id if site else '' }}">
 <div class="app">
   <!-- ================= Sidebar ================= -->
   <aside class="sidebar">
@@ -34,10 +34,15 @@
       <div><h1>Fuck Competitors</h1></div>
     </div>
 
+{% if home %}
+    <nav class="nav">
+      <a class="active" href="/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span>全部站点</a>
+    </nav>
+{% else %}
+    <a class="back-link" href="/">← 全部站点</a>
     <div class="site-switch">
-      <select aria-label="切换站点" data-current="{{ site.id }}" onchange="Feed.switchSite(this.value)">
+      <select aria-label="切换站点" onchange="location.href = '/?site=' + this.value">
         {% for x in all_sites %}<option value="{{ x.id }}"{% if x.id == site.id %} selected{% endif %}>{{ x.name }}</option>{% endfor %}
-        <option value="new">＋ 添加站点…</option>
       </select>
     </div>
 
@@ -59,9 +64,11 @@
       <div class="empty-side">还没有竞品<br>添加第一个开始监控</div>
     </div>
 
+{% endif %}
+
     <div class="side-foot">
       <button type="button" class="side-settings" onclick="Feed.openSettings()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>设置</button>
-      <span class="pill hide-empty">● {{ '演示数据' if demo else '巡检运行中' }}</span>
+      {% if not home %}<span class="pill hide-empty">● {{ '演示数据' if demo else '巡检运行中' }}</span>{% endif %}
     </div>
   </aside>
 
@@ -69,8 +76,9 @@
   <main class="main">
     <!-- header bar (like fuckseo's site toolbar): search on the left, primary action on the right -->
     <div class="topbar">
-      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="搜索页面 / 关键词"></div>
-      <button class="btn btn-primary btn-sm" onclick="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>添加竞品</button>
+      <div class="search"{% if home %} style="visibility:hidden"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="搜索页面 / 关键词"></div>
+      {% if home %}<button class="btn btn-primary btn-sm" onclick="document.getElementById('homeSiteName').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>添加站点</button>
+      {% else %}<button class="btn btn-primary btn-sm" onclick="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>添加竞品</button>{% endif %}
     </div>
 
     <div class="content">
@@ -78,6 +86,32 @@
     <div class="demo-banner">这是演示站，页面里的竞品和文章都是虚构的示例数据，不能添加或修改。想监控自己的竞品？<a href="https://github.com/tod-zhang/fuck-competitors" target="_blank" rel="noopener">在 GitHub 上免费自行部署 →</a></div>
     {% endif %}
 
+{% if home %}
+    <!-- ===== All my sites (home) ===== -->
+    <section class="view show" id="view-home">
+      <div class="fd-head"><div><h2 class="fd-h">我的站点</h2><p class="fd-sub">每个站点有自己的竞品、Feed 和博客文章，点进去看。</p></div></div>
+      <div class="home-grid">
+        {% for c in cards %}
+        <a class="home-card" href="/?site={{ c.id }}">
+          <div class="top"><span class="home-mono">{{ c.monogram }}</span><div><div class="nm">{{ c.name }}</div><div class="lk">{{ c.domain or '未填域名' }}</div></div></div>
+          <div class="home-stats">
+            <div><div class="k">竞品</div><div class="v">{{ c.competitors }}</div></div>
+            <div><div class="k">7 天新文章</div><div class="v">{{ c.week }}</div></div>
+            <div><div class="k">待处理</div><div class="v{% if c.new %} hot{% endif %}">{{ c.new }}</div></div>
+            <div><div class="k">已保存</div><div class="v">{{ c.saved }}</div></div>
+          </div>
+        </a>
+        {% endfor %}
+        <div class="home-card home-add">
+          <div class="nm">添加站点</div>
+          <input id="homeSiteName" placeholder="站点名称，例如：宠物用品站" autocomplete="off">
+          <input placeholder="域名，例如 example.com" autocomplete="off">
+          <button type="button" class="btn btn-soft btn-sm" onclick="Feed.addSite(this)">添加</button>
+        </div>
+      </div>
+    </section>
+
+{% else %}
     <!-- ===== First-run empty state ===== -->
     <section class="onboarding only-empty">
       <div class="ob-card">
@@ -123,6 +157,7 @@
 
     {% include "partials/feed.html" %}
 
+{% endif %}
     <!-- ===== Settings (API keys + my site) ===== -->
     <section class="view" id="view-settings">{% include "partials/feed_config.html" %}</section>
     </div>
@@ -134,7 +169,7 @@
   <div class="modal">
     <h3>盯上一个新对手</h3>
     <p class="sub">填入站点地图地址，我们会定期巡检并记录每一次增删改。</p>
-    <form method="post" action="/competitors">
+    <form method="post" action="/competitors{% if site %}?site={{ site.id }}{% endif %}">
       <div class="field"><label>竞品名称</label><input name="name" required placeholder="例如：Linear"></div>
       <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" required placeholder="https://example.com/sitemap.xml"></div>
       <div class="field"><label>巡检频率</label>
@@ -163,7 +198,7 @@
 </div>
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
-<script src="/static/app.js?v=4"></script>
-<script src="/static/feed.js?v=7"></script>
+<script src="/static/app.js?v=5"></script>
+<script src="/static/feed.js?v=8"></script>
 </body>
 </html>

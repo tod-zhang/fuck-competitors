@@ -25,14 +25,44 @@ router = APIRouter()
 PALETTE = ["#111111", "#5E6AD2", "#635BFF", "#0A0A0A", "#F24E1E", "#2563EB", "#059669", "#DB2777"]
 
 
-SITE_COOKIE = "fc_site"
-
-
 def current_site(s: Session, request: Request) -> Site:
-    """The site picked in the sidebar (a cookie), else the first one. init_db guarantees one exists."""
-    sid = request.cookies.get(SITE_COOKIE, "")
+    """The site in the URL (?site=, which app.js also adds to every fetch), else the first one.
+    init_db guarantees one exists."""
+    sid = request.query_params.get("site", "")
     site = s.get(Site, int(sid)) if sid.isdigit() else None
     return site or s.exec(select(Site).order_by(Site.id)).first()
+
+
+def _back_to(competitor_id: int) -> RedirectResponse:
+    """After a competitor form: back to that competitor's site."""
+    with Session(engine) as s:
+        comp = s.get(Competitor, competitor_id)
+    return RedirectResponse(f"/?site={comp.site_id}" if comp and comp.site_id else "/", status_code=303)
+
+
+def _home(request: Request, s: Session) -> HTMLResponse:
+    """/ without ?site=: every site of mine as a card, like fuckseo's /app home."""
+    sites = s.exec(select(Site).order_by(Site.id)).all()
+    comps = s.exec(select(Competitor)).all()
+    site_of = {c.id: c.site_id for c in comps}
+    week_ago = utcnow() - timedelta(days=7)
+    rows = s.exec(select(FeedItem.competitor_id, FeedItem.status, FeedItem.published_at >= week_ago, func.count())
+                  .group_by(FeedItem.competitor_id, FeedItem.status, FeedItem.published_at >= week_ago)).all()
+    stats: dict[int, dict] = {x.id: {"competitors": 0, "week": 0, "new": 0, "saved": 0} for x in sites}
+    for c in comps:
+        if c.site_id in stats:
+            stats[c.site_id]["competitors"] += 1
+    for comp_id, status, recent, n in rows:
+        st = stats.get(site_of.get(comp_id))
+        if st is None:
+            continue
+        st["week"] += n if recent else 0
+        if status in ("new", "saved"):
+            st[status] += n
+    cards = [{"id": x.id, "name": x.name, "domain": x.domain, "monogram": vm.monogram(x.name), **stats[x.id]} for x in sites]
+    from .feed_web import config_context  # feed_web imports this module
+    ctx = {"home": True, "site": None, "cards": cards, "has_data": True, **config_context(s, None)}
+    return templates.TemplateResponse(request, "index.html", ctx)
 
 
 def site_competitors(s: Session, site: Site) -> list[Competitor]:
@@ -42,6 +72,8 @@ def site_competitors(s: Session, site: Site) -> list[Competitor]:
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request):
     with Session(engine) as s:
+        if not request.query_params.get("site", "").isdigit() or s.get(Site, int(request.query_params["site"])) is None:
+            return _home(request, s)
         site = current_site(s, request)
         competitors = site_competitors(s, site)
         comp_ids = [c.id for c in competitors]
@@ -89,7 +121,7 @@ def add_competitor(
     with Session(engine) as s:
         site_id = current_site(s, request).id
     create_competitor(site_id, name, sitemap_url, interval_hours)
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse(f"/?site={site_id}", status_code=303)
 
 
 def create_competitor(site_id: int, name: str, sitemap_url: str, interval_hours: int) -> None:
@@ -112,7 +144,7 @@ def create_competitor(site_id: int, name: str, sitemap_url: str, interval_hours:
 @router.post("/competitors/{competitor_id}/check")
 def manual_check(competitor_id: int):
     check_now(competitor_id)
-    return RedirectResponse("/", status_code=303)
+    return _back_to(competitor_id)
 
 
 @router.get("/competitors/{competitor_id}/settings", response_class=HTMLResponse)
@@ -150,13 +182,14 @@ def update_competitor(
             s.commit()
             s.refresh(competitor)
             schedule_competitor(competitor)  # reschedule in case the interval changed
-    return RedirectResponse("/", status_code=303)
+    return _back_to(competitor_id)
 
 
 @router.post("/competitors/{competitor_id}/delete")
 def delete_competitor_route(competitor_id: int):
+    back = _back_to(competitor_id)
     delete_competitor(competitor_id)
-    return RedirectResponse("/", status_code=303)
+    return back
 
 
 def delete_competitor(competitor_id: int) -> None:
@@ -188,9 +221,7 @@ def add_site(name: str = Form(...), domain: str = Form("")):
         s.add(site)
         s.commit()
         s.refresh(site)
-    resp = JSONResponse({"ok": True, "id": site.id})
-    resp.set_cookie(SITE_COOKIE, str(site.id), max_age=365 * 86400, samesite="lax")
-    return resp
+    return {"ok": True, "id": site.id}
 
 
 @router.post("/sites/{site_id}/delete")
@@ -209,6 +240,4 @@ def delete_site(site_id: int):
         if site:
             s.delete(site)
         s.commit()
-    resp = JSONResponse({"ok": True})
-    resp.delete_cookie(SITE_COOKIE)
-    return resp
+    return {"ok": True}

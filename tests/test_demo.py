@@ -31,8 +31,10 @@ def test_demo_mode():
         # nothing crawls: the only job is the daily reseed
         assert [j.id for j in scheduler.get_jobs()] == ["demo-reseed"]
 
-        home = client.get("/")
+        home = client.get("/")   # all my sites as cards
         assert home.status_code == 200 and "这是演示站" in home.text
+        assert all(f'href="/?site={x.id}"' in home.text for x in sites)
+        assert client.get(f"/?site={sites[0].id}").status_code == 200
         assert client.get(f"/competitors/{cid}/settings").status_code == 200
 
         # the content feed ships with sample articles and trend reads, so visitors see what it looks like
@@ -42,11 +44,9 @@ def test_demo_mode():
         assert client.get("/feed/config").status_code == 200
 
         # the second sample site has its own competitor and articles
-        client.cookies.set("fc_site", str(sites[1].id))
-        other = client.get("/feed/list?status=new&window=7").text
+        other = client.get(f"/feed/list?status=new&window=7&site={sites[1].id}").text
         assert "paylane.example" in other and "nimbus.example" not in other
         assert "nimbus.example" in feed and "paylane.example" not in feed
-        client.cookies.clear()
 
         for path in ["/competitors", f"/competitors/{cid}/check",
                      f"/competitors/{cid}/update", f"/competitors/{cid}/delete", "/sites", f"/sites/{sites[1].id}/delete",
