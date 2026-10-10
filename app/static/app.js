@@ -49,7 +49,6 @@ function applyTimelineFilter() {
 function showView(view) {
   document.querySelectorAll('.nav a').forEach(x => x.classList.toggle('active', x.dataset.view === view));
   document.querySelector('.side-settings').classList.toggle('active', view === 'settings');
-  document.querySelector('.greet').hidden = view === 'settings';
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + view));
 }
 // clicking a competitor in the sidebar: jump to the changelog filtered to it

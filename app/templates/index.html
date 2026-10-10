@@ -61,8 +61,7 @@
     </div>
 
     <nav class="nav">
-      <a class="active" data-view="overview"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span>最近动态</a>
-      <a data-view="feed"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></span>内容 Feed</a>
+      <a class="active" data-view="feed"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></span>内容 Feed</a>
       <a data-view="timeline"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></span>变更日志{% if nav_changes %}<span class="badge hide-empty">{{ nav_changes }}</span>{% endif %}</a>
       <a data-view="sites"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg></span>竞品列表</a>
     </nav>
@@ -117,13 +116,12 @@
       </div>
     </section>
 
-    <div class="greet hide-empty">
-      <div class="date">{{ greet_date }}</div>
-      <h2>{% if recent_count %}最近竞品有 <span class="hl">{{ recent_count }} 处</span> 新动静。{% else %}最近暂无新动静，<span class="hl">一切平静</span>。{% endif %}</h2>
-    </div>
-
-    <!-- ===== Overview ===== -->
-    <section class="view show" id="view-overview">
+    <!-- ===== Timeline ===== -->
+    <section class="view" id="view-timeline">
+      <div class="greet hide-empty">
+        <div class="date">{{ greet_date }}</div>
+        <h2>{% if recent_count %}最近竞品有 <span class="hl">{{ recent_count }} 处</span> 新动静。{% else %}最近暂无新动静，<span class="hl">一切平静</span>。{% endif %}</h2>
+      </div>
       <div class="stats">
         <div class="stat c-add"><div class="num">{{ stats.added }}</div><div class="lab">新增页面 <span class="trend">近 7 天</span></div></div>
         <div class="stat c-del"><div class="num">{{ stats.removed }}</div><div class="lab">删减页面 <span class="trend">近 7 天</span></div></div>
@@ -131,11 +129,6 @@
         <div class="stat c-site"><div class="num">{{ stats.sites }}</div><div class="lab">监控站点 <span class="trend">{{ stats.pages }} 页</span></div></div>
       </div>
 
-      <button type="button" class="btn btn-soft btn-sm" onclick="showView('timeline');resetTimelineFilter()">查看全部变更 →</button>
-    </section>
-
-    <!-- ===== Timeline ===== -->
-    <section class="view" id="view-timeline">
       <div class="sec-head"><h3>变更日志 · <span id="tlScope">全部</span></h3><span class="ribbon">按时间倒序</span><span class="line"></span></div>
       <div class="filterbar">
         <span class="fchip on" data-type="add"><i class="dot"></i>新增</span>
