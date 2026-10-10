@@ -1,0 +1,47 @@
+name: Deploy
+
+# Updates the demo site (competitors.fuckseo.io) after CI passes on main, or on demand from the
+# Actions tab. The VPS clones the public repo, so it pulls by itself; the deploy key in
+# VPS_SSH_KEY is pinned on the server (authorized_keys command=) to exactly
+# `cd /opt/fuck-competitors && git pull --ff-only && docker compose up -d --build`.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Set up SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Pull and rebuild on the VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes "$VPS_HOST"
+
+      - name: Check the live page
+        run: |
+          sleep 10
+          curl -fsS https://competitors.fuckseo.io/ -o /dev/null
