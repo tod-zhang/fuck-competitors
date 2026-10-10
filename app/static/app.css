@@ -92,7 +92,7 @@ body.first-run .side-foot{display:none}
 /* ---------- Main ---------- */
 .main{flex:1;min-width:0;min-height:0;overflow-y:auto;background:var(--nb-paper)}
 /* header bar: nb-canvas + border-b-2 border-ink, py-2, min-h 45 */
-.topbar{position:sticky;top:0;z-index:30;background:var(--nb-paper);border-bottom:2px solid var(--nb-ink);min-height:45px;padding:7px 24px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.topbar{position:sticky;top:0;z-index:30;background:var(--nb-paper);border-bottom:2px solid var(--nb-ink);min-height:45px;padding:7px max(24px, calc((100% - 1152px) / 2 + 24px));display:flex;align-items:center;justify-content:space-between;gap:8px}
 .content{max-width:1152px;margin:0 auto;padding:32px 24px 40px}
 .demo-banner{background:var(--nb-yellow);color:#111;border:2px solid var(--nb-ink);border-radius:8px;box-shadow:3px 3px 0 var(--nb-ink);padding:10px 14px;margin-bottom:24px;font-size:13px;font-weight:500}
 .demo-banner a{color:#111;font-weight:700;white-space:nowrap}
