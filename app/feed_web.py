@@ -109,8 +109,6 @@ def feed_list(request: Request, status: str = "new", window: int = 7, comp: int 
             "scan_error": any(c.status == "error" for c in comps),
             "my_domain": feed.get_setting(s, "my_domain"),
             "my_sitemap_url": feed.get_setting(s, "my_sitemap_url"),
-            "my_posts": len(s.exec(select(MyPost.id)).all()),
-            "sync_status": feed.get_setting(s, "my_sync_status"),
             "ready": _ready(),
         }
         if status == "trends":
@@ -195,15 +193,6 @@ def refresh_now():
     return {"ok": True, "count": len(ids)}
 
 
-@router.post("/settings")
-def save_settings(my_domain: str = Form(""), my_sitemap_url: str = Form("")):
-    with Session(engine) as s:
-        feed.set_setting(s, "my_domain", my_domain)
-        feed.set_setting(s, "my_sitemap_url", my_sitemap_url)
-        s.commit()
-    return {"ok": True}
-
-
 def _set_status_text(key: str, text: str) -> None:
     with Session(engine) as s:
         feed.set_setting(s, key, text)
@@ -222,7 +211,7 @@ def _sync_job() -> None:
 @router.post("/sync-my-blog")
 def sync_my_blog():
     if not ai.embedding_ready():
-        return _err(ai.NotConfigured("没有配置嵌入接口（FC_EMBEDDING_API_KEY）"))
+        return _err(ai.NotConfigured("还没填嵌入接口的 API Key，到「设置」里填"))
     scheduler.add_job(_sync_job, id="sync-my-blog", replace_existing=True)
     return {"ok": True}
 
@@ -318,7 +307,65 @@ def _trends_job(regenerate_all: bool) -> None:
 @router.post("/trends/generate")
 def generate_trends(all: int = Form(0)):
     if not ai.llm_ready():
-        return _err(ai.NotConfigured("没有配置总结用的大模型（FC_LLM_API_KEY）"))
+        return _err(ai.NotConfigured("还没填大模型的 API Key，到「设置」里填"))
     _set_status_text("trends_status", "排队中…")
     scheduler.add_job(_trends_job, args=[bool(all)], id="trends", replace_existing=True)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- settings (API keys + my site)
+
+CONFIG_SECTIONS = [
+    ("我的站点", [("my_domain", "我的域名", "example.com", "推荐竞品时用"),
+                 ("my_sitemap_url", "我的博客 sitemap", "https://example.com/post-sitemap.xml", "找「我博客里最接近的文章」时用")], None),
+    ("DataForSEO", [("dataforseo_login", "账号（邮箱）", "", ""), ("dataforseo_password", "API 密码", "", "在 DataForSEO 后台 API Access 里看"),
+                    ("dataforseo_location_code", "国家代码", "2840", "2840 = 美国，2826 = 英国"),
+                    ("dataforseo_language_code", "语言", "en", "")], "dataforseo"),
+    ("嵌入（相似文章）", [("embedding_base_url", "接口地址", "https://openrouter.ai/api/v1", "任意 OpenAI 格式的 /embeddings"),
+                     ("embedding_api_key", "API Key", "", ""), ("embedding_model", "模型", "qwen/qwen3-embedding-8b", "换模型后需要重新同步博客")], "embedding"),
+    ("大模型（趋势总结）", [("llm_base_url", "接口地址", "https://api.deepseek.com/v1", "任意 OpenAI 格式的 /chat/completions"),
+                      ("llm_api_key", "API Key", "", ""), ("llm_model", "模型", "deepseek-chat", "用非推理模型")], "llm"),
+]
+
+
+def _mask(value: str) -> str:
+    return f"已设置 ··· {value[-4:]}" if len(value) > 8 else ("已设置" if value else "")
+
+
+@router.get("/config", response_class=HTMLResponse)
+def config_form(request: Request):
+    with Session(engine) as s:
+        sections = []
+        for title, fields, service in CONFIG_SECTIONS:
+            rows = []
+            for key, label, placeholder, hint in fields:
+                value = ai.cfg(key) if key in ai.UI_KEYS else feed.get_setting(s, key)
+                secret = key in ai.SECRET_KEYS
+                rows.append({"key": key, "label": label, "hint": hint, "secret": secret,
+                             "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
+            sections.append({"title": title, "rows": rows, "service": service})
+        ctx = {"sections": sections, "my_posts": len(s.exec(select(MyPost.id)).all()),
+               "sync_status": feed.get_setting(s, "my_sync_status")}
+    return templates.TemplateResponse(request, "partials/feed_config.html", ctx)
+
+
+@router.post("/config")
+async def config_save(request: Request):
+    form = await request.form()
+    with Session(engine) as s:
+        for _, fields, _ in CONFIG_SECTIONS:
+            for key, *_ in fields:
+                if form.get(f"clear_{key}"):
+                    feed.set_setting(s, key, "")
+                elif key in form and (form[key].strip() or key not in ai.SECRET_KEYS):
+                    feed.set_setting(s, key, form[key])   # a blank secret field means "keep the saved one"
+        s.commit()
+    return {"ok": True}
+
+
+@router.post("/config/test/{service}")
+def config_test(service: str):
+    try:
+        return {"ok": True, "message": ai.test_service(service)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "message": str(exc)[:300]}

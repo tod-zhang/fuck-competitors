@@ -148,18 +148,35 @@ const Feed = (() => {
     const data = await (await post('/feed/refresh')).json();
     btn.textContent = `已开始巡检 ${data.count} 个竞品`;
   }
-  function toggleSetup() { $('feedSetup').classList.toggle('open'); }
   function toggleHelp() { const h = $('feedHelp'); if (h) h.classList.toggle('open'); }
-  async function saveSetup(form) {
-    await post('/feed/settings', new FormData(form));
-    load();
+
+  // ---- settings (API keys + my site), in the modal
+  async function openSettings() {
+    openModal('<p class="fd-hint">加载中…</p>');
+    $('feedModal').innerHTML = await (await fetch('/feed/config')).text();
+  }
+  async function saveSettings(form, quiet) {
+    const resp = await post('/feed/config', new FormData(form));
+    if (!resp.ok) { $('cfgState').textContent = '保存失败（' + resp.status + '）'; return false; }
+    form.querySelectorAll('input[type=password]').forEach(i => { i.value = ''; });
+    if (!quiet) { closeModal(); if (state.loaded) load(); }
+    return true;
+  }
+  async function testService(service, btn) {
+    const msg = document.querySelector(`.fd-test-msg[data-service="${service}"]`);
+    btn.disabled = true;
+    msg.className = 'fd-hint fd-test-msg';
+    msg.textContent = '保存并测试中…';
+    if (!(await saveSettings($('feedConfig'), true))) { btn.disabled = false; return; }
+    const data = await (await post('/feed/config/test/' + service)).json();
+    msg.textContent = data.message;
+    msg.classList.add(data.ok ? 'ok' : 'bad');
+    btn.disabled = false;
   }
   async function syncBlog() {
-    const form = $('feedSetup');
-    await post('/feed/settings', new FormData(form));
+    if (!(await saveSettings($('feedConfig'), true))) return;
     const data = await (await post('/feed/sync-my-blog')).json();
-    if (data.error) return alert(data.error);
-    $('syncState').textContent = '同步中…（后台抓取和嵌入，稍后刷新查看）';
+    $('syncState').textContent = data.error || '同步中…（后台抓取和嵌入，稍后再打开设置查看）';
   }
 
   // ---- trends
@@ -234,6 +251,6 @@ const Feed = (() => {
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
   return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
-           refresh, toggleSetup, toggleHelp, saveSetup, syncBlog, refreshTrend, generateTrends, openSuggestions,
+           refresh, toggleHelp, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, closeModal };
 })();

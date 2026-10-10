@@ -1,0 +1,28 @@
+<h3>设置</h3>
+<p class="sub">API key 存在本机数据库里，这里填的优先于 <code>.env</code>。密钥栏留空表示不改。</p>
+<form id="feedConfig" onsubmit="event.preventDefault();Feed.saveSettings(this)">
+  {% for sec in sections %}
+  <div class="fd-cfg-sec">
+    <div class="fd-cfg-head"><h4>{{ sec.title }}</h4>
+      {% if sec.service %}<span class="fd-spacer"></span><span class="fd-hint fd-test-msg" data-service="{{ sec.service }}"></span>
+      <button type="button" class="btn btn-soft btn-sm" onclick="Feed.testService('{{ sec.service }}', this)">测试连接</button>{% endif %}
+    </div>
+    {% for r in sec.rows %}
+    <div class="field">
+      <label>{{ r.label }}{% if r.hint %} <span class="fd-hint">{{ r.hint }}</span>{% endif %}</label>
+      <div class="fd-cfg-input">
+        <input name="{{ r.key }}" value="{{ r.value }}" placeholder="{{ r.placeholder }}" {% if r.secret %}type="password" autocomplete="new-password"{% else %}autocomplete="off"{% endif %}>
+        {% if r.secret and r.placeholder %}<label class="fd-clear"><input type="checkbox" name="clear_{{ r.key }}" value="1"> 清除</label>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% if sec.title == '我的站点' %}
+    <div class="fd-setup-foot"><span class="fd-hint" id="syncState">已嵌入 {{ my_posts }} 篇{% if sync_status %} · {{ sync_status }}{% endif %}</span><span class="fd-spacer"></span>
+      <button class="btn btn-soft btn-sm" type="button" onclick="Feed.syncBlog()">同步我的博客</button></div>
+    {% endif %}
+  </div>
+  {% endfor %}
+  <div class="modal-foot"><span class="fd-hint" id="cfgState"></span><span class="fd-spacer"></span>
+    <button class="btn btn-ghost" type="button" onclick="Feed.closeModal()">取消</button>
+    <button class="btn btn-primary" type="submit">保存</button></div>
+</form>

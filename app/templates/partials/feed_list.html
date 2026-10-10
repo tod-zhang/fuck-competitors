@@ -7,24 +7,17 @@
     <span class="fd-scan{% if scan_error %} err{% endif %}"><i></i>上次巡检 {{ last_scan }}</span>
     <button type="button" class="btn btn-primary btn-sm" onclick="Feed.refresh(this)">立即刷新</button>
     <button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSuggestions()">推荐竞品</button>
-    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.toggleSetup()">我的站点</button>
+    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">设置</button>
     <button type="button" class="btn btn-soft btn-sm" onclick="showView('sites')">竞品列表</button>
   </div>
 </div>
 
-<form class="fd-setup{% if not my_domain and not my_sitemap_url %} open{% endif %}" id="feedSetup" onsubmit="event.preventDefault();Feed.saveSetup(this)">
-  <div class="field"><label>我的域名 <span class="fd-hint">用来推荐竞品（DataForSEO 自然搜索竞品）</span></label><input name="my_domain" value="{{ my_domain }}" placeholder="example.com"></div>
-  <div class="field"><label>我的博客 sitemap <span class="fd-hint">用来找"我博客里最接近的文章"（向量相似度）</span></label><input name="my_sitemap_url" value="{{ my_sitemap_url }}" placeholder="https://example.com/post-sitemap.xml"></div>
-  <div class="fd-setup-foot">
-    <span class="fd-hint" id="syncState">已嵌入 {{ my_posts }} 篇{% if sync_status %} · {{ sync_status }}{% endif %}</span>
-    <span class="fd-spacer"></span>
-    <button class="btn btn-soft btn-sm" type="button" onclick="Feed.syncBlog()">同步我的博客</button>
-    <button class="btn btn-primary btn-sm" type="submit">保存</button>
-  </div>
-  {% if not (ready.dfs and ready.embed and ready.llm) %}
-  <p class="fd-hint">未配置：{% if not ready.dfs %}DataForSEO（FC_DATAFORSEO_LOGIN / PASSWORD） {% endif %}{% if not ready.embed %}嵌入（FC_EMBEDDING_API_KEY） {% endif %}{% if not ready.llm %}大模型（FC_LLM_API_KEY）{% endif %}</p>
-  {% endif %}
-</form>
+{% if not (ready.dfs and ready.embed and ready.llm) or not (my_domain and my_sitemap_url) %}
+<div class="fd-setup-note">
+  <span>{% if not (ready.dfs and ready.embed and ready.llm) %}还缺 API：{% if not ready.dfs %}DataForSEO {% endif %}{% if not ready.embed %}嵌入 {% endif %}{% if not ready.llm %}大模型 {% endif %}{% endif %}{% if not (my_domain and my_sitemap_url) %}{% if not (ready.dfs and ready.embed and ready.llm) %}· {% endif %}还没填我的域名 / 博客 sitemap{% endif %}</span>
+  <button type="button" class="btn btn-primary btn-sm" onclick="Feed.openSettings()">打开设置</button>
+</div>
+{% endif %}
 
 <div class="fd-tabs">
   {% for key, label in [('new', '待处理'), ('saved', '已保存 · 灵感'), ('declined', '已忽略'), ('trends', '趋势')] %}
@@ -39,7 +32,7 @@
     {% if ready.llm %}
     {% if need %}<button class="btn btn-primary btn-sm" onclick="Feed.generateTrends(0, this)">生成 {{ need }} 个缺失 / 过期的</button>{% endif %}
     <button class="btn btn-soft btn-sm" onclick="Feed.generateTrends(1, this)">全部重新生成</button>
-    {% else %}<span class="fd-hint">配置 FC_LLM_API_KEY 后可用</span>{% endif %}
+    {% else %}<button class="btn btn-soft btn-sm" onclick="Feed.openSettings()">在设置里填大模型 API</button>{% endif %}
   </div>
   {% for c in cards %}{% include "partials/feed_trend_card.html" %}{% else %}<p class="empty-soft">还没有竞品。</p>{% endfor %}
 {% else %}
@@ -101,7 +94,7 @@
         <div class="fd-more-body">
           {% if it.keywords %}{% with keywords = it.keywords %}{% include "partials/feed_keywords.html" %}{% endwith %}
           {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取 (W)</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
-          {% else %}<p class="fd-hint">配置 FC_DATAFORSEO_LOGIN / FC_DATAFORSEO_PASSWORD 后可用。</p>{% endif %}
+          {% else %}<p class="fd-hint">在<a href="#" onclick="event.preventDefault();Feed.openSettings()">设置</a>里填 DataForSEO 账号后可用。</p>{% endif %}
         </div>
       </details>
     </article>

@@ -17,6 +17,26 @@ from .config import settings
 DFS_BASE = "https://api.dataforseo.com/v3/dataforseo_labs/google"
 
 
+# Settings that can be filled in from the UI (设置). A value saved there wins over the env / .env.
+UI_KEYS = ("dataforseo_login", "dataforseo_password", "dataforseo_location_code", "dataforseo_language_code",
+           "embedding_base_url", "embedding_api_key", "embedding_model", "embedding_providers",
+           "llm_base_url", "llm_api_key", "llm_model")
+SECRET_KEYS = ("dataforseo_password", "embedding_api_key", "llm_api_key")
+
+
+def cfg(key: str) -> str:
+    from sqlmodel import Session
+
+    from .db import engine
+    from .models import AppSetting
+
+    with Session(engine) as s:
+        row = s.get(AppSetting, key)
+    if row is not None and row.value.strip():
+        return row.value.strip()
+    return str(getattr(settings, key, "") or "")
+
+
 class NotConfigured(Exception):
     pass
 
@@ -28,22 +48,22 @@ class ApiError(Exception):
 # ---------------------------------------------------------------- DataForSEO
 
 def dataforseo_ready() -> bool:
-    return bool(settings.dataforseo_login and settings.dataforseo_password)
+    return bool(cfg("dataforseo_login") and cfg("dataforseo_password"))
 
 
 def _dfs(endpoint: str, task: dict) -> dict:
     """POST one task to a DataForSEO Labs live endpoint and return its first result (or {})."""
     if not dataforseo_ready():
-        raise NotConfigured("没有配置 DataForSEO（FC_DATAFORSEO_LOGIN / FC_DATAFORSEO_PASSWORD）")
+        raise NotConfigured("还没填 DataForSEO 账号，到「设置」里填")
     task = {
-        "location_code": settings.dataforseo_location_code,
-        "language_code": settings.dataforseo_language_code,
+        "location_code": int(cfg("dataforseo_location_code") or 2840),
+        "language_code": cfg("dataforseo_language_code"),
         **task,
     }
     resp = httpx.post(
         f"{DFS_BASE}/{endpoint}/live",
         json=[task],
-        auth=(settings.dataforseo_login, settings.dataforseo_password),
+        auth=(cfg("dataforseo_login"), cfg("dataforseo_password")),
         timeout=60,
     )
     resp.raise_for_status()
@@ -122,12 +142,12 @@ def related_keywords(seed: str, limit: int = 15) -> tuple[dict | None, list[dict
 # ---------------------------------------------------------------- embeddings
 
 def embedding_ready() -> bool:
-    return bool(settings.embedding_api_key)
+    return bool(cfg("embedding_api_key"))
 
 
 def embed(texts: list[str], chunk: int = 32) -> list[list[float]]:
     if not embedding_ready():
-        raise NotConfigured("没有配置嵌入接口（FC_EMBEDDING_API_KEY）")
+        raise NotConfigured("还没填嵌入接口的 API Key，到「设置」里填")
     vecs: list[list[float]] = []
     for i in range(0, len(texts), chunk):
         vecs.extend(_embed_request(texts[i:i + chunk]))
@@ -135,12 +155,12 @@ def embed(texts: list[str], chunk: int = 32) -> list[list[float]]:
 
 
 def _embed_request(texts: list[str]) -> list[list[float]]:
-    body: dict = {"model": settings.embedding_model, "input": texts}
-    order = [p.strip() for p in settings.embedding_providers.split(",") if p.strip()]
+    body: dict = {"model": cfg("embedding_model"), "input": texts}
+    order = [p.strip() for p in cfg("embedding_providers").split(",") if p.strip()]
     if order:
         body["provider"] = {"order": order, "allow_fallbacks": True}
-    headers = {"Authorization": f"Bearer {settings.embedding_api_key}"}
-    url = settings.embedding_base_url.rstrip("/") + "/embeddings"
+    headers = {"Authorization": f"Bearer {cfg('embedding_api_key')}"}
+    url = cfg("embedding_base_url").rstrip("/") + "/embeddings"
     resp = httpx.post(url, json=body, headers=headers, timeout=90)
     if resp.status_code >= 400 and "provider" in body:
         del body["provider"]  # provider routing can be rejected; retry without it
@@ -163,26 +183,49 @@ def cosine(a: list[float], b: list[float]) -> float:
 # ---------------------------------------------------------------- chat
 
 def llm_ready() -> bool:
-    return bool(settings.llm_api_key)
+    return bool(cfg("llm_api_key"))
 
 
 def chat(system: str, user: str, max_tokens: int = 1500) -> str:
     if not llm_ready():
-        raise NotConfigured("没有配置总结用的大模型（FC_LLM_API_KEY）")
+        raise NotConfigured("还没填大模型的 API Key，到「设置」里填")
     resp = httpx.post(
-        settings.llm_base_url.rstrip("/") + "/chat/completions",
+        cfg("llm_base_url").rstrip("/") + "/chat/completions",
         json={
-            "model": settings.llm_model,
+            "model": cfg("llm_model"),
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "max_tokens": max_tokens,
             "temperature": 0.3,
         },
-        headers={"Authorization": f"Bearer {settings.llm_api_key}"},
+        headers={"Authorization": f"Bearer {cfg('llm_api_key')}"},
         timeout=120,
     )
     if resp.status_code >= 400:
         raise ApiError(f"大模型接口出错 {resp.status_code}: {resp.text[:200]}")
     content = (resp.json()["choices"][0]["message"]["content"] or "").strip()
     if not content:  # reasoning models can spend the whole token budget thinking
-        raise ApiError(f"大模型没有返回内容，换一个非推理模型试试（当前 {settings.llm_model}）")
+        raise ApiError(f"大模型没有返回内容，换一个非推理模型试试（当前 {cfg('llm_model')}）")
     return content
+
+
+# ---------------------------------------------------------------- connection tests (设置 → 测试)
+
+def test_service(service: str) -> str:
+    """One cheap call per service; returns a short human-readable result or raises."""
+    if service == "dataforseo":
+        if not dataforseo_ready():
+            raise NotConfigured("先填 DataForSEO 的账号和密码")
+        resp = httpx.get("https://api.dataforseo.com/v3/appendix/user_data",
+                         auth=(cfg("dataforseo_login"), cfg("dataforseo_password")), timeout=30)
+        if resp.status_code == 401:
+            raise ApiError("账号或密码不对")
+        resp.raise_for_status()
+        money = (((resp.json().get("tasks") or [{}])[0].get("result") or [{}])[0] or {}).get("money") or {}
+        return f"连接成功，余额 ${money.get('balance', 0):.2f}"
+    if service == "embedding":
+        vec = embed(["ping"])[0]
+        return f"连接成功，{cfg('embedding_model')} 返回 {len(vec)} 维向量"
+    if service == "llm":
+        reply = chat("Reply with the single word OK.", "ping", max_tokens=200)
+        return f"连接成功，{cfg('llm_model')} 回复：{reply[:40]}"
+    raise ValueError(service)

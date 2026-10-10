@@ -12,9 +12,18 @@
 .fd-err{color:var(--del);font-size:13px}
 kbd{display:inline-block;min-width:18px;padding:0 4px;border:1.5px solid var(--nb-ink);border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:600;line-height:16px;text-align:center;color:var(--fg);background:var(--nb-paper)}
 
-.fd-setup{display:none;border:2px solid var(--nb-ink);border-radius:8px;padding:16px;margin:0 0 16px}
-.fd-setup.open{display:block}
-.fd-setup .field label{font-size:13px}
+.fd-setup-note{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;border:2px dashed var(--nb-ink);border-radius:8px;padding:10px 16px;margin:0 0 16px;font-size:13px}
+.fd-cfg-sec{border-top:1px solid var(--line);padding:16px 0 4px}
+.fd-cfg-sec:first-of-type{border-top:0;padding-top:4px}
+.fd-cfg-head{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.fd-cfg-head h4{font-size:15px;font-weight:700}
+.fd-cfg-sec .field{margin-bottom:12px}
+.fd-cfg-sec .field label{font-size:13px}
+.fd-cfg-input{display:flex;align-items:center;gap:10px}
+.fd-cfg-input input[name]{flex:1}
+.fd-clear{display:inline-flex!important;align-items:center;gap:4px;margin:0!important;font-size:12px!important;font-weight:400!important;color:var(--muted-fg);white-space:nowrap}
+.fd-test-msg.ok{color:var(--add)}
+.fd-test-msg.bad{color:var(--del)}
 .fd-setup-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
 .fd-tabs{display:flex;gap:4px;border-bottom:2px solid var(--nb-ink);margin:0 0 16px;overflow-x:auto}
@@ -111,3 +120,7 @@ kbd{display:inline-block;min-width:18px;padding:0 4px;border:1.5px solid var(--n
   .fd-side{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .fd-head-actions{margin-left:0}
 }
+
+.side-settings{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 12px;margin:0 0 8px;border:0;border-radius:6px;background:transparent;font:inherit;font-size:14px;font-weight:500;color:var(--fg);cursor:pointer;text-align:left}
+.side-settings:hover{background:var(--hover)}
+.side-settings svg{width:16px;height:16px}
