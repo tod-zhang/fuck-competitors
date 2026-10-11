@@ -142,18 +142,10 @@
 .fd-cfg{max-width:720px}
 .fd-cfg-foot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--line);background:var(--nb-paper)}
 
-/* my sites: sidebar switcher + the list on the settings page */
+/* my sites: sidebar switcher */
 .site-switch{padding:0 10px 12px}
 .site-switch .xselect-trigger{border-width:2px;border-radius:8px;font-weight:600}
 .fd-cfg-input .xselect{flex:1}
-.fd-sites{display:flex;flex-direction:column;gap:8px}
-.fd-site-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px}
-.fd-site-row.on{border-color:var(--nb-ink)}
-.fd-cur{font-size:12px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--nb-yellow);box-shadow:inset 0 0 0 1.5px var(--nb-ink)}
-.fd-site-add{display:flex;gap:8px;flex-wrap:wrap}
-.fd-site-add input{flex:1;min-width:160px;height:32px;padding:0 10px;border:1.5px solid var(--line);border-radius:6px;font:inherit;font-size:13px}
-.fd-site-add input:focus{outline:none;border-color:var(--nb-ink)}
-.fd-cfg + .fd-cfg > .fd-cfg-sec:first-of-type{border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
 
 /* all-sites home (like fuckseo's /app): one card per site of mine */
 .home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
@@ -190,3 +182,6 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .fd-idea-row{display:flex;gap:12px;align-items:baseline}
 .fd-idea-k{flex-shrink:0;width:72px;font-size:12px;color:var(--muted-fg)}
 .fd-idea-title{font-weight:700}
+.home-del{margin-left:auto;align-self:flex-start;padding:2px 8px;border:0;border-radius:4px;background:transparent;font:inherit;font-size:12px;color:var(--muted-fg);cursor:pointer;visibility:hidden}
+.home-card:hover .home-del{visibility:visible}
+.home-del:hover{background:var(--del-bg);color:var(--del)}

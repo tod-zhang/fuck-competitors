@@ -396,10 +396,7 @@ def config_context(s: Session, site: Site | None) -> dict:
             rows.append({"key": key, "label": label, "hint": hint, "secret": secret, "choices": CONFIG_CHOICES.get(key),
                          "value": "" if secret else value, "placeholder": _mask(value) if secret else placeholder})
         sections.append({"title": title, "rows": rows, "service": service})
-    sites = s.exec(select(Site).order_by(Site.id)).all()
-    counts = dict(s.exec(select(Competitor.site_id, func.count()).group_by(Competitor.site_id)).all())
-    ctx = {"sections": sections, "site": site,
-           "site_list": [{"id": x.id, "name": x.name, "domain": x.domain, "competitors": counts.get(x.id, 0)} for x in sites]}
+    ctx = {"sections": sections, "site": site}
     if site is not None:  # on the all-sites home there's no current site to edit
         ctx.update({"site_rows": [{"form": f, "label": label, "placeholder": ph, "hint": hint, "value": getattr(site, attr)}
                                   for f, attr, label, ph, hint in SITE_FIELDS],
