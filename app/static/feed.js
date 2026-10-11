@@ -97,12 +97,6 @@ const Feed = (() => {
     await post(`/feed/item/${id}/status`, { status: 'declined' });
     if (state.status !== 'declined') drop(id);
   }
-  async function restore(id) {
-    id = id || state.current;
-    if (!id || state.status === 'new') return;
-    await post(`/feed/item/${id}/status`, { status: 'new' });
-    drop(id);
-  }
   async function dismissGroup(btn) {
     const group = btn.closest('.fd-group');
     const ids = [...group.querySelectorAll('.fd-card')].map(c => c.dataset.id);
@@ -313,7 +307,7 @@ const Feed = (() => {
   document.querySelectorAll('.nav a[data-view="feed"]').forEach(a => a.addEventListener('click', () => { if (!state.loaded) load(); }));
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
-  return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
+  return { load, focus, save, dismiss, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
            refresh, filterCompetitor, searchCompetitors, searchKey, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, ignoreSuggestion, closeModal };
 })();

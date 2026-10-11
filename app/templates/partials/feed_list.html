@@ -56,7 +56,6 @@
         <div class="fd-btns">
           {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm fd-ico" data-act="save" title="保存" onclick="Feed.save({{ it.id }})">★</button>{% endif %}
           {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm fd-ico" title="忽略" onclick="Feed.dismiss({{ it.id }})">✕</button>{% endif %}
-          {% if it.status != 'new' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.restore({{ it.id }})">放回待处理</button>{% endif %}
         </div>
       </div>
 
