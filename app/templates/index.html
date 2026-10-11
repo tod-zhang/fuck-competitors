@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=9">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=20">
+<link rel="stylesheet" href="/static/feed.css?v=21">
 </head>
 
 {% macro eyes() %}
@@ -95,7 +95,7 @@
         {% for c in cards %}
         <a class="home-card" href="/?site={{ c.id }}">
           <div class="top"><span class="home-mono">{{ c.monogram }}</span><div><div class="nm">{{ c.name }}</div><div class="lk">{{ c.domain or '未填域名' }}</div></div>
-            {% if cards|length > 1 %}<button type="button" class="home-del" title="删除站点" data-name="{{ c.name }}" onclick="event.preventDefault();event.stopPropagation();Feed.deleteSite({{ c.id }}, this.dataset.name)">删除</button>{% endif %}</div>
+            {% if cards|length > 1 %}<button type="button" class="home-del" title="删除站点" aria-label="删除站点" data-name="{{ c.name }}" onclick="event.preventDefault();event.stopPropagation();Feed.deleteSite({{ c.id }}, this.dataset.name)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>{% endif %}</div>
           <div class="home-stats">
             <div><div class="k">竞品</div><div class="v">{{ c.competitors }}</div></div>
             <div><div class="k">7 天新文章</div><div class="v">{{ c.week }}</div></div>
