@@ -12,25 +12,32 @@ from __future__ import annotations
 from datetime import timedelta
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from sqlmodel import Session, select
 
 from .config import settings
 from .db import engine, init_db
-from .models import Change, Competitor, Page, Site
+from .models import AppSetting, Change, Competitor, FeedItem, Page, Site, StrategySummary
 from .timeutil import utcnow
 from .viewmodels import host_of, url_path
 
 mcp = FastMCP(
     "fuck-competitors",
     instructions=(
-        "Competitor-website change monitoring. To answer \"what is competitor X optimizing?\":\n"
-        "1) list_competitors() to see who's monitored.\n"
-        "2) summarize_window(competitor, days) for a one-shot package, or get_changes()+get_diff() for detail.\n"
-        "3) Synthesize by theme — pricing, positioning/messaging, product line, content focus, customers/logos.\n"
-        "Weight high-value pages (pricing, homepage, product, customers) heavily. Be cautious: do NOT infer "
-        "strategy from trivial or noisy changes, and say when the evidence is thin."
+        "Competitors' newly published content, for deciding what to write next. The user runs several sites "
+        "of their own; each has its own competitors and blog.\n"
+        "1) list_sites() and list_competitors(site) to see what's monitored.\n"
+        "2) get_feed(site) for the last month's new articles: each with the closest post on the user's blog "
+        "(similarity 0-1; >= 0.8 means they likely covered it already), an AI writing idea when they haven't, "
+        "keyword data if fetched, and the user's own notes / saved status.\n"
+        "3) get_trends(site) for each competitor's 30-day content strategy read.\n"
+        "get_changes / get_page_history / summarize_window cover raw sitemap changes (pages added / removed).\n"
+        "Be concrete: name articles and URLs, and say when the evidence is thin."
     ),
 )
+# Served behind a domain (nginx / Cloudflare) as well as on localhost, and protected by the bearer
+# token instead: the default localhost-only Host check would reject every remote client.
+mcp.settings.transport_security = TransportSecuritySettings(enable_dns_rebinding_protection=False)
 
 TYPE_LABEL = {"added": "新增", "removed": "删减", "modified": "内容修改", "suspected": "疑似修改"}
 
@@ -41,6 +48,95 @@ def _find_competitor(session: Session, name: str) -> Competitor | None:
         if c.name.lower() == target:
             return c
     return None
+
+
+def _find_site(session: Session, site: str | None) -> Site | None:
+    """By name or domain (case-insensitive); None = no filter."""
+    want = (site or "").strip().lower()
+    if not want:
+        return None
+    for s in session.exec(select(Site)).all():
+        if want in (s.name.lower(), s.domain.lower()):
+            return s
+    raise ValueError(f"site '{site}' not found; call list_sites()")
+
+
+@mcp.tool()
+def list_sites() -> list[dict]:
+    """The user's own sites. Competitors, the feed and the blog posts used for matching belong to one site."""
+    with Session(engine) as s:
+        out = []
+        for x in s.exec(select(Site).order_by(Site.id)).all():
+            comps = s.exec(select(Competitor).where(Competitor.site_id == x.id)).all()
+            out.append({"name": x.name, "domain": x.domain, "blog_sitemap": x.blog_sitemap,
+                        "competitors": [c.name for c in comps]})
+        return out
+
+
+@mcp.tool()
+def get_feed(site: str | None = None, status: str = "new", competitor: str | None = None,
+             days: int = 30, limit: int = 100) -> list[dict]:
+    """Competitors' articles published in the last `days`, newest first.
+
+    site: name or domain from list_sites (omit for all). status: "new" (not triaged yet), "saved",
+    "declined" or "all". competitor: one competitor's name. Each article has its title, description,
+    url, competitor, published date, the closest posts on the user's blog (`similar`, score 0-1),
+    the AI writing idea (`idea`: title / angle / keyword) when one was generated, keyword data if
+    fetched, and the user's note.
+    """
+    since = utcnow() - timedelta(days=days)
+    with Session(engine) as s:
+        try:
+            the_site = _find_site(s, site)
+        except ValueError as exc:
+            return [{"error": str(exc)}]
+        comps = {c.id: c for c in s.exec(select(Competitor)).all()
+                 if the_site is None or c.site_id == the_site.id}
+        if competitor:
+            comps = {k: c for k, c in comps.items() if c.name.lower() == competitor.strip().lower()}
+            if not comps:
+                return [{"error": f"competitor '{competitor}' not found"}]
+        q = select(FeedItem).where(FeedItem.competitor_id.in_(list(comps)), FeedItem.published_at >= since)
+        if status != "all":
+            q = q.where(FeedItem.status == status)
+        sites = {x.id: x.name for x in s.exec(select(Site)).all()}
+        out = []
+        for it in s.exec(q.order_by(FeedItem.published_at.desc()).limit(limit)).all():
+            comp = comps[it.competitor_id]
+            kw = it.keywords or {}
+            out.append({
+                "title": it.title, "description": it.description, "url": it.url,
+                "competitor": comp.name, "site": sites.get(comp.site_id),
+                "published": it.published_at.date().isoformat(), "status": it.status, "note": it.note or None,
+                "similar": it.matches or [], "idea": it.idea,
+                "keywords": {"ranked": kw.get("ranked"), "seed": kw.get("seed"), "related": kw.get("related")} if kw else None,
+            })
+        return out
+
+
+@mcp.tool()
+def get_trends(site: str | None = None) -> list[dict]:
+    """The latest 30-day content-strategy read per competitor (strategy, recurring themes with their
+    article URLs, follow-up ideas), as shown on the 趋势 tab. Competitors never summarised are listed
+    with summary null."""
+    from .feed import parse_summary
+
+    with Session(engine) as s:
+        try:
+            the_site = _find_site(s, site)
+        except ValueError as exc:
+            return [{"error": str(exc)}]
+        out = []
+        for c in s.exec(select(Competitor).order_by(Competitor.created_at)).all():
+            if the_site is not None and c.site_id != the_site.id:
+                continue
+            summary = s.exec(select(StrategySummary).where(StrategySummary.competitor_id == c.id)
+                             .order_by(StrategySummary.created_at.desc())).first()
+            out.append({"competitor": c.name, "host": host_of(c.sitemap_url),
+                        "summary": parse_summary(summary.text) if summary else None,
+                        "articles": summary.article_count if summary else None,
+                        "written_at": summary.created_at.isoformat() if summary else None})
+        return out
 
 
 def _hunks_to_text(hunks: list[dict]) -> str:
@@ -212,17 +308,27 @@ def summarize_window(competitor: str, days: int = 14) -> dict:
         }
 
 
-class BearerAuth:
-    """Minimal ASGI middleware: require `Authorization: Bearer <token>` on HTTP requests."""
+def current_token() -> str:
+    """The token set in 设置 (stored in the DB) wins over FC_MCP_TOKEN; empty = no auth."""
+    with Session(engine) as s:
+        row = s.get(AppSetting, "mcp_token")
+    return (row.value.strip() if row and row.value.strip() else settings.mcp_token).strip()
 
-    def __init__(self, app, token: str):
+
+class BearerAuth:
+    """Minimal ASGI middleware: require `Authorization: Bearer <token>` on HTTP requests.
+    `token` is a string, or a callable read on each request (so a token set in 设置 applies at once);
+    an empty token lets everything through."""
+
+    def __init__(self, app, token):
         self.app = app
-        self._expected = f"Bearer {token}"
+        self._token = token
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] == "http":
+        token = self._token() if callable(self._token) else self._token
+        if scope["type"] == "http" and token:
             headers = dict(scope.get("headers") or [])
-            if headers.get(b"authorization", b"").decode() != self._expected:
+            if headers.get(b"authorization", b"").decode() != f"Bearer {token}":
                 await send({"type": "http.response.start", "status": 401,
                             "headers": [(b"content-type", b"application/json")]})
                 await send({"type": "http.response.body", "body": b'{"error":"unauthorized"}'})
@@ -237,9 +343,7 @@ def main() -> None:
 
         mcp.settings.host = settings.mcp_host
         mcp.settings.port = settings.mcp_port
-        asgi_app = mcp.streamable_http_app()
-        if settings.mcp_token:  # optional shared-secret auth; required when exposed publicly
-            asgi_app = BearerAuth(asgi_app, settings.mcp_token)
+        asgi_app = BearerAuth(mcp.streamable_http_app(), current_token)  # token: required when exposed publicly
         uvicorn.run(asgi_app, host=settings.mcp_host, port=settings.mcp_port, log_level="info")
     else:
         mcp.run()  # stdio (local clients launch this as a subprocess)

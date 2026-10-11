@@ -224,6 +224,31 @@ const Feed = (() => {
     showView('settings');
     document.querySelector('.main').scrollTo(0, 0);
   }
+  // ---- MCP: the address is this site's own /mcp; the snippets follow the token field as you type
+  function renderMcp() {
+    const box = document.querySelector('.fd-mcp');
+    if (!box) return;
+    const url = location.origin + '/mcp';
+    const token = (document.querySelector('input[name=mcp_token]') || {}).value || '';
+    const auth = token ? ` --header "Authorization: Bearer ${token}"` : '';
+    box.querySelector('.mcp-url').textContent = url;
+    box.querySelector('.mcp-cli').textContent = `claude mcp add --transport http fuck-competitors ${url}${auth}`;
+    const server = { type: 'http', url, ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}) };
+    box.querySelector('.mcp-json').textContent = JSON.stringify({ mcpServers: { 'fuck-competitors': server } }, null, 2);
+  }
+  function newMcpToken() {
+    const bytes = crypto.getRandomValues(new Uint8Array(24));
+    document.querySelector('input[name=mcp_token]').value = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+    renderMcp();
+  }
+  async function copyText(btn) {
+    await navigator.clipboard.writeText(btn.previousElementSibling.textContent);
+    btn.textContent = '已复制';
+    setTimeout(() => { btn.textContent = '复制'; }, 1500);
+  }
+  document.addEventListener('input', e => { if (e.target.matches('input[name=mcp_token]')) renderMcp(); });
+  renderMcp();
+
   async function saveSettings(form, quiet) {
     const resp = await post('/feed/config', new FormData(form));
     if (!resp.ok) { $('cfgState').textContent = '保存失败（' + resp.status + '）'; return false; }
@@ -231,6 +256,7 @@ const Feed = (() => {
     if (!quiet) {
       // re-render so saved secrets show as "已设置 ··· last4"
       $('view-settings').innerHTML = await (await fetch('/feed/config')).text();
+      renderMcp();
       $('cfgState').textContent = '已保存';
       if (state.loaded) load();
     }
@@ -315,5 +341,5 @@ const Feed = (() => {
 
   return { load, focus, save, dismiss, dismissGroup, saveNote, skipNote, togglePanel, loadKeywords,
            refresh, filterCompetitor, searchCompetitors, searchKey, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
-           follow, ignoreSuggestion, closeModal };
+           follow, ignoreSuggestion, newMcpToken, copyText, closeModal };
 })();

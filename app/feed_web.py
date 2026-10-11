@@ -374,6 +374,7 @@ CONFIG_SECTIONS = [
                       ("llm_base_url", "接口地址", "https://api.deepseek.com/v1", "任意 OpenAI 格式的 /chat/completions；Claude 官方 API 不用填"),
                       ("llm_api_key", "API Key", "", ""),
                       ("llm_model", "模型", "deepseek-chat", "OpenAI 兼容接口用非推理模型；Claude 留空或非 claude- 开头时用 claude-opus-5-5")], "llm"),
+    ("MCP（给 AI 用）", [("mcp_token", "访问令牌", "留空表示不需要令牌", "AI 客户端连接时带上它；部署在公网务必设置")], "mcp"),
 ]
 
 

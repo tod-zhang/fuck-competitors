@@ -95,13 +95,16 @@ uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
 
 ## AI 分析（MCP）
 
-应用自带一个**只读 MCP server**，把竞品的变化以工具形式开放给 AI Agent
+应用自带一个**只读 MCP server**，把竞品的新文章和变化以工具形式开放给 AI Agent
 （Claude Code / Codex / Claude Desktop / ChatGPT 等）。接上之后用**自然语言**问就行 ——
 Agent 自己调下面的工具拉数据、推理出"对手在优化什么"。
 
 | 工具 | 作用 |
 | --- | --- |
-| `list_competitors` | 列出监控中的竞品（追踪页数、近 7 天活跃度） |
+| `list_sites` | 你的站点，以及每个站点监控的竞品 |
+| `get_feed` | 最近 N 天竞品新文章：相似文章、写作思路、关键词数据、你的笔记 / 保存状态（可按站点、状态、竞品过滤） |
+| `get_trends` | 每个竞品的 30 天内容策略解读（「趋势」标签页的内容） |
+| `list_competitors` | 列出监控中的竞品（追踪页数、近 7 天活跃度，可按站点过滤） |
 | `get_changes` | 拉某段时间的增 / 删 / 改（可按竞品、类型过滤） |
 | `get_diff` | 某条变更的详情（如疑似修改的 `lastmod` 变化） |
 | `get_page_history` | 单个页面随时间的变化轨迹（如 `/pricing`） |
@@ -125,24 +128,27 @@ Agent 自己调下面的工具拉数据、推理出"对手在优化什么"。
 
 ### 方式二：远程（HTTP）—— 自托管后直接输 URL
 
-`docker compose up` 会同时起一个 **MCP HTTP 服务（端口 9528）**，和应用共用同一个数据库。
-在支持远程 MCP 的客户端里填这个地址即可：
+应用自己就在 **`/mcp`** 上提供 MCP（和网页同一个地址、同一个 HTTPS），打开「设置 → MCP」可以看到地址、
+生成访问令牌，并直接复制 Claude Code 命令或 `mcp.json` 配置：
 
 ```
-http://<你的服务器>:9528/mcp
+https://<你的域名>/mcp
 ```
+
+`docker compose up` 另外还会起一个独立的 MCP HTTP 服务（端口 9528，令牌用 `FC_MCP_TOKEN`），需要时可用。
 
 - **Claude Code**：`claude mcp add --transport http fuck-competitors http://<host>:9528/mcp`
   （设了 token 再加 `--header "Authorization: Bearer <token>"`）
 - **Claude Desktop / ChatGPT**：添加远程 MCP / 连接器，粘贴上面的 URL。
 
-> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手以及它们的变化**。本机 / 内网用可不设鉴权；
-> **暴露到公网必须设 `FC_MCP_TOKEN`**（在 compose 的 `mcp` 服务里），客户端连接时带
+> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手和你的笔记**。本机 / 内网用可不设鉴权；
+> **暴露到公网必须设令牌**（「设置 → MCP」里生成，或环境变量 `FC_MCP_TOKEN`），客户端连接时带
 > `Authorization: Bearer <token>`。
 
 ### 接上之后这样问
 
 ```
+这个月对手发了哪些我还没写过的文章？按写作思路排个优先级。（get_feed）
 监控了哪些对手？（list_competitors）
 用 summarize_window 看 cowseal 最近 14 天，它在优化什么？按定价 / 定位 / 产品 / 内容分类说。
 get_page_history /pricing —— 各家定价页这段时间怎么变的？

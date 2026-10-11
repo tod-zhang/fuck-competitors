@@ -16,7 +16,7 @@
   {% for sec in sections %}
   <div class="fd-cfg-sec">
     <div class="fd-cfg-head"><h4>{{ sec.title }}</h4>{% if loop.first %}<span class="fd-hint">以下 API 所有站点共用</span>{% endif %}
-      {% if sec.service %}<span class="fd-spacer"></span><span class="fd-hint fd-test-msg" data-service="{{ sec.service }}"></span>
+      {% if sec.service and sec.service != 'mcp' %}<span class="fd-spacer"></span><span class="fd-hint fd-test-msg" data-service="{{ sec.service }}"></span>
       <button type="button" class="btn btn-soft btn-sm" onclick="Feed.testService('{{ sec.service }}', this)">测试连接</button>{% endif %}
     </div>
     {% for r in sec.rows %}
@@ -31,9 +31,19 @@
         </div>
         {% else %}<input name="{{ r.key }}" value="{{ r.value }}" placeholder="{{ r.placeholder }}" {% if r.secret %}type="password" autocomplete="new-password"{% else %}autocomplete="off"{% endif %}>{% endif %}
         {% if r.secret and r.placeholder %}<label class="fd-clear"><input type="checkbox" name="clear_{{ r.key }}" value="1"> 清除</label>{% endif %}
+        {% if r.key == 'mcp_token' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.newMcpToken()">生成</button>{% endif %}
       </div>
     </div>
     {% endfor %}
+    {% if sec.service == 'mcp' %}
+    <div class="fd-mcp">
+      <p class="fd-hint">把监控数据开放给 Claude Code、Cursor 等 AI 客户端，直接问"这个月对手发了什么、我该写什么"。工具：站点和竞品列表、新文章（含相似文章、写作思路、关键词数据、你的笔记）、30 天趋势，以及原始的页面增删记录。</p>
+      <div class="field"><label>地址</label><div class="fd-copy"><code class="mcp-url"></code><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
+      <div class="field"><label>Claude Code <span class="fd-hint">在终端运行</span></label><div class="fd-copy"><code class="mcp-cli"></code><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
+      <div class="field"><label>配置文件 <span class="fd-hint">Cursor 等客户端的 mcp.json，或项目里的 .mcp.json</span></label><div class="fd-copy"><pre class="mcp-json"></pre><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
+      <p class="fd-hint">改了令牌要先点「保存」，再更新客户端里的配置。</p>
+    </div>
+    {% endif %}
   </div>
   {% endfor %}
   <div class="fd-cfg-foot"><span class="fd-hint" id="cfgState"></span><span class="fd-spacer"></span>
