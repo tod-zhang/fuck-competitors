@@ -186,3 +186,4 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .search-menu .monogram{width:18px;height:18px;font-size:10px}
 .search-menu .search-none{color:var(--muted-fg);cursor:default}
 .site-row.on{background:var(--hover);color:var(--fg)}
+.fd-sugg-act{white-space:nowrap;text-align:right}

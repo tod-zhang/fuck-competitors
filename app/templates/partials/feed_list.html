@@ -27,16 +27,11 @@
   </div>
   {% for c in cards %}{% include "partials/feed_trend_card.html" %}{% else %}<p class="empty-soft">还没有竞品。</p>{% endfor %}
 {% else %}
-  <div class="fd-filters">
-    <div class="fd-frow"><span class="fd-flabel">时间</span>
-      {% for w in windows %}<button type="button" class="fd-chip{% if w == window %} on{% endif %}" onclick="Feed.load({window:{{ w }}})">{{ w }} 天</button>{% endfor %}
-    </div>
-    {# competitors are picked in the sidebar or the top search; here only the active one, to clear it #}
-    {% set picked = competitors|selectattr('id', 'equalto', comp)|first %}
-    {% if picked %}<div class="fd-frow"><span class="fd-flabel">竞品</span>
-      <button type="button" class="fd-chip on" title="看全部竞品" onclick="Feed.filterCompetitor(null)">{{ picked.host or picked.name }} ✕</button>
-    </div>{% endif %}
-  </div>
+  {# competitors are picked in the sidebar or the top search; the active one shows here, to clear it #}
+  {% set picked = competitors|selectattr('id', 'equalto', comp)|first %}
+  {% if picked %}<div class="fd-filters"><div class="fd-frow"><span class="fd-flabel">竞品</span>
+    <button type="button" class="fd-chip on" title="看全部竞品" onclick="Feed.filterCompetitor(null)">{{ picked.host or picked.name }} ✕</button>
+  </div></div>{% endif %}
 
 
   {% for g in groups %}

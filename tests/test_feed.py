@@ -97,6 +97,21 @@ def test_matches_stay_within_site():
         s.add(comp); s.commit()
 
 
+def test_ignored_suggestions():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with Session(engine) as s:
+        sid = s.exec(select(Site)).first().id
+        feed.set_setting(s, feed.site_key("suggestions_cache", sid), '{"domain": "", "rows": '
+                         '[{"domain": "a.example", "intersections": 5, "avg_position": 3, "etv": 1}, '
+                         '{"domain": "b.example", "intersections": 4, "avg_position": 3, "etv": 1}]}')
+        s.commit()
+    client = TestClient(app)
+    assert client.post(f"/feed/suggestions/ignore?site={sid}", data={"domain": "www.a.example"}).json()["ok"]
+    page = client.get(f"/feed/suggestions?site={sid}").text
+    assert "b.example" in page and "a.example" not in page and "不感兴趣的 1 个" in page
+
+
 def test_suggestions_filter():
     httpx_post, ai.httpx.post = ai.httpx.post, fake_post
     try:
@@ -168,6 +183,7 @@ if __name__ == "__main__":
     test_ingest_and_seed()
     test_embed_and_match()
     test_matches_stay_within_site()
+    test_ignored_suggestions()
     test_suggestions_filter()
     test_unconfigured_llm_and_summary_parsing()
     test_claude_provider()

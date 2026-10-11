@@ -1,13 +1,14 @@
 <h3>推荐关注的竞品</h3>
-<p class="sub">和 <b>{{ domain }}</b> 抢同一批关键词的网站（DataForSEO 自然搜索竞品，按共同关键词数排序）。关注时会自动找它的 sitemap。{% if hidden %}已关注的 {{ hidden }} 个不再列出。{% endif %}{% if demo %}<br><b>这是示例数据</b>，演示站不调用付费接口。{% endif %}</p>
+<p class="sub">和 <b>{{ domain }}</b> 抢同一批关键词的网站（DataForSEO 自然搜索竞品，按共同关键词数排序）。关注时会自动找它的 sitemap。{% if hidden %}已关注的 {{ hidden }} 个不再列出。{% endif %}{% if ignored %}标了不感兴趣的 {{ ignored }} 个也不列出。{% endif %}{% if demo %}<br><b>这是示例数据</b>，演示站不调用付费接口。{% endif %}</p>
 <table class="fd-kw fd-sugg">
   <tr><th>网站</th><th>共同关键词</th><th>平均排名</th><th>重叠词流量</th><th></th></tr>
   {% for r in rows %}
   <tr>
     <td><a href="https://{{ r.domain }}" target="_blank" rel="noopener">{{ r.domain }}</a></td>
     <td>{{ '{:,}'.format(r.intersections) }}</td><td>{{ r.avg_position }}</td><td>{{ '{:,}'.format(r.etv) }}</td>
-    <td><button class="btn btn-soft btn-sm" onclick="Feed.follow('{{ r.domain }}', this)">关注</button></td>
+    <td class="fd-sugg-act"><button class="btn btn-soft btn-sm" onclick="Feed.follow('{{ r.domain }}', this)">关注</button>
+      <button class="btn btn-ghost btn-sm" onclick="Feed.ignoreSuggestion('{{ r.domain }}', this)">不感兴趣</button></td>
   </tr>
-  {% else %}<tr><td colspan="5" class="fd-hint">{{ '推荐的竞品都已经关注了。' if hidden else '没有找到竞品。' }}</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="5" class="fd-hint">{{ '推荐的竞品都已经关注或标了不感兴趣。' if hidden or ignored else '没有找到竞品。' }}</td></tr>{% endfor %}
 </table>
 <div class="modal-foot"><button class="btn btn-ghost btn-sm" onclick="Feed.openSuggestions(1)">重新查询（计费）</button></div>

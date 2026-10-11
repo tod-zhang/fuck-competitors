@@ -1,7 +1,7 @@
 // Content feed view: competitor-grouped cards, keyboard triage, inline notes, trends.
 // The view's HTML comes from /feed/* partials; app.js handles the nav switch to #view-feed.
 const Feed = (() => {
-  const state = { status: 'new', window: 7, comp: null, current: null, loaded: false };
+  const state = { status: 'new', comp: null, current: null, loaded: false };
   const $ = id => document.getElementById(id);
   // Tab HTML fetched ahead of time (each request is a full round trip through Cloudflare, ~1 s),
   // so switching tabs is instant. Any write drops it, since counts and lists may have changed.
@@ -20,7 +20,7 @@ const Feed = (() => {
   const card = id => document.querySelector(`#feedRoot .fd-card[data-id="${id}"]`);
 
   function query(status) {
-    const q = new URLSearchParams({ status: status || state.status, window: state.window });
+    const q = new URLSearchParams({ status: status || state.status });
     if (state.comp) q.set('comp', state.comp);
     return q.toString();
   }
@@ -281,11 +281,16 @@ const Feed = (() => {
     openModal('<p class="fd-hint">正在查询 DataForSEO 自然搜索竞品…</p>');
     $('feedModal').innerHTML = await (await fetch('/feed/suggestions' + (refresh ? '?refresh=1' : ''))).text();
   }
+  async function ignoreSuggestion(domain, btn) {
+    btn.disabled = true;
+    await post('/feed/suggestions/ignore', { domain });
+    btn.closest('tr').remove();
+  }
   async function follow(domain, btn) {
     btn.disabled = true;
     btn.textContent = '找 sitemap…';
     const data = await (await post('/feed/suggestions/follow', { domain })).json();
-    if (data.ok) btn.replaceWith(Object.assign(document.createElement('span'), { className: 'fd-hint', textContent: '已关注 · ' + data.sitemap }));
+    if (data.ok) btn.parentElement.replaceChildren(Object.assign(document.createElement('span'), { className: 'fd-hint', textContent: '已关注 · ' + data.sitemap }));
     else { btn.disabled = false; btn.textContent = '关注'; alert(data.error); }
   }
 
@@ -308,5 +313,5 @@ const Feed = (() => {
 
   return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
            refresh, filterCompetitor, searchCompetitors, searchKey, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
-           follow, closeModal };
+           follow, ignoreSuggestion, closeModal };
 })();

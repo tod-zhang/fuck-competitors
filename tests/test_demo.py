@@ -45,6 +45,7 @@ def test_demo_mode():
         sugg = client.get("/feed/suggestions").text   # sample rows instead of a paid call
         assert "这是示例数据" in sugg and "shipfast.example" in sugg
         assert "nimbus.example" not in sugg and "已关注的 3 个不再列出" in sugg   # already followed: left out
+        assert "不感兴趣" in sugg
 
         # the second sample site has its own competitor and articles
         other = client.get(f"/feed/list?status=new&window=7&site={sites[1].id}").text

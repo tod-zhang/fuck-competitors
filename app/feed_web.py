@@ -23,7 +23,7 @@ from .web import create_competitor, current_site, site_competitors, templates
 
 router = APIRouter(prefix="/feed")
 STATUSES = ("new", "saved", "declined")
-WINDOWS = (1, 3, 7, 14, 30)
+FEED_DAYS = 30  # the feed shows the last month; checked about once a month, so no time filter
 
 
 def _comp_vm(c: Competitor | None) -> dict:
@@ -73,14 +73,13 @@ def _err_html(exc: Exception) -> HTMLResponse:
 
 
 @router.get("/list", response_class=HTMLResponse)
-def feed_list(request: Request, status: str = "new", window: int = 7, comp: int | None = None):
+def feed_list(request: Request, status: str = "new", comp: int | None = None):
     status = status if status in STATUSES + ("trends",) else "new"
-    window = window if window in WINDOWS else 7
     with Session(engine) as s:
         site = current_site(s, request)
         comps = site_competitors(s, site)
         by_id = {c.id: c for c in comps}
-        cutoff = utcnow() - timedelta(days=window)
+        cutoff = utcnow() - timedelta(days=FEED_DAYS)
         mine = FeedItem.competitor_id.in_(list(by_id))
         base = select(FeedItem).where(mine, FeedItem.published_at >= cutoff)
         count_q = select(FeedItem.status, func.count()).where(mine, FeedItem.published_at >= cutoff)
@@ -100,8 +99,6 @@ def feed_list(request: Request, status: str = "new", window: int = 7, comp: int 
         last_scan = max((c.last_checked_at for c in comps if c.last_checked_at), default=None)
         ctx = {
             "status": status,
-            "window": window,
-            "windows": WINDOWS,
             "comp": comp,
             "counts": counts,
             "groups": list(groups.values()),
@@ -250,11 +247,32 @@ def suggestions(request: Request, refresh: int = 0):
     return templates.TemplateResponse(request, "partials/feed_suggestions.html", data)
 
 
+def _ignored(s: Session, site: Site) -> list[str]:
+    raw = feed.get_setting(s, feed.site_key("suggestions_ignored", site.id))
+    return json.loads(raw) if raw else []
+
+
 def _hide_followed(s: Session, site: Site, data: dict) -> dict:
-    """Leave out competitors this site already follows (also ones followed since the cached query)."""
+    """Leave out competitors this site already follows (also ones followed since the cached query)
+    and ones marked 不感兴趣."""
     tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
-    rows = [r for r in data["rows"] if r["domain"] not in tracked]
-    return {**data, "rows": rows[:20], "hidden": len(data["rows"]) - len(rows)}
+    ignored = set(_ignored(s, site))
+    rows = [r for r in data["rows"] if r["domain"] not in tracked and r["domain"] not in ignored]
+    hidden_tracked = sum(1 for r in data["rows"] if r["domain"] in tracked)
+    return {**data, "rows": rows[:20], "hidden": hidden_tracked, "ignored": len(data["rows"]) - len(rows) - hidden_tracked}
+
+
+@router.post("/suggestions/ignore")
+def ignore_suggestion(request: Request, domain: str = Form(...)):
+    """不感兴趣: never suggest this domain again for the current site."""
+    with Session(engine) as s:
+        site = current_site(s, request)
+        ignored = _ignored(s, site)
+        if feed._bare(domain) not in ignored:
+            ignored.append(feed._bare(domain))
+        feed.set_setting(s, feed.site_key("suggestions_ignored", site.id), json.dumps(ignored))
+        s.commit()
+    return {"ok": True}
 
 
 @router.post("/suggestions/follow")
