@@ -87,7 +87,9 @@ const Feed = (() => {
     c.querySelectorAll('.fd-btns [data-act=save]').forEach(b => b.remove());
     const box = c.querySelector('.fd-notebox');
     box.classList.add('open');
-    box.querySelector('textarea').focus();
+    const note = box.querySelector('textarea');
+    if (!note.value.trim() && c.dataset.idea) note.value = c.dataset.idea;  // start from the AI writing idea
+    note.focus();
   }
   async function dismiss(id) {
     id = id || state.current;

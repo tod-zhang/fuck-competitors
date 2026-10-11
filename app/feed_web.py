@@ -46,6 +46,7 @@ def _item_vm(item: FeedItem) -> dict:
         "note": item.note,
         "matches": item.matches,
         "keywords": item.keywords,
+        "idea": item.idea,
     }
 
 

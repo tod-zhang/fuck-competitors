@@ -236,6 +236,7 @@ def after_check(competitor_id: int) -> None:
                 enrich(session, competitor_id)
         except (ai.NotConfigured, ai.ApiError):
             pass  # embedding is optional; matching just stays empty
+        make_ideas(session, competitor_id)
 
 
 def backfill_all() -> None:
@@ -249,6 +250,61 @@ def backfill_all() -> None:
             _embed_and_match(session, session.exec(select(FeedItem).where(FeedItem.matches == None)).all())  # noqa: E711
         except (ai.NotConfigured, ai.ApiError):
             pass  # embedding is optional; titles are already saved per item
+    with Session(engine) as session:
+        make_ideas(session)
+
+
+# ---------------------------------------------------------------- AI writing ideas
+
+IDEA_MAX_SIMILARITY = 0.6   # below this, my blog has nothing close: a topic worth writing about
+IDEA_PROMPT = (
+    "你是 SEO 内容策划。下面是竞品新发的一篇文章，以及我博客里和它最接近的几篇（可能没有）。"
+    "给我一个自己写这个话题的思路，只输出 JSON，不要别的文字：\n"
+    '{"title": "建议标题，用竞品文章的语言", "angle": "1-2 句中文：切入角度，和竞品那篇有什么不同、怎么写得更好", '
+    '"keyword": "核心目标关键词，用竞品文章的语言，小写"}'
+)
+
+
+def needs_idea(item: FeedItem) -> bool:
+    """Pending, and nothing on my blog is close (or matching couldn't run)."""
+    best = max((m["score"] for m in item.matches or []), default=0.0)
+    return item.status == "new" and item.fetched and item.idea is None and best < IDEA_MAX_SIMILARITY
+
+
+def parse_idea(text: str) -> dict | None:
+    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", (text or "").strip())
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return None
+    if not isinstance(data, dict) or not data.get("title"):
+        return None
+    return {k: str(data.get(k) or "").strip() for k in ("title", "angle", "keyword")}
+
+
+def make_ideas(session: Session, competitor_id: int | None = None) -> int:
+    """Writing ideas for this month's pending articles that my blog doesn't cover yet. Returns how many."""
+    if not ai.llm_ready():
+        return 0
+    cutoff = utcnow() - timedelta(days=30)
+    q = select(FeedItem).where(FeedItem.status == "new", FeedItem.idea == None, FeedItem.published_at >= cutoff)  # noqa: E711
+    if competitor_id is not None:
+        q = q.where(FeedItem.competitor_id == competitor_id)
+    made = 0
+    for item in [i for i in session.exec(q.order_by(FeedItem.published_at.desc())).all() if needs_idea(i)][: settings.feed_idea_batch]:
+        mine = "\n".join(f"- {m['title']}（相似度 {m['score']:.2f}）" for m in item.matches or []) or "（没有可比较的文章）"
+        user = (f"竞品文章标题：{item.title}\n摘要：{item.description or ''}\n正文开头：{(item.excerpt or '')[:1500]}\n"
+                f"URL：{item.url}\n\n我博客里最接近的：\n{mine}")
+        try:
+            idea = parse_idea(ai.chat(IDEA_PROMPT, user, max_tokens=600))
+        except (ai.NotConfigured, ai.ApiError):
+            break  # stop for this run; the rest are picked up next time
+        if idea:
+            item.idea = idea
+            session.add(item)
+            session.commit()
+            made += 1
+    return made
 
 
 # ---------------------------------------------------------------- my blog

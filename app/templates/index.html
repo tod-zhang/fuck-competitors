@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=9">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=18">
+<link rel="stylesheet" href="/static/feed.css?v=19">
 </head>
 
 {% macro eyes() %}
@@ -29,17 +29,16 @@
 <div class="app">
   <!-- ================= Sidebar ================= -->
   <aside class="sidebar">
-    <div class="brand">
-      <div class="mark pixel-eyes" title="we're watching">{{ eyes() }}</div>
+    <a class="brand" href="/" title="全部站点">
+      <div class="mark pixel-eyes">{{ eyes() }}</div>
       <div><h1>Fuck Competitors</h1></div>
-    </div>
+    </a>
 
 {% if home %}
     <nav class="nav">
       <a class="active" href="/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></span>全部站点</a>
     </nav>
 {% else %}
-    <a class="back-link" href="/">← 全部站点</a>
     <div class="site-switch">
       <div class="xselect" data-nav="/?site=">
         <button type="button" class="xselect-trigger" aria-label="切换站点"><span class="xselect-label">{{ site.name }}</span><span class="xselect-caret">▾</span></button>
@@ -187,6 +186,6 @@
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
 <script src="/static/app.js?v=7"></script>
-<script src="/static/feed.js?v=11"></script>
+<script src="/static/feed.js?v=12"></script>
 </body>
 </html>

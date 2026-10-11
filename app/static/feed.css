@@ -156,8 +156,6 @@
 .fd-cfg + .fd-cfg > .fd-cfg-sec:first-of-type{border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
 
 /* all-sites home (like fuckseo's /app): one card per site of mine */
-.back-link{display:block;padding:0 20px 8px;font-size:13px;font-weight:500;color:var(--muted-fg);text-decoration:none}
-.back-link:hover{color:var(--fg)}
 .home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .home-card{display:flex;flex-direction:column;gap:14px;border:2px solid var(--nb-ink);border-radius:12px;padding:16px;color:inherit;text-decoration:none;transition:box-shadow .12s,transform .12s}
 a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2px)}
@@ -187,3 +185,8 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .search-menu .search-none{color:var(--muted-fg);cursor:default}
 .site-row.on{background:var(--hover);color:var(--fg)}
 .fd-sugg-act{white-space:nowrap;text-align:right}
+.brand{color:inherit;text-decoration:none}
+.fd-idea{display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.55}
+.fd-idea-row{display:flex;gap:12px;align-items:baseline}
+.fd-idea-k{flex-shrink:0;width:72px;font-size:12px;color:var(--muted-fg)}
+.fd-idea-title{font-weight:700}

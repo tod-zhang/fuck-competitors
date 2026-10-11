@@ -105,7 +105,7 @@ FEED = [
      "new", "", [("ai-agent-observability", 0.86), ("llm-evals-guide", 0.71), ("on-call-for-ml", 0.58)]),
     ("nimbus", "/blog/edge-functions-vs-serverless", 0, 7, "Edge functions vs. serverless: which one should you use in 2026?",
      "A side-by-side on cold starts, pricing and limits, with a decision tree for picking the right runtime.",
-     "new", "", [("serverless-cost-calculator", 0.74), ("cold-start-benchmarks", 0.69), ("pricing-page-teardown", 0.41)]),
+     "new", "", [("serverless-cost-calculator", 0.54), ("cold-start-benchmarks", 0.49), ("pricing-page-teardown", 0.31)]),
     ("nimbus", "/customers/acme-retail", 1, 4, "How Acme Retail cut page load time by 63% on Nimbus",
      "Case study: migrating 1,400 storefront pages, image optimisation at the edge and the A/B test that paid for it.",
      "saved", "可以做一篇我们自己的电商客户案例，数据维度照这个来：加载速度 + 转化率。", [("customer-story-shopco", 0.77), ("core-web-vitals-playbook", 0.64), ("image-cdn-guide", 0.6)]),
@@ -123,7 +123,7 @@ FEED = [
      "declined", "", [("bug-bash-guide", 0.63), ("support-to-eng-handoff", 0.6), ("on-call-for-ml", 0.38)]),
     ("paylane", "/blog/stablecoin-payouts", 0, 8, "Stablecoin payouts are live in 40 countries",
      "Pay contractors in USDC with same-day settlement; what it means for FX fees and compliance.",
-     "new", "", [("cross-border-payouts", 0.79), ("fx-fees-explained", 0.68), ("contractor-payments-guide", 0.65)]),
+     "new", "", [("cross-border-payouts", 0.52), ("fx-fees-explained", 0.47), ("contractor-payments-guide", 0.41)]),
     ("paylane", "/blog/reduce-checkout-fraud", 2, 10, "How to reduce checkout fraud without hurting conversion",
      "Risk scoring, 3DS step-up rules and the five signals that catch 80% of card testing.",
      "new", "", [("chargeback-guide", 0.75), ("3ds-explained", 0.73), ("checkout-ux-checklist", 0.61)]),
@@ -144,7 +144,7 @@ FEED = [
      "new", "", [("ai-design-tools", 0.83), ("design-to-code", 0.74), ("design-system-starter", 0.55)]),
     ("canvasly", "/blog/config-recap", 1, 5, "Config 2026 recap: everything we announced",
      "Dev mode for everyone, variables 2.0, and a preview of real-time multiplayer prototyping.",
-     "new", "", [("conference-recap-2025", 0.61), ("design-system-starter", 0.48), ("prototyping-guide", 0.46)]),
+     "new", "", [("conference-recap-2025", 0.56), ("design-system-starter", 0.48), ("prototyping-guide", 0.46)]),
     ("canvasly", "/templates/pitch-deck", 3, 2, "50 free pitch deck templates for startups",
      "Editable decks used by YC companies, sorted by stage, plus a slide-by-slide checklist.",
      "new", "", [("pitch-deck-guide", 0.87), ("startup-templates", 0.69), ("investor-update-template", 0.6)]),
@@ -182,6 +182,7 @@ def _seed_feed(s, now, page, comps) -> None:
             status=status, note=note, fetched=True, embed_model="demo",
             matches=[{"url": MY_BLOG + m, "title": m.replace("-", " ").capitalize(), "score": sc} for m, sc in matches],
             keywords=_DEMO_KEYWORDS if path == "/blog/linear-vs-jira" else None,
+            idea=IDEAS.get(path),
         ))
     s.commit()
     for ck, data in TRENDS.items():
@@ -214,4 +215,21 @@ SUGGESTIONS = {
                      ("tasknest.example", 410, 15.8, 6300)],
     "pay.mine.example": [("paylane.example", 2210, 6.9, 58800), ("ledgerly.example", 1490, 10.2, 21700),
                          ("invoicely.example", 980, 13.5, 12900), ("fraudguard.example", 615, 16.0, 7400)],
+}
+
+
+# AI writing ideas for the sample articles my blog doesn't cover (best match < 0.6), as make_ideas() writes them.
+IDEAS = {
+    "/blog/edge-functions-vs-serverless": {
+        "title": "Edge vs. serverless functions: a cost breakdown at 1M, 10M and 100M requests",
+        "angle": "对手只比冷启动和功能；我们按真实流量档位算账，给出每档该选哪个，正好接上我们的成本计算器。",
+        "keyword": "edge functions vs serverless"},
+    "/blog/stablecoin-payouts": {
+        "title": "Paying contractors in USDC: fees, settlement times and the tax paperwork",
+        "angle": "对手讲产品功能；我们从付款方的角度写全流程，重点放在合规和报税清单，这块他们没写。",
+        "keyword": "pay contractors in usdc"},
+    "/blog/config-recap": {
+        "title": "Every Config 2026 launch, ranked by how much it changes your design workflow",
+        "angle": "对手只罗列发布内容；我们按对日常工作的影响排序，并给每项一句该不该马上用的建议。",
+        "keyword": "config 2026 announcements"},
 }

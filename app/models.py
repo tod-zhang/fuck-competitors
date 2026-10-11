@@ -87,6 +87,7 @@ class FeedItem(SQLModel, table=True):
     embed_model: Optional[str] = None
     matches: Optional[list] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))    # closest posts on my blog
     keywords: Optional[dict] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))   # DataForSEO data, fetched on request
+    idea: Optional[dict] = Field(default=None, sa_column=Column(JSON(none_as_null=True)))       # AI writing idea {title, angle, keyword}
     fetched: bool = False                # title/excerpt fetch attempted
     created_at: datetime = Field(default_factory=utcnow)
 

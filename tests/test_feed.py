@@ -171,6 +171,32 @@ def test_claude_provider():
             s.commit()
 
 
+def test_writing_ideas():
+    from datetime import datetime
+    chat, ready = ai.chat, ai.llm_ready
+    calls = []
+    ai.llm_ready = lambda: True
+    ai.chat = lambda system, user, max_tokens=0: (calls.append(user), '```json\n{"title": "T", "angle": "A", "keyword": "k"}\n```')[1]
+    try:
+        with Session(engine) as s:
+            comp = s.exec(select(Competitor)).first()
+            covered = FeedItem(competitor_id=comp.id, page_id=9001, url="https://x/1", title="covered", fetched=True,
+                               matches=[{"url": "u", "title": "mine", "score": 0.85}])
+            fresh = FeedItem(competitor_id=comp.id, page_id=9002, url="https://x/2", title="fresh", fetched=True,
+                             matches=[{"url": "u", "title": "mine", "score": 0.4}])
+            s.add(covered); s.add(fresh); s.commit()
+            feed.make_ideas(s, comp.id)
+            s.refresh(covered); s.refresh(fresh)
+            assert covered.idea is None                                   # my blog already has it: no idea
+            assert fresh.idea == {"title": "T", "angle": "A", "keyword": "k"}
+            assert any("fresh" in c for c in calls) and not any("covered" in c for c in calls)
+            n = len(calls)
+            feed.make_ideas(s, comp.id)
+            assert len(calls) == n                                         # not regenerated
+    finally:
+        ai.chat, ai.llm_ready = chat, ready
+
+
 def test_page_meta():
     html = (b'<html><head><title>T | Site</title><meta property="og:image" content="/img/a.png">'
             b'<meta name="description" content="Short summary"></head><body><p>' + b"word " * 460 + b"</p></body></html>")
@@ -187,6 +213,7 @@ if __name__ == "__main__":
     test_suggestions_filter()
     test_unconfigured_llm_and_summary_parsing()
     test_claude_provider()
+    test_writing_ideas()
     test_page_meta()
     os.unlink(_tmp.name)
     print("ok: feed ingest/seed, embedding match, competitor suggestions, LLM guard, summary JSON, page metadata")

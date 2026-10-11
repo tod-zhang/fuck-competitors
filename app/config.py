@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     my_site_max_pages: int = 300   # cap on how many of your own posts get fetched + embedded
     feed_seed_days: int = 30       # first crawl seeds the feed with pages whose <lastmod> is this recent
     feed_enrich_batch: int = 30    # titles fetched per check for new feed items (basic-monitoring competitors)
+    feed_idea_batch: int = 60      # AI writing ideas generated per check (one LLM call each)
     dataforseo_login: str = ""
     dataforseo_password: str = ""
     dataforseo_location_code: int = 2840   # 2840 = United States

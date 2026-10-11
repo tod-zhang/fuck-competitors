@@ -50,6 +50,7 @@ def _migrate() -> None:
         ("page", "last_modified", "VARCHAR"),
         ("competitor", "site_id", "INTEGER"),
         ("mypost", "site_id", "INTEGER"),
+        ("feeditem", "idea", "JSON"),
     ]
     with engine.connect() as conn:
         for table, column, coltype in additions:

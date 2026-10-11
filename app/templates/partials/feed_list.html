@@ -44,7 +44,7 @@
       {% if status == 'new' %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.dismissGroup(this)">全部忽略</button>{% endif %}
     </div>
     {% for it in g['items'] %}
-    <article class="fd-card st-{{ it.status }}" data-id="{{ it.id }}" data-url="{{ it.url }}" onclick="Feed.focus({{ it.id }}, event)">
+    <article class="fd-card st-{{ it.status }}" data-id="{{ it.id }}" data-url="{{ it.url }}"{% if it.idea %} data-idea="{{ '标题：' ~ it.idea.title ~ '\n角度：' ~ it.idea.angle ~ ('\n关键词：' ~ it.idea.keyword if it.idea.keyword else '') }}"{% endif %} onclick="Feed.focus({{ it.id }}, event)">
       <div class="fd-thumb">{% if it.image %}<img src="{{ it.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=fd-thumb-ph>{{ g.comp.monogram }}</span>'">{% else %}<span class="fd-thumb-ph" style="--c:{{ g.comp.color }}">{{ g.comp.monogram }}</span>{% endif %}</div>
       <div class="fd-body">
         <a class="fd-title" href="{{ it.url }}" target="_blank" rel="noopener">{{ it.title }}</a>
@@ -69,6 +69,14 @@
       </div>
 
       <div class="fd-foot">
+      {% if it.idea %}<details class="fd-more" data-kind="idea">
+        <summary>写作思路</summary>
+        <div class="fd-more-body fd-idea">
+          <div class="fd-idea-row"><span class="fd-idea-k">建议标题</span><span class="fd-idea-title">{{ it.idea.title }}</span></div>
+          <div class="fd-idea-row"><span class="fd-idea-k">切入角度</span><span>{{ it.idea.angle }}</span></div>
+          {% if it.idea.keyword %}<div class="fd-idea-row"><span class="fd-idea-k">核心关键词</span><span class="fd-intent">{{ it.idea.keyword }}</span></div>{% endif %}
+        </div>
+      </details>{% endif %}
       <details class="fd-more" data-kind="matches" ontoggle="Feed.loadMatches(this, {{ it.id }})">
         <summary>相似文章{% if it.matches %} {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</summary>
         <div class="fd-more-body">{% if it.matches %}{% with matches = it.matches, ready = ready, has_posts = true %}{% include "partials/feed_matches.html" %}{% endwith %}{% endif %}</div>
