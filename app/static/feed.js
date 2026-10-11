@@ -243,8 +243,10 @@ const Feed = (() => {
   }
   async function copyText(btn) {
     await navigator.clipboard.writeText(btn.previousElementSibling.textContent);
-    btn.textContent = '已复制';
-    setTimeout(() => { btn.textContent = '复制'; }, 1500);
+    const icon = btn.innerHTML;
+    btn.classList.add('done');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>已复制';
+    setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = icon; }, 1500);
   }
   document.addEventListener('input', e => { if (e.target.matches('input[name=mcp_token]')) renderMcp(); });
   renderMcp();

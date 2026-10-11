@@ -187,5 +187,10 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .home-del:hover{background:var(--del-bg);color:var(--del);border-color:var(--del);box-shadow:2px 2px 0 var(--del)}
 .fd-mcp{display:flex;flex-direction:column;gap:4px}
 .fd-mcp > .fd-hint{margin:0 0 10px;line-height:1.6}
-.fd-copy{display:flex;align-items:flex-start;gap:8px}
-.fd-copy code,.fd-copy pre{flex:1;margin:0;padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;background:var(--muted);font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.fd-copy{position:relative}
+.fd-copy code,.fd-copy pre{display:block;margin:0;padding:8px 44px 8px 10px;border:1.5px solid var(--line);border-radius:6px;background:var(--muted);font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.fd-copy-btn{position:absolute;top:5px;right:5px;display:inline-flex;align-items:center;gap:4px;height:26px;min-width:26px;padding:0 6px;justify-content:center;border:1.5px solid var(--nb-ink);border-radius:6px;background:var(--nb-paper);color:var(--fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer;box-shadow:2px 2px 0 var(--nb-ink)}
+.fd-copy-btn svg{width:13px;height:13px}
+.fd-copy-btn:hover{background:var(--nb-yellow)}
+.fd-copy-btn:active{transform:translate(2px,2px);box-shadow:none}
+.fd-copy-btn.done{background:var(--add-bg);color:var(--add);border-color:var(--add);box-shadow:2px 2px 0 var(--add)}

@@ -38,9 +38,9 @@
     {% if sec.service == 'mcp' %}
     <div class="fd-mcp">
       <p class="fd-hint">把监控数据开放给 Claude Code、Cursor 等 AI 客户端，直接问"这个月对手发了什么、我该写什么"。工具：站点和竞品列表、新文章（含相似文章、写作思路、关键词数据、你的笔记）、30 天趋势，以及原始的页面增删记录。</p>
-      <div class="field"><label>地址</label><div class="fd-copy"><code class="mcp-url"></code><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
-      <div class="field"><label>Claude Code <span class="fd-hint">在终端运行</span></label><div class="fd-copy"><code class="mcp-cli"></code><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
-      <div class="field"><label>配置文件 <span class="fd-hint">Cursor 等客户端的 mcp.json，或项目里的 .mcp.json</span></label><div class="fd-copy"><pre class="mcp-json"></pre><button type="button" class="btn btn-ghost btn-sm" onclick="Feed.copyText(this)">复制</button></div></div>
+      <div class="field"><label>地址</label><div class="fd-copy"><code class="mcp-url"></code><button type="button" class="fd-copy-btn" title="复制" aria-label="复制" onclick="Feed.copyText(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div>
+      <div class="field"><label>Claude Code <span class="fd-hint">在终端运行</span></label><div class="fd-copy"><code class="mcp-cli"></code><button type="button" class="fd-copy-btn" title="复制" aria-label="复制" onclick="Feed.copyText(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div>
+      <div class="field"><label>配置文件 <span class="fd-hint">Cursor 等客户端的 mcp.json，或项目里的 .mcp.json</span></label><div class="fd-copy"><pre class="mcp-json"></pre><button type="button" class="fd-copy-btn" title="复制" aria-label="复制" onclick="Feed.copyText(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div>
       <p class="fd-hint">改了令牌要先点「保存」，再更新客户端里的配置。</p>
     </div>
     {% endif %}
