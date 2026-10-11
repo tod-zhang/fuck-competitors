@@ -9,10 +9,12 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 
-一个自托管、开源的竞品监控应用。填入竞品的 `sitemap.xml`，它会定期巡检页面的
-**新增 / 删减 / 修改**，像写观察日记一样记录下来。温暖的手账风界面，自带像素眼睛吉祥物。
+一个自托管、开源的竞品内容监控应用。填入竞品的 `sitemap.xml`，它每月巡检一次，
+把对手**新发布的文章**排进内容 Feed，配上你博客里最接近的文章、AI 写作思路和关键词数据，帮你找到下一篇该写什么。
 
 **[👀 在线演示 → competitors.fuckseo.io](https://competitors.fuckseo.io)**（示例数据，只读）
+
+姊妹项目：**[Fuck SEO](https://fuckseo.io)** —— 免费的 Google Search Console 数据分析工具。
 
 </div>
 
