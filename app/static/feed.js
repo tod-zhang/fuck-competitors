@@ -140,22 +140,28 @@ const Feed = (() => {
   });
 
   // ---- AI bits inside a card
-  async function loadMatches(details, id) {
-    if (!details.open || details.dataset.loaded) return;
-    details.dataset.loaded = '1';
-    const body = details.querySelector('.fd-more-body');
-    if (body.children.length) return;  // rendered with the card already
-    body.innerHTML = '<p class="fd-hint">计算中…</p>';
-    body.innerHTML = await (await fetch(`/feed/item/${id}/matches`)).text();
+  // a tag under the card opens its panel below the tag row (several can be open at once)
+  function togglePanel(pill) {
+    const foot = pill.closest('.fd-foot');
+    const panel = foot.querySelector(`.fd-panel[data-kind="${pill.dataset.kind}"]`);
+    panel.hidden = !panel.hidden;
+    pill.classList.toggle('on', !panel.hidden);
+    if (!panel.hidden && pill.dataset.kind === 'matches') loadMatches(panel, +pill.closest('.fd-card').dataset.id);
+  }
+  async function loadMatches(panel, id) {
+    if (panel.dataset.loaded || panel.children.length) return;  // rendered with the card already
+    panel.dataset.loaded = '1';
+    panel.innerHTML = '<p class="fd-hint">计算中…</p>';
+    panel.innerHTML = await (await fetch(`/feed/item/${id}/matches`)).text();
   }
   async function loadKeywords(id, el) {
     const c = id ? card(id) : (el && el.closest('.fd-card')) || card(state.current);
     if (!c) return;
-    const details = c.querySelector('details[data-kind="keywords"]');
-    details.open = true;
-    const body = details.querySelector('.fd-more-body');
-    body.innerHTML = '<p class="fd-hint">正在向 DataForSEO 查询…</p>';
-    body.innerHTML = await (await post(`/feed/item/${c.dataset.id}/keywords`)).text();
+    const panel = c.querySelector('.fd-panel[data-kind="keywords"]');
+    panel.hidden = false;
+    c.querySelector('.fd-pill[data-kind="keywords"]').classList.add('on');
+    panel.innerHTML = '<p class="fd-hint">正在向 DataForSEO 查询…</p>';
+    panel.innerHTML = await (await post(`/feed/item/${c.dataset.id}/keywords`)).text();
   }
 
   // ---- header actions
@@ -307,7 +313,7 @@ const Feed = (() => {
   document.querySelectorAll('.nav a[data-view="feed"]').forEach(a => a.addEventListener('click', () => { if (!state.loaded) load(); }));
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
-  return { load, focus, save, dismiss, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
+  return { load, focus, save, dismiss, dismissGroup, saveNote, skipNote, togglePanel, loadKeywords,
            refresh, filterCompetitor, searchCompetitors, searchKey, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, ignoreSuggestion, closeModal };
 })();

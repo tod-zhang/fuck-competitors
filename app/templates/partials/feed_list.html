@@ -68,26 +68,23 @@
       </div>
 
       <div class="fd-foot">
-      {% if it.idea %}<details class="fd-more" data-kind="idea">
-        <summary>写作思路</summary>
-        <div class="fd-more-body fd-idea">
+        {# tags stay in one row; the open one's panel shows under the row #}
+        <div class="fd-pills">
+          {% if it.idea %}<button type="button" class="fd-pill" data-kind="idea" onclick="Feed.togglePanel(this)">写作思路</button>{% endif %}
+          <button type="button" class="fd-pill" data-kind="matches" onclick="Feed.togglePanel(this)">相似文章{% if it.matches %} {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</button>
+          <button type="button" class="fd-pill{% if it.keywords %} on{% endif %}" data-kind="keywords" onclick="Feed.togglePanel(this)">关键词数据</button>
+        </div>
+        {% if it.idea %}<div class="fd-panel fd-idea" data-kind="idea" hidden>
           <div class="fd-idea-row"><span class="fd-idea-k">建议标题</span><span class="fd-idea-title">{{ it.idea.title }}</span></div>
           <div class="fd-idea-row"><span class="fd-idea-k">切入角度</span><span>{{ it.idea.angle }}</span></div>
           {% if it.idea.keyword %}<div class="fd-idea-row"><span class="fd-idea-k">核心关键词</span><span class="fd-intent">{{ it.idea.keyword }}</span></div>{% endif %}
-        </div>
-      </details>{% endif %}
-      <details class="fd-more" data-kind="matches" ontoggle="Feed.loadMatches(this, {{ it.id }})">
-        <summary>相似文章{% if it.matches %} {{ '%.2f'|format(it.matches[0].score) }}{% endif %}</summary>
-        <div class="fd-more-body">{% if it.matches %}{% with matches = it.matches, ready = ready, has_posts = true %}{% include "partials/feed_matches.html" %}{% endwith %}{% endif %}</div>
-      </details>
-      <details class="fd-more" data-kind="keywords"{% if it.keywords %} open{% endif %}>
-        <summary>关键词数据</summary>
-        <div class="fd-more-body">
+        </div>{% endif %}
+        <div class="fd-panel" data-kind="matches" hidden>{% if it.matches %}{% with matches = it.matches, ready = ready, has_posts = true %}{% include "partials/feed_matches.html" %}{% endwith %}{% endif %}</div>
+        <div class="fd-panel" data-kind="keywords"{% if not it.keywords %} hidden{% endif %}>
           {% if it.keywords %}{% with keywords = it.keywords %}{% include "partials/feed_keywords.html" %}{% endwith %}
           {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
           {% else %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">去设置</button> <span class="fd-hint">填好 DataForSEO 账号后可查这篇的关键词数据</span>{% endif %}
         </div>
-      </details>
       </div>
     </article>
     {% endfor %}
