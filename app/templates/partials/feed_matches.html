@@ -9,7 +9,6 @@
   </a>
   {% endfor %}
 </div>
-<p class="fd-hint">余弦相似度，越接近 1 越像；0.8 以上基本是同一话题，可能已经写过。</p>
 {% elif error %}<p class="fd-err">{{ error }}</p>
 {% elif not ready.embed %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">去设置</button> <span class="fd-hint">填好嵌入接口的 API Key 后可用</span>
 {% elif not has_posts %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">去设置</button> <span class="fd-hint">还没有可比对的文章：填博客 sitemap 后点「同步我的博客」</span>

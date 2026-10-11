@@ -81,7 +81,7 @@
 .fd-more[open] summary{background:var(--nb-ink);border-color:var(--nb-ink);color:#fff}
 .fd-more-body{margin-top:8px;padding:12px 14px;border:1.5px solid var(--nb-ink);border-radius:10px;background:var(--nb-paper)}
 
-.fd-matches{display:flex;flex-direction:column;margin-bottom:8px}
+.fd-matches{display:flex;flex-direction:column}
 .fd-match{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;padding:8px 2px;border-bottom:1px solid var(--line)}
 .fd-match:last-child{border-bottom:0}
 .fd-match:hover .fd-match-title{text-decoration:underline}
