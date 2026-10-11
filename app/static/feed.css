@@ -2,7 +2,7 @@
 .fd-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin:0 0 16px}
 .fd-h{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .fd-sub{color:var(--muted-fg);font-size:14px;margin-top:4px}
-.fd-head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fd-head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 0 6px 16px}
 .fd-scan{display:inline-flex;align-items:center;gap:6px;height:31px;padding:0 10px;border:1.5px solid var(--add);border-radius:9999px;color:var(--add);font-size:12px;font-weight:500;white-space:nowrap}
 .fd-scan i{width:7px;height:7px;border-radius:50%;background:currentColor}
 .fd-scan.err{border-color:var(--del);color:var(--del)}
@@ -10,7 +10,6 @@
 .fd-hint{color:var(--muted-fg);font-size:12px;font-weight:400}
 .fd-warn{color:var(--mod);font-weight:600}
 .fd-err{color:var(--del);font-size:13px}
-kbd{display:inline-block;min-width:18px;padding:0 4px;border:1.5px solid var(--nb-ink);border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:600;line-height:16px;text-align:center;color:var(--fg);background:var(--nb-paper)}
 
 .fd-setup-note{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;border:2px dashed var(--nb-ink);border-radius:8px;padding:10px 16px;margin:0 0 16px;font-size:13px}
 .fd-cfg-sec{border-top:1px solid var(--line);padding:16px 0 4px}
@@ -40,10 +39,6 @@ kbd{display:inline-block;min-width:18px;padding:0 4px;border:1.5px solid var(--n
 .fd-chip:hover{border-color:var(--nb-ink)}
 .fd-chip.on{background:var(--nb-yellow);border-color:var(--nb-ink)}
 
-.fd-keys{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:12px;color:var(--muted-fg);margin:0 0 8px}
-.fd-qbtn{width:22px;height:20px;margin-left:6px;border:1.5px solid var(--nb-ink);border-radius:4px;background:var(--nb-paper);font:inherit;font-size:11px;font-weight:700;cursor:pointer}
-.fd-help{display:none;font-size:12px;color:var(--muted-fg);border:1.5px dashed var(--line);border-radius:8px;padding:8px 12px;margin:0 0 12px;line-height:2}
-.fd-help.open{display:block}
 
 .fd-group{border:2px solid var(--nb-ink);border-radius:8px;margin:0 0 16px;overflow:hidden}
 .fd-group-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -178,3 +173,6 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .home-add input{height:34px;padding:0 10px;border:1.5px solid var(--line);border-radius:6px;font:inherit;font-size:13px}
 .home-add input:focus{outline:none;border-color:var(--nb-ink)}
 .home-add .btn{align-self:flex-start}
+.fd-comp-pick{width:280px;max-width:100%}
+.fd-comp-pick .xselect-trigger{height:30px;border-radius:9999px;font-size:13px}
+.xselect-menu{max-height:320px;overflow-y:auto}

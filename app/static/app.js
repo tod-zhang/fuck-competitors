@@ -40,6 +40,7 @@ document.addEventListener('click', e => {
     xs.querySelector('.xselect-label').textContent = item.textContent;
     xs.querySelectorAll('.xselect-menu li').forEach(li => li.classList.toggle('sel', li === item));
     xs.classList.remove('open');
+    xs.querySelector('input[type=hidden]').dispatchEvent(new Event('change', { bubbles: true }));
     if (xs.dataset.nav) location.href = xs.dataset.nav + item.dataset.value;  // e.g. the sidebar site switcher
   }
 });

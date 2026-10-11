@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/app.css?v=6">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=10">
+<link rel="stylesheet" href="/static/feed.css?v=12">
 </head>
 
 {% macro eyes() %}
@@ -133,7 +133,6 @@
 
     <!-- ===== Sites ===== -->
     <section class="view" id="view-sites">
-      <div class="sec-head"><h3>竞品列表</h3><span class="ribbon">{{ competitors|length }} 个竞品</span><span class="line"></span></div>
       <div class="grid">
         {% for s in sites %}
         <div class="site-card">
@@ -199,7 +198,7 @@
 </div>
 
 {% if demo %}<script>window.FC_DEMO = true;</script>{% endif %}
-<script src="/static/app.js?v=6"></script>
-<script src="/static/feed.js?v=8"></script>
+<script src="/static/app.js?v=7"></script>
+<script src="/static/feed.js?v=9"></script>
 </body>
 </html>

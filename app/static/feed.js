@@ -54,14 +54,6 @@ const Feed = (() => {
     const c = card(id);
     if (c && !e) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
-  function move(delta) {
-    const list = cards();
-    if (!list.length) return;
-    const i = list.findIndex(c => +c.dataset.id === state.current);
-    const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta))];
-    focus(+next.dataset.id);
-  }
-
   // remove a card from the current tab and select its neighbour (inbox-style)
   function drop(id) {
     const list = cards();
@@ -175,7 +167,6 @@ const Feed = (() => {
     const data = await (await post('/feed/refresh')).json();
     btn.textContent = `已开始巡检 ${data.count} 个竞品`;
   }
-  function toggleHelp() { const h = $('feedHelp'); if (h) h.classList.toggle('open'); }
 
   // clicking a competitor in the sidebar: its articles in the feed
   function filterCompetitor(id) {
@@ -275,7 +266,7 @@ const Feed = (() => {
     else { btn.disabled = false; btn.textContent = '关注'; alert(data.error); }
   }
 
-  // ---- hotkeys (only while the feed view is showing)
+  // ---- keys: Enter / Esc in a note box, Esc closes the modal
   document.addEventListener('keydown', e => {
     const view = $('view-feed');
     if (!view || !view.classList.contains('show') || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -285,23 +276,7 @@ const Feed = (() => {
       else if (e.key === 'Escape') { e.preventDefault(); skipNote(id); }
       return;
     }
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) {
-      if (e.key === 'Escape') e.target.blur();
-      return;
-    }
-    if (modalOpen()) { if (e.key === 'Escape') closeModal(); return; }
-    const c = card(state.current);
-    const actions = {
-      j: () => move(1), ArrowDown: () => move(1), k: () => move(-1), ArrowUp: () => move(-1),
-      s: () => save(), d: () => dismiss(), u: () => restore(),
-      n: () => { if (c) { c.querySelector('.fd-notebox').classList.add('open'); c.querySelector('.fd-note').focus(); } },
-      o: () => c && window.open(c.dataset.url, '_blank', 'noopener'),
-      m: () => { if (c) { const d = c.querySelector('details[data-kind="matches"]'); d.open = !d.open; } },
-      w: () => c && !c.querySelector('details[data-kind="keywords"] table') && loadKeywords(state.current),
-      '?': () => toggleHelp(),
-    };
-    const fn = actions[e.key] || actions[e.key.toLowerCase()];
-    if (fn) { e.preventDefault(); fn(); }
+    if (modalOpen() && e.key === 'Escape') closeModal();
   });
 
   // load lazily the first time the view is opened
@@ -309,6 +284,6 @@ const Feed = (() => {
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
   return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
-           refresh, toggleHelp, filterCompetitor, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
+           refresh, filterCompetitor, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, closeModal };
 })();

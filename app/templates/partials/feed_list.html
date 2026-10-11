@@ -1,15 +1,3 @@
-<div class="fd-head">
-  <div>
-    <h2 class="fd-h">{{ '竞品趋势' if status == 'trends' else '竞品内容 Feed' }}</h2>
-    <p class="fd-sub">{% if status == 'trends' %}每个竞品一份 30 天内容策略解读，点「刷新」重新生成。{% else %}竞品最近 {{ window }} 天发布的新文章{% endif %}</p>
-  </div>
-  <div class="fd-head-actions">
-    <span class="fd-scan{% if scan_error %} err{% endif %}"><i></i>上次巡检 {{ last_scan }}</span>
-    <button type="button" class="btn btn-primary btn-sm" onclick="Feed.refresh(this)">立即刷新</button>
-    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSuggestions()">推荐竞品</button>
-  </div>
-</div>
-
 {% if not demo and (not (ready.dfs and ready.embed and ready.llm) or not (my_domain and my_sitemap_url)) %}
 <div class="fd-setup-note">
   <span>{% if not (ready.dfs and ready.embed and ready.llm) %}还缺 API：{% if not ready.dfs %}DataForSEO {% endif %}{% if not ready.embed %}嵌入 {% endif %}{% if not ready.llm %}大模型 {% endif %}{% endif %}{% if not (my_domain and my_sitemap_url) %}{% if not (ready.dfs and ready.embed and ready.llm) %}· {% endif %}还没填我的域名 / 博客 sitemap{% endif %}</span>
@@ -21,6 +9,11 @@
   {% for key, label in [('new', '待处理'), ('saved', '已保存 · 灵感'), ('declined', '已忽略'), ('trends', '趋势')] %}
   <button type="button" class="fd-tab{% if status == key %} on{% endif %}" data-status="{{ key }}" onclick="Feed.load({status:'{{ key }}'})">{{ label }}{% if key in ('new', 'saved') %} <span class="fd-cnt">{{ counts.get(key, 0) }}</span>{% endif %}</button>
   {% endfor %}
+  <div class="fd-head-actions">
+    <span class="fd-scan{% if scan_error %} err{% endif %}"><i></i>上次巡检 {{ last_scan }}</span>
+    <button type="button" class="btn btn-primary btn-sm" onclick="Feed.refresh(this)">立即刷新</button>
+    <button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSuggestions()">推荐竞品</button>
+  </div>
 </div>
 
 {% if status == 'trends' %}
@@ -39,15 +32,19 @@
       {% for w in windows %}<button type="button" class="fd-chip{% if w == window %} on{% endif %}" onclick="Feed.load({window:{{ w }}})">{{ w }} 天</button>{% endfor %}
     </div>
     <div class="fd-frow"><span class="fd-flabel">竞品</span>
-      <button type="button" class="fd-chip{% if not comp %} on{% endif %}" onclick="Feed.load({comp:null})">全部</button>
-      {% for c in competitors %}<button type="button" class="fd-chip{% if comp == c.id %} on{% endif %}" onclick="Feed.load({comp:{{ c.id }}})">{{ c.host or c.name }}</button>{% endfor %}
+      {# a dropdown, not a chip per competitor: dozens of competitors would bury the chips #}
+      {% set picked = competitors|selectattr('id', 'equalto', comp)|first %}
+      <div class="xselect fd-comp-pick">
+        <button type="button" class="xselect-trigger"><span class="xselect-label">{{ (picked.host or picked.name) if picked else '全部竞品' }}</span><span class="xselect-caret">▾</span></button>
+        <input type="hidden" value="{{ comp or '' }}" onchange="Feed.load({comp: +this.value || null})">
+        <ul class="xselect-menu" role="listbox">
+          <li data-value=""{% if not comp %} class="sel"{% endif %}>全部竞品</li>
+          {% for c in competitors %}<li data-value="{{ c.id }}"{% if comp == c.id %} class="sel"{% endif %}>{{ c.host or c.name }}</li>{% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 
-  <div class="fd-keys">按 <kbd>J</kbd><kbd>K</kbd> 上下，<kbd>S</kbd> 保存，<kbd>D</kbd> 忽略 <button type="button" class="fd-qbtn" onclick="Feed.toggleHelp()">?</button></div>
-  <div class="fd-help" id="feedHelp">
-    <kbd>J</kbd>/<kbd>K</kbd> 下一篇 / 上一篇 · <kbd>S</kbd> 保存（接着写笔记，<kbd>Enter</kbd> 保存笔记，<kbd>Esc</kbd> 跳过） · <kbd>D</kbd> 忽略 · <kbd>U</kbd> 放回待处理 · <kbd>N</kbd> 写笔记 · <kbd>O</kbd> 打开原文 · <kbd>M</kbd> 展开相似文章 · <kbd>W</kbd> 拉关键词
-  </div>
 
   {% for g in groups %}
   <section class="fd-group" data-comp="{{ g.id }}">
@@ -69,8 +66,8 @@
       <div class="fd-side">
         <span class="fd-date">{{ it.date }}</span>
         <div class="fd-btns">
-          {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm fd-ico" data-act="save" title="保存 (S)" onclick="Feed.save({{ it.id }})">★</button>{% endif %}
-          {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm fd-ico" title="忽略 (D)" onclick="Feed.dismiss({{ it.id }})">✕</button>{% endif %}
+          {% if it.status != 'saved' %}<button type="button" class="btn btn-soft btn-sm fd-ico" data-act="save" title="保存" onclick="Feed.save({{ it.id }})">★</button>{% endif %}
+          {% if it.status != 'declined' %}<button type="button" class="btn btn-soft btn-sm fd-ico" title="忽略" onclick="Feed.dismiss({{ it.id }})">✕</button>{% endif %}
           {% if it.status != 'new' %}<button type="button" class="btn btn-ghost btn-sm" onclick="Feed.restore({{ it.id }})">放回待处理</button>{% endif %}
         </div>
       </div>
@@ -92,7 +89,7 @@
         <summary>关键词数据</summary>
         <div class="fd-more-body">
           {% if it.keywords %}{% with keywords = it.keywords %}{% include "partials/feed_keywords.html" %}{% endwith %}
-          {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取 (W)</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
+          {% elif ready.dfs %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.loadKeywords({{ it.id }})">从 DataForSEO 拉取</button> <span class="fd-hint">这篇排名的词 + 核心词的搜索量、难度、相关词（按次计费）</span>
           {% else %}<button type="button" class="btn btn-soft btn-sm" onclick="Feed.openSettings()">去设置</button> <span class="fd-hint">填好 DataForSEO 账号后可查这篇的关键词数据</span>{% endif %}
         </div>
       </details>
