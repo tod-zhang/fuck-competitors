@@ -24,7 +24,7 @@ document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () =
 
 function showView(view) {
   document.querySelectorAll('.nav a').forEach(x => x.classList.toggle('active', x.dataset.view === view));
-  document.querySelector('.side-settings').classList.toggle('active', view === 'settings');
+  document.querySelectorAll('.side-settings').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('show', s.id === 'view-' + view));
 }
 // custom dropdown (.xselect) — delegated so it also works in the on-demand settings modal

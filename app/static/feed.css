@@ -194,3 +194,17 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .fd-copy-btn:hover{background:var(--nb-yellow)}
 .fd-copy-btn:active{transform:translate(2px,2px);box-shadow:none}
 .fd-copy-btn.done{background:var(--add-bg);color:var(--add);border-color:var(--add);box-shadow:2px 2px 0 var(--add)}
+
+/* 帮助中心 */
+.help{max-width:760px;font-size:14px;line-height:1.75}
+.help-toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 20px}
+.help-toc a{padding:2px 10px;border:1.5px solid var(--line);border-radius:9999px;font-size:12px;font-weight:500;color:var(--fg);text-decoration:none}
+.help-toc a:hover{border-color:var(--nb-ink)}
+.help-sec{border-top:1px solid var(--line);padding:16px 0 4px;scroll-margin-top:16px}
+.help-sec h3{font-size:16px;font-weight:700;margin:0 0 8px}
+.help-sec p{margin:0 0 10px}
+.help-sec ol,.help-sec ul{margin:0 0 10px;padding-left:22px}
+.help-sec li{margin:2px 0}
+.help-sec a{color:var(--fg)}
+.help-sec dt{font-weight:700;margin-top:8px}
+.help-sec dd{margin:0 0 4px;color:#444}

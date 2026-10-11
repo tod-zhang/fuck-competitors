@@ -1,0 +1,98 @@
+{# 帮助中心: how the product works, in the app's own style. Static; no data from the DB. #}
+<div class="fd-head"><div><h2 class="fd-h">帮助中心</h2><p class="fd-sub">盯住对手新发的内容，找到你下一篇该写什么。</p></div></div>
+<div class="help">
+  <nav class="help-toc">
+    <a href="#h-start">快速上手</a><a href="#h-sites">站点</a><a href="#h-comp">竞品</a><a href="#h-crawl">巡检</a>
+    <a href="#h-feed">内容 Feed</a><a href="#h-card">卡片上的三个标签</a><a href="#h-trends">趋势</a>
+    <a href="#h-sugg">推荐竞品</a><a href="#h-keys">API Key</a><a href="#h-mcp">MCP</a><a href="#h-self">自行部署</a><a href="#h-faq">常见问题</a>
+  </nav>
+
+  <section class="help-sec" id="h-start">
+    <h3>快速上手</h3>
+    <ol>
+      <li>在首页「全部站点」添加你的站点（名称和域名）。</li>
+      <li>进入站点，在「设置 → 站点信息」填上你博客的 sitemap，点「同步我的博客」。</li>
+      <li>点右上角「添加竞品」填竞品的 sitemap，或者点「推荐竞品」让系统按你的域名找。</li>
+      <li>在「设置」里填好 API Key（DataForSEO、嵌入、大模型），相似文章、写作思路、关键词这些功能才会开启。</li>
+      <li>之后每个月打开「内容 Feed」看一遍：★ 保存值得写的，✕ 忽略不相关的。</li>
+    </ol>
+  </section>
+
+  <section class="help-sec" id="h-sites">
+    <h3>站点</h3>
+    <p>如果你运营好几个不同品类的网站，每个站点都有自己的竞品、Feed 和博客文章，互不影响。首页是所有站点的卡片，点进去就是这个站点；左上角的图标可以回到首页，侧边栏顶部的下拉框可以直接切换站点。</p>
+    <p>添加站点用首页的「添加站点」卡片；删除站点时把鼠标移到站点卡片上，点右上角的垃圾桶。删除会把这个站点的竞品、文章和同步的博客一起删掉。站点名称、域名、博客 sitemap 和 DataForSEO 的国家 / 语言，在进入站点后的「设置 → 站点信息」里改。</p>
+  </section>
+
+  <section class="help-sec" id="h-comp">
+    <h3>竞品</h3>
+    <p>竞品靠它的 sitemap 来监控。手动添加时要填 sitemap 地址（通常是 <code>https://对手域名/sitemap.xml</code>）；从「推荐竞品」点「关注」时会自动去找。</p>
+    <p>点侧边栏里的竞品，Feed 只看它的文章；顶部搜索框可以按名字或域名找竞品。改名称、sitemap，或者删除竞品，去「竞品列表」点卡片上的「设置」。</p>
+  </section>
+
+  <section class="help-sec" id="h-crawl">
+    <h3>巡检</h3>
+    <p>每个竞品每月自动巡检一次：下载它的 sitemap，和上次比对，找出新上线的页面。第一次巡检只记下现有页面，不会把旧文章当新文章刷屏（不过会把最近 30 天内更新过的文章放进 Feed）。</p>
+    <p>想马上查，点 Feed 右上角的「立即刷新」（当前站点所有竞品），或者在竞品设置里点「立即巡检」（单个竞品）。</p>
+  </section>
+
+  <section class="help-sec" id="h-feed">
+    <h3>内容 Feed</h3>
+    <p>竞品最近 30 天新发的文章，按竞品分组。分类页、标签页、作者页、图片这类网址会被过滤掉。</p>
+    <ul>
+      <li><b>待处理</b>：还没看过的文章。</li>
+      <li><b>已保存 · 灵感</b>：点 ★ 保存的文章。保存时会弹出笔记框，写一句为什么存它、打算怎么写（有写作思路时会自动填进去）。</li>
+      <li><b>已忽略</b>：点 ✕ 忽略的文章；每组还有「全部忽略」。改主意了可以在这里点 ★ 保存。</li>
+      <li><b>趋势</b>：见下文。</li>
+    </ul>
+  </section>
+
+  <section class="help-sec" id="h-card">
+    <h3>卡片上的三个标签</h3>
+    <ul>
+      <li><b>相似文章</b>：你博客里和这篇最接近的 3 篇，以及相似度。0.8 以上标「可能写过」，0.6～0.8 标「相关」，再低是「不太像」。比较的是标题加正文开头约 6000 字。需要嵌入 API，并且同步过博客。</li>
+      <li><b>写作思路</b>：你博客里最接近的一篇相似度低于 0.6 时（也就是你还没写过），巡检后自动用大模型生成：建议标题、切入角度、核心关键词。需要大模型 API。</li>
+      <li><b>关键词数据</b>：点了才从 DataForSEO 拉：这篇已经排名的关键词，以及核心词的搜索量、难度和相关词。按次计费。</li>
+    </ul>
+  </section>
+
+  <section class="help-sec" id="h-trends">
+    <h3>趋势</h3>
+    <p>每个竞品一份 30 天内容策略解读：它在押什么方向、反复出现的主题和对应文章、你可以跟进的选题。超过 7 天或者之后又发了新文章，会标为过期，可以一键重新生成。需要大模型 API。</p>
+  </section>
+
+  <section class="help-sec" id="h-sugg">
+    <h3>推荐竞品</h3>
+    <p>用当前站点的域名去 DataForSEO 查「和你抢同一批关键词的网站」，去掉 YouTube、维基百科这类大站和你自己，按共同关键词数排序。已经关注的、标了「不感兴趣」的不会再出现。结果会缓存，只有点「重新查询（计费）」才会再花钱；这类数据变化很慢，一两个月查一次就够。</p>
+  </section>
+
+  <section class="help-sec" id="h-keys">
+    <h3>API Key</h3>
+    <p>在「设置」里填，所有站点共用，存在本机数据库里，优先于 <code>.env</code>。密钥栏留空表示不改。每项都有「测试连接」。</p>
+    <ul>
+      <li><b>DataForSEO</b>：推荐竞品、关键词数据。</li>
+      <li><b>嵌入</b>：相似文章。任意 OpenAI 格式的 embeddings 接口，默认 OpenRouter。</li>
+      <li><b>大模型</b>：写作思路、趋势。可以选 OpenAI 兼容接口（默认 DeepSeek），也可以选 Claude 官方 API。</li>
+    </ul>
+  </section>
+
+  <section class="help-sec" id="h-mcp">
+    <h3>MCP（给 AI 用）</h3>
+    <p>把这里的数据开放给 Claude Code、Cursor 等 AI 客户端，直接问「这个月对手发了哪些我还没写过的？」。地址是你打开这个网站的地址加 <code>/mcp</code>，在「设置 → MCP」里能直接复制 Claude Code 命令和配置文件。部署在公网时，务必在那里生成访问令牌。工具都是只读的。</p>
+  </section>
+
+  <section class="help-sec" id="h-self">
+    <h3>自行部署</h3>
+    <p>这是开源项目，代码在 <a href="https://github.com/tod-zhang/fuck-competitors" target="_blank" rel="noopener">GitHub</a>。有 Docker 的话，克隆下来运行 <code>make up</code>，打开 <code>http://localhost:9527</code>。数据都在一个 SQLite 文件里（<code>data/app.db</code>），备份它就行。部署到公网时记得给 MCP 设令牌。</p>
+  </section>
+
+  <section class="help-sec" id="h-faq">
+    <h3>常见问题</h3>
+    <dl>
+      <dt>Feed 是空的？</dt><dd>刚添加的竞品第一次巡检只记录现有页面，新文章要等它之后发布。可以先点「立即刷新」，或者确认 sitemap 地址能打开。</dd>
+      <dt>相似文章一直没有？</dt><dd>需要填嵌入 API，并在「设置 → 站点信息」里同步过博客。</dd>
+      <dt>没有写作思路？</dt><dd>需要大模型 API；而且只有你博客里还没写过的文章（最高相似度低于 0.6）才会生成。</dd>
+      <dt>竞品巡检出错（侧边栏红点）？</dt><dd>多半是 sitemap 地址不对，或者对方网站拦了爬虫。去竞品设置里检查地址，再点「立即巡检」。</dd>
+    </dl>
+  </section>
+</div>
