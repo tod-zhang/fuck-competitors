@@ -40,6 +40,7 @@ const Feed = (() => {
     if (q !== query()) return;  // the user already switched again
     $('feedRoot').innerHTML = html;
     state.loaded = true;
+    document.querySelectorAll('.site-row').forEach(r => r.classList.toggle('on', +r.dataset.id === state.comp));
     state.current = null;
     const first = cards()[0];
     if (first) focus(+first.dataset.id);
@@ -168,11 +169,33 @@ const Feed = (() => {
     btn.textContent = `已开始巡检 ${data.count} 个竞品`;
   }
 
-  // clicking a competitor in the sidebar: its articles in the feed
+  // a competitor picked in the sidebar or the top search: its articles in the feed (null = all)
   function filterCompetitor(id) {
     showView('feed');
-    load({ comp: id, status: 'new' });
+    load(id ? { comp: id, status: 'new' } : { comp: null });
     document.querySelector('.main').scrollTo(0, 0);  // .main is the scroll container inside the framed window
+    const box = $('compSearch');
+    if (box) { box.value = ''; box.blur(); searchCompetitors(''); }
+  }
+  function searchCompetitors(q) {
+    const menu = $('compSearchMenu');
+    if (!menu) return;
+    q = q.trim().toLowerCase();
+    let shown = 0;
+    menu.querySelectorAll('li[data-id]').forEach(li => {
+      const hit = q && li.dataset.text.includes(q);
+      li.hidden = !hit;
+      if (hit) shown++;
+    });
+    menu.querySelector('.search-none').hidden = !q || shown > 0;
+    menu.classList.toggle('open', !!q);
+  }
+  function searchKey(e) {
+    if (e.key === 'Escape') { e.target.value = ''; searchCompetitors(''); e.target.blur(); }
+    if (e.key === 'Enter') {
+      const first = [...document.querySelectorAll('#compSearchMenu li[data-id]')].find(li => !li.hidden);
+      if (first) filterCompetitor(+first.dataset.id);
+    }
   }
 
   // ---- my sites: the current one is ?site= in the URL (app.js adds it to every fetch)
@@ -284,6 +307,6 @@ const Feed = (() => {
   if ($('view-feed') && $('view-feed').classList.contains('show')) load();
 
   return { load, focus, save, dismiss, restore, dismissGroup, saveNote, skipNote, loadMatches, loadKeywords,
-           refresh, filterCompetitor, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
+           refresh, filterCompetitor, searchCompetitors, searchKey, addSite, deleteSite, openSettings, saveSettings, testService, syncBlog, refreshTrend, generateTrends, openSuggestions,
            follow, closeModal };
 })();

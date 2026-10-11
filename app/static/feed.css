@@ -173,6 +173,16 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .home-add input{height:34px;padding:0 10px;border:1.5px solid var(--line);border-radius:6px;font:inherit;font-size:13px}
 .home-add input:focus{outline:none;border-color:var(--nb-ink)}
 .home-add .btn{align-self:flex-start}
-.fd-comp-pick{width:280px;max-width:100%}
-.fd-comp-pick .xselect-trigger{height:30px;border-radius:9999px;font-size:13px}
 .xselect-menu{max-height:320px;overflow-y:auto}
+
+/* top search: find a competitor of this site */
+.topbar .search{position:relative}
+.search-menu{display:none;position:absolute;top:calc(100% + 4px);left:-2px;right:-2px;z-index:40;list-style:none;margin:0;padding:4px;max-height:320px;overflow-y:auto;
+  background:var(--nb-paper);border:2px solid var(--nb-ink);border-radius:8px;box-shadow:4px 4px 0 var(--nb-ink)}
+.search-menu.open{display:block}
+.search-menu li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;font-size:13px;font-weight:500;color:var(--fg);cursor:pointer}
+.search-menu li:hover{background:var(--hover)}
+.search-menu li[hidden]{display:none}
+.search-menu .monogram{width:18px;height:18px;font-size:10px}
+.search-menu .search-none{color:var(--muted-fg);cursor:default}
+.site-row.on{background:var(--hover);color:var(--fg)}
