@@ -85,7 +85,6 @@ svg{flex-shrink:0}
 .monogram:not(.no-fav) .letter{display:none}
 
 .side-foot{margin-top:auto;border-top:2px solid var(--nb-ink);padding:12px 20px;font-size:12px;color:var(--muted-fg)}
-.side-foot .pill{display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:12px;color:var(--muted-fg)}
 
 /* ---------- Main ---------- */
 .main{flex:1;min-width:0;min-height:0;overflow-y:auto;background:var(--nb-paper)}

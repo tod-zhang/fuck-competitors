@@ -204,3 +204,15 @@ _DEMO_KEYWORDS = {
                 {"keyword": "open source jira alternative", "volume": 1300, "kd": 36, "intent": "commercial"}],
     "fetched_at": "演示数据",
 }
+
+
+# 推荐竞品 on the demo site: what DataForSEO's competitors_domain returns, per sample site of mine.
+# (domain, keywords both rank for, their average position on those, traffic value of the overlap)
+SUGGESTIONS = {
+    "mine.example": [("nimbus.example", 1840, 8.2, 42600), ("shipfast.example", 1312, 11.4, 23900),
+                     ("trackly.example", 1104, 9.7, 31200), ("deploybox.example", 865, 14.1, 9800),
+                     ("canvasly.example", 702, 12.6, 15400), ("logpanda.example", 538, 17.3, 4100),
+                     ("tasknest.example", 410, 15.8, 6300)],
+    "pay.mine.example": [("paylane.example", 2210, 6.9, 58800), ("ledgerly.example", 1490, 10.2, 21700),
+                         ("invoicely.example", 980, 13.5, 12900), ("fraudguard.example", 615, 16.0, 7400)],
+}

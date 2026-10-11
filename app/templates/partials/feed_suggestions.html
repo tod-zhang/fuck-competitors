@@ -1,5 +1,5 @@
 <h3>推荐关注的竞品</h3>
-<p class="sub">和 <b>{{ domain }}</b> 抢同一批关键词的网站（DataForSEO 自然搜索竞品，按共同关键词数排序）。关注时会自动找它的 sitemap。</p>
+<p class="sub">和 <b>{{ domain }}</b> 抢同一批关键词的网站（DataForSEO 自然搜索竞品，按共同关键词数排序）。关注时会自动找它的 sitemap。{% if demo %}<br><b>这是示例数据</b>，演示站不调用付费接口。{% endif %}</p>
 <table class="fd-kw fd-sugg">
   <tr><th>网站</th><th>共同关键词</th><th>平均排名</th><th>重叠词流量</th><th></th></tr>
   {% for r in rows %}

@@ -226,10 +226,15 @@ def sync_my_blog(request: Request):
 @router.get("/suggestions", response_class=HTMLResponse)
 def suggestions(request: Request, refresh: int = 0):
     """Organic competitors from DataForSEO. Cached in the DB per site, since every call costs money."""
-    if settings.demo_mode:
-        return _err_html(ValueError("演示站不调用付费接口。"))
     with Session(engine) as s:
         site = current_site(s, request)
+        if settings.demo_mode:  # no paid calls on the demo: show what a real answer looks like
+            from .demo import SUGGESTIONS
+            rows = [{"domain": d, "intersections": n, "avg_position": pos, "etv": etv}
+                    for d, n, pos, etv in SUGGESTIONS.get(feed._bare(site.domain), [])]
+            tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
+            data = {"domain": feed._bare(site.domain), "rows": [{**r, "tracked": r["domain"] in tracked} for r in rows], "demo": True}
+            return templates.TemplateResponse(request, "partials/feed_suggestions.html", data)
         key = feed.site_key("suggestions_cache", site.id)
         cached = feed.get_setting(s, key)
         data = json.loads(cached) if cached else None
