@@ -31,7 +31,6 @@
   {% set picked = competitors|selectattr('id', 'equalto', comp)|first %}
   {% if picked %}<div class="fd-filters"><div class="fd-frow"><span class="fd-flabel">竞品</span>
     <button type="button" class="fd-chip on" title="看全部竞品" onclick="Feed.filterCompetitor(null)">{{ picked.host or picked.name }} ✕</button>
-    <button type="button" class="btn btn-ghost btn-sm" onclick="openSettings({{ picked.id }})">竞品设置</button>
   </div></div>{% endif %}
 
 

@@ -8,6 +8,14 @@ def monogram(name: str) -> str:
     return (name.strip()[:1] or "?").upper()
 
 
+def interval_label(hours: int) -> str:
+    if hours == 24:
+        return "每天"
+    if hours == 168:
+        return "每周"
+    return f"每 {hours} 小时"
+
+
 def url_path(url: str) -> str:
     p = urlparse(url)
     return (p.path or "/") + (f"?{p.query}" if p.query else "")
