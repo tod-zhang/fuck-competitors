@@ -2,7 +2,7 @@
 .fd-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin:0 0 16px}
 .fd-h{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .fd-sub{color:var(--muted-fg);font-size:14px;margin-top:4px}
-.fd-head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 0 6px 16px}
+.fd-head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;padding:2px 4px 6px 16px}  /* room for the buttons' hard shadow: .fd-tabs scrolls, so it clips */
 .fd-scan{display:inline-flex;align-items:center;gap:6px;height:31px;padding:0 10px;border:1.5px solid var(--add);border-radius:9999px;color:var(--add);font-size:12px;font-weight:500;white-space:nowrap}
 .fd-scan i{width:7px;height:7px;border-radius:50%;background:currentColor}
 .fd-scan.err{border-color:var(--del);color:var(--del)}

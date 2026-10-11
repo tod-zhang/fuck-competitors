@@ -111,7 +111,7 @@ svg{flex-shrink:0}
 .btn-sm:hover{box-shadow:3px 3px 0 var(--nb-ink)}
 .btn-sm:active{transform:translate(2px,2px);box-shadow:none}
 .btn-sm svg{width:14px;height:14px}
-.btn-ghost{background:transparent}
+.btn-ghost,.btn-ghost:hover{background:transparent;box-shadow:none}  /* borderless: a hard shadow under nothing looks broken */
 .btn-ghost:hover{background:var(--hover)}
 .btn-soft{background:transparent;border:1.5px solid var(--nb-ink)}
 .btn-soft:hover{background:var(--hover)}
