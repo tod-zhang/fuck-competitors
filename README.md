@@ -2,119 +2,100 @@
 
 # Fuck Competitors
 
-**盯紧竞争对手的网站，把每一次变化都记成日志。**
+**盯住对手新发的内容，找到你下一篇该写什么。**
 
 [![CI](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml/badge.svg)](https://github.com/tod-zhang/fuck-competitors/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 
-一个自托管、开源的竞品内容监控应用。填入竞品的 `sitemap.xml`，它每月巡检一次，
-把对手**新发布的文章**排进内容 Feed，配上你博客里最接近的文章、AI 写作思路和关键词数据，帮你找到下一篇该写什么。
+一个开源、可自行部署的竞品内容监控工具。填入对手的 `sitemap.xml`，它每月巡检一次，
+把对手**新发布的文章**排进内容 Feed，配上你博客里最接近的文章、AI 写作思路和关键词数据。
 
 **[👀 在线演示 → competitors.fuckseo.io](https://competitors.fuckseo.io)**（示例数据，只读）
 
-姊妹项目：**[Fuck SEO](https://fuckseo.io)** —— 免费的 Google Search Console 数据分析工具。
+姊妹项目：**[Fuck SEO](https://fuckseo.io)** —— 免费的 Google Search Console 数据分析工具。竞品监控看对手，Fuck SEO 看自己。
 
 </div>
-
-## 界面截图
 
 | 全部站点 | 内容 Feed |
 | --- | --- |
 | ![全部站点](docs/screenshots/sites.png) | ![内容 Feed](docs/screenshots/feed.png) |
-| **设置** | |
-| ![设置](docs/screenshots/settings.png) | |
+| **写作思路与相似文章** | **设置** |
+| ![写作思路与相似文章](docs/screenshots/card.png) | ![设置](docs/screenshots/settings.png) |
 
 ---
 
-## 功能特性
+## 它能做什么
 
-- 📰 **内容 Feed** —— 竞品新发的文章排成收件箱，保存、忽略、写笔记；附带 AI 功能（见下文「内容 Feed」）
-- 🗂️ **多站点** —— 运营好几个不同品类的站？首页是所有站点的卡片，点进去看各自的竞品、Feed 和博客文章；站点 ID 在网址里（`/?site=2`），可以多开、分享
-- 🔍 **sitemap 监控** —— 只读 sitemap，轻量地发现竞品新发布的页面
-- 🧠 **AI 分析（MCP）** —— 内置只读 MCP server，把变化开放给 Claude Code / Codex 等 Agent，直接分析"对手在优化什么"
-- 🤫 **静默基线** —— 首次巡检只记录"现在有哪些页"，不会把旧文章当成新文章刷屏
-- ⚙️ **竞品设置** —— 随时改名称 / sitemap 地址、立即巡检、删除竞品
-- 🐳 **一条命令部署** —— 单容器 + 单个 SQLite 文件，无需任何外部服务
-- 🪶 **无前端构建** —— 服务端渲染 + 原生 JS，克隆即跑
+- 📰 **内容 Feed**：对手最近 30 天新发的文章，按竞品分组排成收件箱。★ 保存值得写的（顺手记一句笔记），✕ 忽略不相关的。
+- ≈ **相似文章**：同步你自己博客的 sitemap，给每篇对手文章找出你博客里最接近的 3 篇。0.8 以上说明你多半已经写过。
+- ✍️ **写作思路**：对你还没写过的话题（最接近的一篇相似度低于 0.6），巡检后自动用大模型生成建议标题、切入角度和核心关键词，保存时带进笔记。
+- 🔑 **关键词数据**：按需从 DataForSEO 拉这篇文章已经排名的词，以及核心词的搜索量、难度和相关词。
+- 📈 **趋势**：每个竞品一份 30 天内容策略解读：在押什么方向、反复出现的主题、你可以跟进的选题。
+- 🧭 **推荐竞品**：按你的域名找出和你抢同一批关键词的网站，一键关注并自动找它的 sitemap；不感兴趣的可以排除。
+- 🗂️ **多站点**：运营好几个不同品类的站？每个站点有自己的竞品、Feed 和博客，首页一张卡片一个站点。
+- 🤖 **MCP**：把数据开放给 Claude Code、Cursor 等 AI 客户端，直接问「这个月对手发了哪些我还没写过的？」。
+- 🐳 **好部署**：一个 Docker 容器加一个 SQLite 文件，不依赖任何外部服务；没有前端构建步骤。
 
 ## 快速开始
 
 ```bash
-docker compose up
+git clone https://github.com/tod-zhang/fuck-competitors.git
+cd fuck-competitors
+docker compose up -d
 # 打开 http://localhost:9527
 ```
 
-就这样 —— 一个容器、一个 SQLite 文件（持久化在主机的 `./data` 目录里），不依赖任何外部服务。
+然后：
 
-## 安装方式
+1. 在首页「全部站点」添加你的站点（名称和域名）。
+2. 进入站点，在「设置 → 站点信息」填上你博客的 sitemap，点「同步我的博客」。
+3. 右上角「添加竞品」填对手的 sitemap，或者点「推荐竞品」让它按你的域名找。
+4. 在「设置」里填 API Key（见下文），相似文章、写作思路、关键词和趋势才会开启。
+5. 之后每个月打开「内容 Feed」看一遍。
 
-### 方式一：Docker（推荐）
+应用里左下角的「帮助中心」有每个功能的详细说明。
 
-```bash
-git clone https://github.com/tod-zhang/fuck-competitors.git
-cd fuck-competitors
-docker compose up -d          # 后台运行
-# 打开 http://localhost:9527
-```
+## 工作方式
 
-数据库就是主机仓库目录下的 `./data/app.db`。它是**目录挂载**（不是 docker 命名卷），所以重建镜像、`docker compose down -v`、改项目名都不会动它——升级代码后重新部署，竞品记录都还在。需要重置为空白：删掉 `./data` 目录再 `up`。
+- **巡检**：每个竞品每月一次，只下载它的 sitemap 和上次对比，找出新上线的页面；分类页、标签页、作者页、图片这类网址会被过滤掉。新文章会单独抓一次，取标题、摘要、缩略图和正文开头。想马上查，点 Feed 右上角「立即刷新」。
+- **第一次巡检**只记下对手现有的页面，不会把旧文章当新文章刷屏；不过最近 30 天内更新过的文章会放进 Feed，免得一开始是空的。
+- **相似度**：把对手文章和你博客文章的「标题 + 正文开头约 6000 字」做向量，算余弦相似度，只在同一个站点里比较。
+- 抓取时遵守 robots.txt、限制同一域名的请求间隔，遇到 403 / 429 会自动退避。
 
-> 从 CI/脚本里**每次 clone 到新目录**部署的话，相对的 `./data` 会落在新目录里。这种情况把 compose 里的挂载改成一个固定的绝对路径（如 `/var/lib/fuck-competitors/data:/data`），数据就和代码目录解耦了。
+## API Key
 
-仓库自带一个 `Makefile` 封装了常用命令（固定 `-p fuck-competitors` 项目名，并在经典构建器下构建，
-这样即使项目目录是中文/非 ASCII 路径也能跑）：
+所有 AI 和数据功能都是可选的，各自填了 Key 才开启。在应用的「设置」里填（存在本机数据库里，优先于 `.env`，每项都有「测试连接」），也可以写进 `.env`（见 `.env.example`）。API Key 所有站点共用。
 
-```bash
-make up        # 构建并后台启动 app(:9527) + mcp(:9528)
-make logs      # 跟踪两个服务的日志
-make ps        # 查看容器状态
-make down      # 停止并移除容器（保留 ./data 里的数据库）
-```
+| 服务 | 用来做什么 | 说明 |
+| --- | --- | --- |
+| **DataForSEO** | 推荐竞品、关键词数据 | 按次计费。推荐结果会缓存，关键词只在你点按钮时才查。每个站点可以单独设国家和语言。 |
+| **嵌入接口** | 相似文章 | 任意 OpenAI 格式的 `/embeddings` 接口，默认 OpenRouter 上的 `qwen/qwen3-embedding-8b`。 |
+| **大模型** | 写作思路、趋势 | 任意 OpenAI 格式的 `/chat/completions` 接口（默认 DeepSeek），或者 Claude 官方 API（默认 `claude-opus-5-5`）。 |
 
-### 方式二：源码本地运行
+## MCP（给 AI 用）
 
-```bash
-git clone https://github.com/tod-zhang/fuck-competitors.git
-cd fuck-competitors
-
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-
-uvicorn app.main:app --port 9527        # 打开 http://localhost:9527
-```
-
-> ⚠️ 调度器跑在进程内，请用**单个 worker**（默认即是）。多 worker 会重复触发巡检。
-
-## 使用流程
-
-1. **添加竞品** —— 点「＋ 添加竞品」，填竞品的 `sitemap.xml`。
-   首次巡检是**静默建基线**：只记录当前全部页面，**不会**给每个页面灌一条"新增"
-   —— 初始清单里没有"变化"这个信号。
-2. **让它跑** —— 所有竞品每月自动重抓一次（或在卡片设置里点「立即巡检」马上查一次）。
-   从第二次巡检起，新发布的文章进「内容 Feed」。
-
-## AI 分析（MCP）
-
-应用自带一个**只读 MCP server**，把竞品的新文章和变化以工具形式开放给 AI Agent
-（Claude Code / Codex / Claude Desktop / ChatGPT 等）。接上之后用**自然语言**问就行 ——
-Agent 自己调下面的工具拉数据、推理出"对手在优化什么"。
+应用自己就在 **`/mcp`** 上提供 MCP 服务：你用什么地址打开网站，MCP 就是那个地址加 `/mcp`（例如本机是 `http://localhost:9527/mcp`）。打开「设置 → MCP」可以生成访问令牌，并直接复制 Claude Code 命令或 `mcp.json` 配置。
 
 | 工具 | 作用 |
 | --- | --- |
 | `list_sites` | 你的站点，以及每个站点监控的竞品 |
-| `get_feed` | 最近 N 天竞品新文章：相似文章、写作思路、关键词数据、你的笔记 / 保存状态（可按站点、状态、竞品过滤） |
-| `get_trends` | 每个竞品的 30 天内容策略解读（「趋势」标签页的内容） |
-| `list_competitors` | 列出监控中的竞品（追踪页数、近 7 天活跃度，可按站点过滤） |
-| `get_changes` | 拉某段时间的增 / 删 / 改（可按竞品、类型过滤） |
-| `get_diff` | 某条变更的详情（如疑似修改的 `lastmod` 变化） |
-| `get_page_history` | 单个页面随时间的变化轨迹（如 `/pricing`） |
-| `summarize_window` | 一次性打包某竞品 N 天内的全部变化，直接交给模型分析 |
+| `get_feed` | 最近的新文章：相似文章、写作思路、关键词数据、你的笔记和保存状态（可按站点、状态、竞品过滤） |
+| `get_trends` | 每个竞品的 30 天内容策略解读 |
+| `list_competitors` | 监控中的竞品（可按站点过滤） |
+| `get_changes` / `get_page_history` / `summarize_window` / `get_diff` | 原始的页面增删记录 |
 
-### 方式一：本地（stdio）—— Claude Code / Codex
+接上之后可以这样问：
 
-在项目根目录建 `.mcp.json`，然后**重启客户端**：
+```
+这个月对手发了哪些我还没写过的文章？按写作思路排个优先级。
+看一下 Nimbus 最近 30 天的内容策略，我能跟进哪些选题？
+```
+
+所有工具都是只读的。只在自己电脑上用可以不设令牌；**能从公网访问到时，务必生成令牌**（或设置环境变量 `FC_MCP_TOKEN`）。
+
+不想开服务的话，也可以让客户端直接以 stdio 方式启动它，在项目根目录建 `.mcp.json`：
 
 ```json
 {
@@ -128,135 +109,89 @@ Agent 自己调下面的工具拉数据、推理出"对手在优化什么"。
 }
 ```
 
-### 方式二：远程（HTTP）—— 自托管后直接输 URL
+## 部署
 
-应用自己就在 **`/mcp`** 上提供 MCP（和网页同一个地址、同一个 HTTPS），打开「设置 → MCP」可以看到地址、
-生成访问令牌，并直接复制 Claude Code 命令或 `mcp.json` 配置：
+### Docker（推荐）
 
-```
-https://<你的域名>/mcp
-```
-
-`docker compose up` 另外还会起一个独立的 MCP HTTP 服务（端口 9528，令牌用 `FC_MCP_TOKEN`），需要时可用。
-
-- **Claude Code**：`claude mcp add --transport http fuck-competitors http://<host>:9528/mcp`
-  （设了 token 再加 `--header "Authorization: Bearer <token>"`）
-- **Claude Desktop / ChatGPT**：添加远程 MCP / 连接器，粘贴上面的 URL。
-
-> 🔒 **安全**：这个端点**只读，但会暴露你监控了哪些对手和你的笔记**。本机 / 内网用可不设鉴权；
-> **暴露到公网必须设令牌**（「设置 → MCP」里生成，或环境变量 `FC_MCP_TOKEN`），客户端连接时带
-> `Authorization: Bearer <token>`。
-
-### 接上之后这样问
-
-```
-这个月对手发了哪些我还没写过的文章？按写作思路排个优先级。（get_feed）
-监控了哪些对手？（list_competitors）
-用 summarize_window 看 cowseal 最近 14 天，它在优化什么？按定价 / 定位 / 产品 / 内容分类说。
-get_page_history /pricing —— 各家定价页这段时间怎么变的？
+```bash
+docker compose up -d     # 应用在 :9527；另有一个独立的 MCP 服务在 :9528（可选）
 ```
 
-> ⚠️ **前提：库里得有变化数据。** MCP 只读、不爬取。刚加的竞品只有"静默基线"、没有变化，分析不出东西——
-> 变化要随巡检积累。想先试效果，可灌一份演示数据：
-> ```bash
-> FC_DB_URL="sqlite:///./data/demo.db" python tests/seed_demo.py
-> ```
-> 再把上面的 `FC_DB_URL` / URL 指向 `./data/demo.db` 即可。
+数据库是主机上的 `./data/app.db`。它是目录挂载，不是 Docker 命名卷，所以重建镜像、`docker compose down -v` 都不会动它。备份就复制这个文件；想从头开始，删掉 `./data` 再启动。
 
-## 内容 Feed（每月看一遍）
+仓库带了一个 `Makefile`（固定项目名，并用经典构建器，项目放在中文路径下也能构建）：
 
-侧边栏「内容 Feed」把竞品**新上线的文章**按竞品分组排成卡片（标题、摘要、缩略图），显示最近 30 天的，可按竞品筛选，
-顶部显示上次巡检时间，「立即刷新」马上重新巡检全部竞品。首次巡检时，还会把 `lastmod` 在 30 天内的文章放进来
-（如果一个站把所有页面的 `lastmod` 都标成今天，就不信它）。每篇可以 ★ 保存（顺手写一句笔记）或 ✕ 忽略，每组还有「全部忽略」。
+```bash
+make up      # 构建并后台启动
+make logs    # 看日志
+make down    # 停止（保留 ./data）
+```
 
-对你博客里还没写过的文章（最接近的一篇相似度低于 0.6，或还没同步博客），巡检后会用大模型自动生成一份「写作思路」：建议标题、切入角度和核心关键词，保存这篇时会带进笔记。
+部署到公网时，用 nginx / Caddy 之类在前面加 HTTPS，并记得给 MCP 设令牌。
 
-「趋势」标签页给每个竞品一份 30 天内容策略解读（策略判断 + 反复出现的主题和对应文章 + 可跟进的选题），
-超过 7 天或之后又发了新文章的标为过期，可以一键生成全部缺失 / 过期的。
+### 源码运行
 
-四个 AI 功能，各自填了 key 才启用。key 在侧边栏左下角的「设置」里填（存在本机数据库里，每个服务都有「测试连接」），也可以写进 `.env`（见 `.env.example`），设置里填的优先：
+```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --port 9527
+```
 
-| 功能 | 用什么 | 配置 |
-| --- | --- | --- |
-| **推荐竞品**：按「我的域名」找自然搜索竞品，一键关注并自动找 sitemap | DataForSEO Labs `competitors_domain` | `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` |
-| **我博客里最接近的文章**：同步你的博客 sitemap，向量 + 余弦相似度给每篇竞品文章找最像的 3 篇 | 任意 OpenAI 格式的 embeddings 接口，默认 OpenRouter `qwen/qwen3-embedding-8b` | `FC_EMBEDDING_API_KEY` |
-| **关键词数据**（按需）：这篇文章已排名的词 + 核心词的搜索量 / 难度 / 相关词 | DataForSEO Labs `ranked_keywords` + `related_keywords` | 同上 |
-| **趋势（30 天内容策略）**：把竞品最近 30 天的文章交给大模型，归纳策略和主题 | 任意 OpenAI 格式的 chat 接口（默认 DeepSeek），或 Claude 官方 API | `FC_LLM_PROVIDER` / `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` |
-
-每个站点的域名、博客 sitemap 和 DataForSEO 国家 / 语言在「设置 → 我的站点」里填（进入站点后，侧边栏顶部可切换站点），填完点「同步我的博客」。DataForSEO 按次计费：推荐竞品的结果会缓存，
-关键词只在你点按钮时才查。
-
-## 监控原理
-
-每次巡检只读竞品的 sitemap，和上次对比得出页面**新增 / 删减**；若页面带 `<lastmod>`，时间戳变化会标记一条**「疑似修改」**。
-新增的文章会单独抓一次正文，给「内容 Feed」生成标题、摘要和相似文章。
-
-> **诚实说明**：「疑似修改」只是推测（且仅当站点诚实填写了 `<lastmod>`），看不到*改了什么*。
+> ⚠️ 定时巡检跑在进程内，请只开**一个 worker**（默认就是），否则会重复巡检。
 
 ## 配置
 
-所有配置都是 `FC_` 前缀的环境变量（见 `.env.example`）：
+所有配置都是 `FC_` 开头的环境变量，常用的如下（完整列表见 `.env.example` 和 `app/config.py`）：
 
 | 变量 | 默认值 | 含义 |
 | --- | --- | --- |
 | `FC_DB_URL` | `sqlite:///./data/app.db` | 数据库位置 |
 | `FC_DEFAULT_INTERVAL_HOURS` | `720` | 所有竞品的巡检间隔（小时，默认 30 天） |
+| `FC_MCP_TOKEN` | 空 | MCP 访问令牌（「设置」里填的优先） |
+| `FC_RESPECT_ROBOTS` | `true` | 是否遵守对手站点的 robots.txt |
+| `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔 |
 | `FC_REQUEST_TIMEOUT` | `20` | 单次请求超时（秒） |
-| `FC_MAX_SITEMAP_URLS` | `50000` | 单个 sitemap 的抓取上限 |
-| `FC_WRITE_BATCH` | `200` | 巡检写库每 N 行提交一次（频繁释放写锁，避免阻塞并发添加） |
-| `FC_USER_AGENT` | `FuckCompetitors/0.1 …` | 抓取时使用的 User-Agent |
-| `FC_RESPECT_ROBOTS` | `true` | 是否遵守目标站 robots.txt（若某站 robots 误挡了 sitemap，可关掉） |
-| `FC_CRAWL_DELAY_SECONDS` | `1.0` | 同一域名两次请求的最小间隔（robots 的 Crawl-delay 更大时取大者） |
-| `FC_BLOCK_COOLDOWN_SECONDS` | `900` | 遇到 403 / 无 Retry-After 的 429 后，对该域名退避多久 |
-| `FC_DEMO_MODE` | `false` | 只读演示站：每天重置为虚构示例数据，不巡检，拒绝一切写操作（**会清空数据库**，勿对真实数据开启） |
-| `FC_MY_DOMAIN` / `FC_MY_SITEMAP_URL` | 空 | 老数据库升级时，用来生成第一个站点的域名 / 博客 sitemap（之后在「设置」里改） |
-| `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` | 空 | DataForSEO 账号（推荐竞品 + 关键词数据） |
-| `FC_DATAFORSEO_LOCATION_CODE` / `FC_DATAFORSEO_LANGUAGE_CODE` | `2840` / `en` | 关键词数据的国家和语言 |
-| `FC_EMBEDDING_BASE_URL` / `FC_EMBEDDING_API_KEY` / `FC_EMBEDDING_MODEL` | OpenRouter / 空 / `qwen/qwen3-embedding-8b` | 相似文章用的嵌入接口 |
-| `FC_LLM_PROVIDER` | `openai` | 大模型接口类型：`openai`（任意 OpenAI 格式）或 `anthropic`（Claude 官方 API，模型默认 `claude-opus-5-5`，不用填接口地址） |
-| `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` | `https://api.deepseek.com/v1` / 空 / `deepseek-chat` | 策略总结用的大模型 |
+| `FC_DATAFORSEO_LOGIN` / `FC_DATAFORSEO_PASSWORD` | 空 | DataForSEO 账号 |
+| `FC_EMBEDDING_BASE_URL` / `FC_EMBEDDING_API_KEY` / `FC_EMBEDDING_MODEL` | OpenRouter / 空 / `qwen/qwen3-embedding-8b` | 嵌入接口 |
+| `FC_LLM_PROVIDER` | `openai` | `openai`（任意 OpenAI 格式）或 `anthropic`（Claude 官方 API） |
+| `FC_LLM_BASE_URL` / `FC_LLM_API_KEY` / `FC_LLM_MODEL` | DeepSeek / 空 / `deepseek-chat` | 大模型 |
+| `FC_DEMO_MODE` | `false` | 只读演示站：每天重置为虚构示例数据，不巡检，拒绝写操作（**会清空数据库**，不要对真实数据开启） |
 
 ## 开发
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 9527   # http://localhost:9527
-
-python tests/test_basic.py             # sitemap 解析 + 增删改 diff（纯标准库）
-python tests/test_security.py          # 拒绝 XXE / 实体炸弹的 sitemap
-python tests/test_feed.py              # 内容 Feed：入库、相似文章、竞品推荐（不联网）
-python tests/e2e_local.py              # 全链路：抓取 → diff → 落库（本地 HTTP 服务）
-python tests/seed_demo.py              # 灌入演示数据，方便逛界面
+uvicorn app.main:app --reload --port 9527
+python tests/seed_demo.py       # 灌入两个示例站点的演示数据，方便逛界面（会清空当前数据库）
 ```
 
-## 架构
+测试都是可以直接运行的脚本，不联网：
 
-- **FastAPI** 应用，服务端渲染 **Jinja2** 模板（无构建步骤），抽屉 / 设置 / 筛选用原生 `fetch` + 少量 JS。
-- **APScheduler** 每个竞品一个进程内定时任务 → **请用单 worker 运行**。
-- **SQLite**（经 SQLModel）：`competitors / pages / changes / snapshots` 四张表。
-- `app/monitor/` 是零依赖的核心：`sitemap.py`（抓取 + 解析）、`basic.py`（增删改 diff）、
-  `extract.py`（正文提取）、`favicon.py`（站点图标解析）。
+```bash
+for t in tests/test_*.py; do python "$t"; done
+python tests/e2e_local.py       # 全链路：起一个本地 HTTP 服务 → 抓取 → 对比 → 入库
+```
+
+技术栈：**FastAPI** + 服务端渲染的 **Jinja2** 模板 + 原生 JS（没有前端构建），**SQLite**（经 SQLModel），进程内的 **APScheduler** 定时任务。
 
 ```
 app/
-├── main.py          # FastAPI 入口 + lifespan（启动调度器）
-├── web.py           # 页面路由 + 表单/接口端点
-├── service.py       # 巡检编排
-├── scheduler.py     # APScheduler 定时任务
-├── models.py        # SQLModel 表
-├── viewmodels.py    # DB 行 → 模板数据
-├── config.py · db.py · timeutil.py
-├── monitor/         # sitemap.py · basic.py · extract.py · favicon.py
-├── templates/       # index.html + partials/（Feed、设置、竞品设置等片段）
-└── static/          # app.css · app.js · favicon.svg
+├── main.py          # 入口：数据库、定时任务、/mcp
+├── web.py           # 页面、站点和竞品的接口
+├── feed_web.py      # 内容 Feed、趋势、推荐竞品、设置的接口
+├── feed.py          # 新文章入库、抓正文、相似文章、写作思路、关键词、趋势
+├── integrations.py  # DataForSEO / 嵌入 / 大模型（OpenAI 兼容或 Claude）
+├── mcp_server.py    # MCP 工具
+├── service.py · scheduler.py   # 巡检编排和定时任务
+├── monitor/         # sitemap 抓取解析、新增 / 删减对比、正文提取、站点图标
+├── templates/ · static/
+└── models.py · db.py · config.py · demo.py
 ```
 
-## 安全说明
+## 安全
 
-- Sitemap 是不可信输入，XML 用 **defusedxml** 解析（防 XXE / 实体展开攻击），并有回归测试覆盖。
-- 抓取时设置了自定义 `User-Agent` 和超时；请做个好公民，用合理的巡检间隔。
-- 站点图标（favicon）由用户浏览器直接向竞品站点请求，并带 `no-referrer`，不经任何第三方。
+- Sitemap 是不可信输入，用 **defusedxml** 解析（防 XXE / 实体展开），有回归测试。
+- 网页界面本身**没有登录**。部署到公网时，请放在只有你能访问的地方（内网、VPN，或者在反向代理上加一层认证）；MCP 另有令牌保护。
+- 竞品的站点图标由你的浏览器直接请求，带 `no-referrer`，不经过第三方。
 
 ## 许可证
 
