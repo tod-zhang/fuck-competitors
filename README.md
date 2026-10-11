@@ -114,7 +114,7 @@ docker compose up -d
 ### Docker（推荐）
 
 ```bash
-docker compose up -d     # 应用在 :9527；另有一个独立的 MCP 服务在 :9528（可选）
+docker compose up -d     # 应用在 :9527，MCP 在同一端口的 /mcp
 ```
 
 数据库是主机上的 `./data/app.db`。它是目录挂载，不是 Docker 命名卷，所以重建镜像、`docker compose down -v` 都不会动它。备份就复制这个文件；想从头开始，删掉 `./data` 再启动。

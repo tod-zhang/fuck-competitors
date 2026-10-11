@@ -10,7 +10,7 @@ COMPOSE := DOCKER_BUILDKIT=0 COMPOSE_BAKE=false docker compose -p $(PROJECT)
 
 .PHONY: up down restart logs ps build
 
-# Build (if needed) and start app (:9527) + mcp (:9528) in the background.
+# Build (if needed) and start the app (:9527, MCP at /mcp) in the background.
 up:
 	$(COMPOSE) up -d --build
 
