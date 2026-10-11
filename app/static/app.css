@@ -116,12 +116,6 @@ svg{flex-shrink:0}
 .btn-soft{background:transparent;border:1.5px solid var(--nb-ink)}
 .btn-soft:hover{background:var(--hover)}
 
-/* section heading = panel title (text-sm font-semibold) */
-.sec-head{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
-.sec-head h3{font-size:14px;font-weight:600}
-.sec-head .ribbon{font-size:12px;color:var(--muted-fg)}
-.sec-head .line{display:none}
-
 .change{display:flex;align-items:flex-start;gap:10px;font-size:13px}
 
 .change .path{font-family:var(--mono);color:var(--fg);font-size:12px;overflow-wrap:anywhere}
@@ -135,22 +129,8 @@ svg{flex-shrink:0}
 .diff .dl s{opacity:.7}
 .diff .src{font-size:12px;color:var(--muted-fg);margin-top:4px}
 
-/* competitor cards = the /app home site cards (nb-panel rounded-xl) */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.site-card{border:2px solid var(--nb-ink);border-radius:12px;padding:16px}
-.site-card .top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.site-card .monogram{width:20px;height:20px;font-size:11px}
-.site-card .nm{font-weight:500;font-size:14px}
-.site-card .lk{font-size:12px;color:var(--muted-fg)}
-.site-card .meta{display:flex;gap:24px}
-.site-card .meta .k{font-size:12px;color:var(--muted-fg)}
-.site-card .meta .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
 .spark{display:flex;align-items:flex-end;gap:3px;height:30px;margin-left:auto}
 .spark span{width:5px;border-radius:2px;background:var(--accent-bg)}
-.freq{font-size:12px;color:var(--muted-fg);border:1px solid var(--line);border-radius:4px;padding:0 6px}
-.top-right{display:flex;align-items:center;gap:6px;margin-left:auto}
-.card-settings{font-family:inherit;font-size:12px;font-weight:500;color:var(--fg);background:transparent;border:1.5px solid var(--nb-ink);height:26px;padding:0 8px;border-radius:6px;cursor:pointer;transition:background-color .15s}
-.card-settings:hover{background:var(--hover)}
 
 .empty-soft{color:var(--muted-fg);font-size:13px}
 

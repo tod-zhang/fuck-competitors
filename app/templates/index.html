@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/app.css?v=6">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
-<link rel="stylesheet" href="/static/feed.css?v=14">
+<link rel="stylesheet" href="/static/app.css?v=7">{# bump ?v= when app.css / app.js change: Cloudflare caches /static for 4h #}
+<link rel="stylesheet" href="/static/feed.css?v=15">
 </head>
 
 {% macro eyes() %}
@@ -50,14 +50,13 @@
 
     <nav class="nav">
       <a class="active" data-view="feed"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></span>内容 Feed</a>
-      <a data-view="sites"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg></span>竞品列表</a>
     </nav>
 
     <div class="hide-empty">
       <div class="nav-label">监控中 · {{ competitors|length }}</div>
       <div class="sites-list">
         {% for c in competitors %}
-        <div class="site-row" data-id="{{ c.id }}" onclick="Feed.filterCompetitor({{ c.id }})">{{ avatar((c.name[:1] or '?')|upper, c.color, favicons[c.id]) }}{{ c.name }}<span class="dot-status" title="{% if c.status == 'error' %}上次巡检出错{% elif c.last_checked_at %}巡检正常{% else %}等待首次巡检{% endif %}" style="background:{% if c.status == 'error' %}var(--del){% elif c.last_checked_at %}var(--add){% else %}var(--ink-faint){% endif %}"></span></div>
+        <div class="site-row" data-id="{{ c.id }}" onclick="Feed.filterCompetitor({{ c.id }})">{{ avatar((c.name[:1] or '?')|upper, c.color, favicons[c.id]) }}{{ c.name }}<button type="button" class="row-gear" title="竞品设置" onclick="event.stopPropagation();openSettings({{ c.id }})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><span class="dot-status" title="{% if c.status == 'error' %}上次巡检出错{% elif c.last_checked_at %}巡检正常{% else %}等待首次巡检{% endif %}" style="background:{% if c.status == 'error' %}var(--del){% elif c.last_checked_at %}var(--add){% else %}var(--ink-faint){% endif %}"></span></div>
         {% endfor %}
       </div>
     </div>
@@ -132,29 +131,6 @@
       </div>
     </section>
 
-    <!-- ===== Sites ===== -->
-    <section class="view" id="view-sites">
-      <div class="grid">
-        {% for s in sites %}
-        <div class="site-card">
-          <div class="top">
-            {{ avatar(s.monogram, s.color, s.favicon) }}
-            <div><div class="nm">{{ s.name }}</div><div class="lk">{{ s.host }}</div></div>
-            <div class="top-right">
-              <span class="freq">{{ s.freq }}</span>
-              <button type="button" class="card-settings" onclick="openSettings({{ s.id }})">设置</button>
-            </div>
-          </div>
-          <div class="meta">
-            <div><div class="k">追踪页面</div><div class="v">{{ s.tracked }}</div></div>
-            <div><div class="k">近 7 天新文章</div><div class="v" style="color:var(--accent)">{{ s.week_posts }}</div></div>
-          </div>
-        </div>
-        {% else %}
-        <p class="empty-soft">还没有竞品，点右上角「＋ 添加竞品」。</p>
-        {% endfor %}
-      </div>
-    </section>
 
     {% include "partials/feed.html" %}
 

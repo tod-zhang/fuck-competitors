@@ -187,3 +187,8 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .search-menu .search-none{color:var(--muted-fg);cursor:default}
 .site-row.on{background:var(--hover);color:var(--fg)}
 .fd-sugg-act{white-space:nowrap;text-align:right}
+.row-gear{display:grid;place-items:center;width:22px;height:22px;margin-left:auto;padding:0;border:0;border-radius:4px;background:transparent;color:var(--muted-fg);cursor:pointer;visibility:hidden}
+.row-gear svg{width:14px;height:14px}
+.site-row:hover .row-gear,.site-row.on .row-gear{visibility:visible}
+.row-gear:hover{background:var(--nb-paper);color:var(--fg)}
+.row-gear + .dot-status{margin-left:6px}

@@ -76,35 +76,12 @@ def index(request: Request):
             return _home(request, s)
         site = current_site(s, request)
         competitors = site_competitors(s, site)
-        comp_ids = [c.id for c in competitors]
-        tracked = dict(s.exec(select(Page.competitor_id, func.count())
-                              .where(Page.competitor_id.in_(comp_ids), Page.status == "active")
-                              .group_by(Page.competitor_id)).all())
-        week_ago = utcnow() - timedelta(days=7)
-        new_posts = dict(s.exec(select(FeedItem.competitor_id, func.count())
-                                .where(FeedItem.competitor_id.in_(comp_ids), FeedItem.published_at >= week_ago)
-                                .group_by(FeedItem.competitor_id)).all())
-        sites = [
-            {
-                "id": c.id,
-                "name": c.name,
-                "color": c.color,
-                "monogram": vm.monogram(c.name),
-                "host": urlparse(c.sitemap_url).netloc or c.sitemap_url,
-                "tracked": tracked.get(c.id, 0),
-                "week_posts": new_posts.get(c.id, 0),
-                "freq": vm.interval_label(c.check_interval_hours),
-                "favicon": vm.favicon_url_for(c),
-            }
-            for c in competitors
-        ]
         ctx = {
             "site": site,
             "all_sites": s.exec(select(Site).order_by(Site.id)).all(),
             "competitors": competitors,
             "favicons": {c.id: vm.favicon_url_for(c) for c in competitors},
             "has_data": bool(competitors),
-            "sites": sites,
         }
         from .feed_web import config_context  # feed_web imports this module
         ctx.update(config_context(s, site))
