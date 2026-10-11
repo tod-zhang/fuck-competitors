@@ -232,9 +232,8 @@ def suggestions(request: Request, refresh: int = 0):
             from .demo import SUGGESTIONS
             rows = [{"domain": d, "intersections": n, "avg_position": pos, "etv": etv}
                     for d, n, pos, etv in SUGGESTIONS.get(feed._bare(site.domain), [])]
-            tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
-            data = {"domain": feed._bare(site.domain), "rows": [{**r, "tracked": r["domain"] in tracked} for r in rows], "demo": True}
-            return templates.TemplateResponse(request, "partials/feed_suggestions.html", data)
+            data = {"domain": feed._bare(site.domain), "rows": rows, "demo": True}
+            return templates.TemplateResponse(request, "partials/feed_suggestions.html", _hide_followed(s, site, data))
         key = feed.site_key("suggestions_cache", site.id)
         cached = feed.get_setting(s, key)
         data = json.loads(cached) if cached else None
@@ -247,10 +246,15 @@ def suggestions(request: Request, refresh: int = 0):
             data = {"domain": domain, "rows": rows}
             feed.set_setting(s, key, json.dumps(data))
             s.commit()
-        tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
-        for row in data["rows"]:
-            row["tracked"] = row["domain"] in tracked
+        data = _hide_followed(s, site, data)
     return templates.TemplateResponse(request, "partials/feed_suggestions.html", data)
+
+
+def _hide_followed(s: Session, site: Site, data: dict) -> dict:
+    """Leave out competitors this site already follows (also ones followed since the cached query)."""
+    tracked = {feed._bare(urlparse(c.sitemap_url).netloc) for c in site_competitors(s, site)}
+    rows = [r for r in data["rows"] if r["domain"] not in tracked]
+    return {**data, "rows": rows[:20], "hidden": len(data["rows"]) - len(rows)}
 
 
 @router.post("/suggestions/follow")

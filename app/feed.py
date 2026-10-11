@@ -416,7 +416,7 @@ def suggest_competitors(session: Session, site: Site) -> list[dict]:
         if d == domain or d in GIANTS or row["domain"] in GIANTS:
             continue
         out.append({**row, "domain": d, "tracked": d in tracked})
-    return out[:20]
+    return out  # the page shows the top 20 it isn't already following
 
 
 def discover_sitemap(domain: str) -> str | None:

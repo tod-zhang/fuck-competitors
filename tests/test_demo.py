@@ -43,7 +43,8 @@ def test_demo_mode():
         assert "fd-theme" in client.get("/feed/list?status=trends").text
         assert client.get("/feed/config").status_code == 200
         sugg = client.get("/feed/suggestions").text   # sample rows instead of a paid call
-        assert "这是示例数据" in sugg and "shipfast.example" in sugg and "已关注" in sugg
+        assert "这是示例数据" in sugg and "shipfast.example" in sugg
+        assert "nimbus.example" not in sugg and "已关注的 3 个不再列出" in sugg   # already followed: left out
 
         # the second sample site has its own competitor and articles
         other = client.get(f"/feed/list?status=new&window=7&site={sites[1].id}").text
