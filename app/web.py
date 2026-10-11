@@ -93,7 +93,6 @@ def index(request: Request):
                 "host": urlparse(c.sitemap_url).netloc or c.sitemap_url,
                 "tracked": tracked.get(c.id, 0),
                 "week_posts": new_posts.get(c.id, 0),
-                "freq": vm.interval_label(c.check_interval_hours),
                 "favicon": vm.favicon_url_for(c),
             }
             for c in competitors
@@ -116,22 +115,21 @@ def add_competitor(
     request: Request,
     name: str = Form(...),
     sitemap_url: str = Form(...),
-    interval_hours: int = Form(24),
 ):
     with Session(engine) as s:
         site_id = current_site(s, request).id
-    create_competitor(site_id, name, sitemap_url, interval_hours)
+    create_competitor(site_id, name, sitemap_url)
     return RedirectResponse(f"/?site={site_id}", status_code=303)
 
 
-def create_competitor(site_id: int, name: str, sitemap_url: str, interval_hours: int) -> None:
+def create_competitor(site_id: int, name: str, sitemap_url: str) -> None:
     with Session(engine) as s:
         count = len(s.exec(select(Competitor)).all())
         competitor = Competitor(
             site_id=site_id,
             name=name.strip(),
             sitemap_url=sitemap_url.strip(),
-            check_interval_hours=interval_hours,
+            check_interval_hours=settings.default_interval_hours,
             color=PALETTE[count % len(PALETTE)],
         )
         s.add(competitor)
@@ -160,7 +158,6 @@ def competitor_settings(competitor_id: int, request: Request):
                 "id": competitor.id,
                 "name": competitor.name,
                 "sitemap_url": competitor.sitemap_url,
-                "interval": competitor.check_interval_hours,
             },
         )
 
@@ -170,18 +167,14 @@ def update_competitor(
     competitor_id: int,
     name: str = Form(...),
     sitemap_url: str = Form(...),
-    interval_hours: int = Form(...),
 ):
     with Session(engine) as s:
         competitor = s.get(Competitor, competitor_id)
         if competitor:
             competitor.name = name.strip()
             competitor.sitemap_url = sitemap_url.strip()
-            competitor.check_interval_hours = interval_hours
             s.add(competitor)
             s.commit()
-            s.refresh(competitor)
-            schedule_competitor(competitor)  # reschedule in case the interval changed
     return _back_to(competitor_id)
 
 

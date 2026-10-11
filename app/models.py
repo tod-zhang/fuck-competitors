@@ -26,7 +26,7 @@ class Competitor(SQLModel, table=True):
     name: str
     sitemap_url: str
     color: str = "#39332B"               # sidebar monogram color
-    check_interval_hours: int = 24
+    check_interval_hours: int = 720      # set from FC_DEFAULT_INTERVAL_HOURS at startup; not edited per competitor
     detailed_on: bool = False            # deprecated/unused — detailed monitoring was removed
     favicon_url: Optional[str] = None    # resolved from the site's <link rel="icon">, if any
     status: str = "ok"                   # ok | error

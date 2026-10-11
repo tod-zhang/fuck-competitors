@@ -141,7 +141,6 @@
             {{ avatar(s.monogram, s.color, s.favicon) }}
             <div><div class="nm">{{ s.name }}</div><div class="lk">{{ s.host }}</div></div>
             <div class="top-right">
-              <span class="freq">{{ s.freq }}</span>
               <button type="button" class="card-settings" onclick="openSettings({{ s.id }})">设置</button>
             </div>
           </div>
@@ -169,22 +168,10 @@
 <div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <h3>盯上一个新对手</h3>
-    <p class="sub">填入站点地图地址，我们会定期巡检并记录每一次增删改。</p>
+    <p class="sub">填入它的 sitemap 地址，每月巡检一次，新文章会进内容 Feed。</p>
     <form method="post" action="/competitors{% if site %}?site={{ site.id }}{% endif %}">
       <div class="field"><label>竞品名称</label><input name="name" required placeholder="例如：Linear"></div>
       <div class="field"><label>Sitemap 地址</label><input name="sitemap_url" required placeholder="https://example.com/sitemap.xml"></div>
-      <div class="field"><label>巡检频率</label>
-        <div class="xselect">
-          <button type="button" class="xselect-trigger">
-            <span class="xselect-label">每天</span><span class="xselect-caret">▾</span>
-          </button>
-          <input type="hidden" name="interval_hours" value="24">
-          <ul class="xselect-menu" role="listbox">
-            <li data-value="24" class="sel">每天</li>
-            <li data-value="168">每周</li>
-          </ul>
-        </div>
-      </div>
       <div class="modal-foot">
         <button class="btn btn-ghost" type="button" onclick="closeModal()">取消</button>
         <button class="btn btn-primary" type="submit">开始监控</button>

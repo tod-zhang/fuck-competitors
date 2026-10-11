@@ -37,6 +37,9 @@ def init_db() -> None:
     SQLModel.metadata.create_all(engine)
     _migrate()
     _ensure_site()
+    with engine.connect() as conn:  # one check interval for everyone (the per-competitor choice was removed)
+        conn.exec_driver_sql("UPDATE competitor SET check_interval_hours = ?", (settings.default_interval_hours,))
+        conn.commit()
 
 
 def _migrate() -> None:

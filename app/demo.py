@@ -35,9 +35,8 @@ def reseed() -> None:
                         location_code="2826", language_code="en")
         s.add(main); s.add(payments); s.commit(); s.refresh(main); s.refresh(payments)
 
-        def comp(name, color, host, interval=24, site=main):
+        def comp(name, color, host, site=main):
             c = Competitor(site_id=site.id, name=name, color=color, sitemap_url=f"https://{host}/sitemap.xml",
-                           check_interval_hours=interval,
                            last_checked_at=now, status="ok", created_at=first_seen)
             s.add(c); s.commit(); s.refresh(c)
             return c
@@ -60,7 +59,7 @@ def reseed() -> None:
         nimbus = comp("Nimbus", "#111111", "nimbus.example")
         trackly = comp("Trackly", "#5E6AD2", "trackly.example")
         paylane = comp("Paylane", "#635BFF", "paylane.example", site=payments)
-        notewise = comp("Notewise", "#059669", "notewise.example", interval=168)
+        notewise = comp("Notewise", "#059669", "notewise.example")
         canvasly = comp("Canvasly", "#F24E1E", "canvasly.example")
         for c, n in [(nimbus, 40), (trackly, 18), (paylane, 93), (notewise, 60), (canvasly, 27)]:
             filler(c, n)

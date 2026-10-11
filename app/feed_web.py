@@ -284,7 +284,7 @@ def follow(request: Request, domain: str = Form(...)):
     name = domain.split(".")[0].capitalize()
     with Session(engine) as s:
         site_id = current_site(s, request).id
-    create_competitor(site_id, name, sitemap, settings.default_interval_hours)
+    create_competitor(site_id, name, sitemap)
     return {"ok": True, "sitemap": sitemap, "name": name}
 
 
