@@ -208,5 +208,3 @@ a.home-card:hover{box-shadow:4px 4px 0 var(--nb-ink);transform:translate(-2px,-2
 .help-sec a{color:var(--fg)}
 .help-sec dt{font-weight:700;margin-top:8px}
 .help-sec dd{margin:0 0 4px;color:#444}
-.side-sister{text-decoration:none}
-.side-tag{margin-left:auto;padding:0 6px;border:1px solid var(--line);border-radius:4px;font-size:11px;font-weight:500;color:var(--muted-fg)}
